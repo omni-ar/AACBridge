@@ -1,0 +1,13 @@
+*.gguf
+*.bin
+data/raw/
+__pycache__/
+build/
+.gradle/
+*.pyc*.gguf
+*.bin
+data/raw/
+__pycache__/
+build/
+.gradle/
+*.pyc
