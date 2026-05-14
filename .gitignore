@@ -5,3 +5,17 @@ __pycache__/
 build/
 .gradle/
 *.pyc
+
+# Android Studio
+.idea/
+local.properties
+.cxx/
+externalNativeBuild/
+
+# Native objects
+*.o
+*.obj
+
+# OS
+.DS_Store
+Thumbs.db
