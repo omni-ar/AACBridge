@@ -19,3 +19,5 @@ externalNativeBuild/
 # OS
 .DS_Store
 Thumbs.db
+
+android/app/src/main/jniLibs/
