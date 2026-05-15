@@ -1,0 +1,7 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+plugins {
+    // Defines the Android Gradle Plugin version for the entire project
+    id 'com.android.application' version '8.3.0' apply false
+    // Defines the Kotlin plugin version matching modern AGP expectations
+    id 'org.jetbrains.kotlin.android' version '1.9.22' apply false
+}

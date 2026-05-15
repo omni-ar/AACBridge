@@ -4,15 +4,13 @@ package com.aacbridge.inference
  * The JNI bridge connecting the Kotlin runtime to the underlying
  * llama.cpp / Snapdragon ARM64 execution backend.
  *
- * This class maps strictly to the functions exposed in `llama_jni.cpp`.
+ * This object maps strictly to the functions exposed in `llama_jni.cpp`.
  */
-class LlamaBridge {
+object LlamaBridge {
 
-    companion object {
-        init {
-            // Loads libaacbridge-jni.so from the APK's lib/arm64-v8a/ directory
-            System.loadLibrary("aacbridge-jni")
-        }
+    init {
+        // Loads libaacbridge-jni.so from the APK's lib/arm64-v8a/ directory
+        System.loadLibrary("aacbridge-jni")
     }
 
     /**
