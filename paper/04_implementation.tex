@@ -1,0 +1,39 @@
+\section{Implementation}
+\label{sec:implementation}
+
+% Briefly introduce the implementation environment: Android OS, targeting Snapdragon ARM64 edge devices.
+% Summarize the hybrid approach utilizing a high-level Kotlin orchestration layer paired with a high-performance C++ backend.
+
+\subsection{System Architecture and JNI Boundary}
+\label{subsec:architecture}
+
+% Describe the multi-layered architecture separating the Kotlin UI/routing layer from the native inference engine.
+% Explain the Java Native Interface (JNI) contract mapping scalar types and preventing raw tensor crossing to minimize latency.
+% Placeholder: Reference a block diagram figure showing the stack: Kotlin -> LlamaBridge -> JNI -> llama.cpp/ggml.
+
+\subsection{Native Inference Backend Configuration}
+\label{subsec:backend}
+
+% Detail the compilation and integration of the llama.cpp backend.
+% Discuss the strict ABI restriction to arm64-v8a for NEON SIMD optimizations.
+% Mention the dependency on the OpenMP runtime for parallelizing tensor operations across big.LITTLE core architectures.
+
+\subsection{Memory Management and Model Loading}
+\label{subsec:memory}
+
+% Explain how the large language model weights (GGUF format) are loaded directly from the device filesystem.
+% Discuss the KV cache state management (save/restore) implemented to optimize sequential AAC intents.
+% Clarify the architectural decision to keep all ggml tensor arenas strictly within the native heap to bypass JVM Garbage Collection overhead.
+
+\subsection{Tokenization and Generation Lifecycle}
+\label{subsec:generation}
+
+% Detail the inference pipeline: from prompt ingestion to the greedy-sampling generation loop.
+% Describe the robust two-pass tokenization mechanism utilized to handle variable-length contexts and dynamically resize native buffers safely.
+
+\subsection{Concurrency and Application Threading}
+\label{subsec:concurrency}
+
+% Explain the Android-specific threading model.
+% Discuss the necessity of dispatching blocking JNI inference calls via background threads (e.g., Kotlin Coroutines or native threads) to prevent Application Not Responding (ANR) exceptions.
+% Describe the interim integration of deterministic mock generators used to validate downstream routing states prior to full inference deployment.
