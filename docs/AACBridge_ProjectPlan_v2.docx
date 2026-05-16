@@ -1,0 +1,352 @@
+AACBridge
+Predictive Amortized KV-Caching for Low-Latency Edge LLMs
+in Augmentative and Alternative Communication
+B.Tech Capstone Project Plan  •  2025–26  •  AI / Healthcare / Embedded Systems
+Team: Arjit  •  Medha  •  Heer
+
+
+This document is a shared planning reference. Everything here is a suggestion — please update, disagree, and edit freely. It’s meant to help coordinate across locations during summer, not to assign blame or rigid ownership. All decisions are collective.
+
+
+1.  Project Overview
+AACBridge is a smartphone-based AAC system for non-verbal patients. It reads facial EMG signals via a BLE wearable and eye-gaze via the front camera, fuses them into an intent, and uses a quantized on-device LLM to generate a natural spoken response in under 500ms.
+The primary engineering contribution is KV Cache Priming — precomputing the patient’s personal context (profile, caregiver, time of day, conversation history) as a key-value cache in the background, so the LLM only processes new intent tokens on each call. This eliminates the prefill latency bottleneck on mobile hardware.
+
+Target outcomes:
+Working Android prototype: EMG + gaze → speech, TTFT < 500ms end-to-end
+Latency ablation: KV-primed vs baseline RAG, across INT4 / INT8 / FP16, N ∈ {50,100,200,500} tokens
+Cross-modal fusion ablation: fusion vs EMG-only vs gaze-only F1
+Paper submitted to IEEE Access by mid-July 2026
+Provisional patent covering KV Cache Priming pipeline + cache invalidation logic
+
+
+2.  Team Role Split
+Roles are split by domain. There is intentional overlap at handoff points — that’s expected and healthy. Nothing is rigid.
+
+Member
+Domain
+Owns
+Arjit
+Backend / LLM
+llama.cpp JNI bridge, KV cache manager, state router (scoring function S(cᵢ)), async drift detector, latency benchmarking, memory profiling, ResponseSelector (contextual bandit — EMA-based adaptive style selection)
+
+
+Medha
+Input / ML
+NinaPro EMG pipeline, CNN-LSTM intent classifier, dataset preprocessing, k-ablation for drift detection, TFLite/ONNX model export
+Heer
+App / UI + Paper lead
+Android app (Kotlin, UI, context collection — GPS, BLE, time), gaze tracking, cross-attention fusion model, manuscript writing lead, defines style set S and reward signal triggers (UI events) for ResponseSelector
+
+
+
+
+💡 Arjit’s backend modules (KV cache, inference, scoring) are consumed by Heer’s Android app layer. They are separate packages. Coordinate on API contracts, not on code.
+
+
+3.  Timeline  (May 15 – July 15, 2026)
+Phase 1  —  Foundation  (May 15–21)
+All three work independently. No cross-dependencies this week. Goal: each person confirms their individual stack runs before Phase 2 begins.
+
+Arjit  —  Backend setup
+Set up Android NDK build environment on dev machine
+Compile llama.cpp for Android ARM64 via NDK
+Verify llama_state_save_seq and llama_state_load_seq APIs work on target Snapdragon device
+Run basic end-to-end inference (Phi-3-Mini or Qwen2.5-1.5B Q4_K_M) — just confirm the stack loads and generates
+Implement MockIntentGenerator (rule-based) — decouples benchmarking from Medha’s model
+
+Medha  —  Signal pipeline setup
+Download NinaPro DB5 (public dataset)
+Understand electrode channel layout and recording protocol
+Write basic preprocessing: bandpass filter (20–450Hz), rectification, 200ms windowing
+Define intent label mapping — which gestures map to which AAC intents (confirm, reject, scroll, select, call-help)
+Decide on EMG embedding output dimensions — needed by Heer for fusion model design
+
+Heer  —  App + gaze setup
+Set up Android project (Kotlin, Gradle), confirm build runs on device
+Set up MediaPipe Face Mesh for gaze fixation detection
+Confirm dwell-time threshold logic works (400ms default)
+Implement basic context collection: GPS (LocationManager), BLE scanner, system clock
+Begin literature survey — 15–20 papers on KV caching, on-device LLMs, AAC, EMG+gaze fusion
+
+⚠️  Sync checkpoint — end of May 21:
+Short call or message. Each person confirms: “my stack runs.” Flag blockers now.
+Medha sends Heer the EMG embedding output spec (tensor dimensions, format, normalization).
+
+
+Phase 2  —  Core Implementation  (May 22 – June 7)
+Real work begins. Cross-dependencies appear. Pay attention to handoff dates.
+
+Arjit  (May 22–31)  —  KV cache + state router
+Implement S(cᵢ) = α·S_time + β·S_gps + γ·S_ble scoring function
+TimeScorer: circular time distance + Gaussian decay
+GPSScorer: Haversine distance + exponential decay
+BLEScorer: RSSI sigmoid → R_ble reliability weight, M=0 → R_ble=0
+KVCacheManager: serialize/deserialize KV states to flash (SQLite-backed), LRU eviction, top-3 RAM management
+KV cache size cap: N=500 tokens max, INT4 quantized, ~2GB RAM budget enforced
+Cold start recovery: BOOT_COMPLETED receiver + active sweep (GPS + clock + 3s BLE scan)
+Two-tier fallback: Tier 1 SQLite generic response <50ms, Tier 2 async llama.cpp prefill
+
+Medha  (May 22–31)  —  CNN-LSTM classifier
+Train CNN-LSTM intent classifier on NinaPro DB5
+Target: 5-class intent classification (confirm, reject, scroll, select, call-help)
+Measure classifier inference latency on CPU (no GPU on Android device)
+Produce labeled dataset: EMG windows + intent ground truth
+
+Heer  (May 22–31)  —  Android app + fusion design
+Wire context collection into ContextDaemon service
+Implement GeofencingApi wakeup + BLE PendingIntent passive trigger
+Implement AlarmManager for time-based wakeups
+Design cross-attention fusion model architecture in PyTorch (waiting on Medha’s embedding spec from May 21)
+Implement MainActivity UI: intent trigger button, TTS output, fallback display
+
+⚠️  Handoff — June 1:
+Medha → Heer: finalized EMG embedding spec + sample tensors for fusion training.
+Arjit → Heer: KVCacheManager API contract (Kotlin interface) so Heer can integrate into ContextDaemon.
+
+Arjit  (June 1–7)  —  Drift detector
+Integrate all-MiniLM-L6-v2 INT8 (~22MB) via ONNX Runtime Android
+Implement anchor embedding computation on cache load
+Implement k=3 sliding window cosine similarity check, async post-generation
+Wire drift detection result to KV cache invalidation trigger
+Target: <5% CPU utilization on efficiency cores — instrument and verify
+
+Medha  (June 1–7)  —  k-ablation
+Annotate 100+ DailyDialog conversations with topic-shift boundaries
+Run k ∈ {1,2,3,4,5} ablation against annotated boundaries
+Produce drift detection F1 scores table per k value
+💡 Send results to Arjit by June 7 — this is the empirical justification for k=3 in the paper.
+
+Heer  (June 1–7)  —  Fusion training
+Train cross-attention fusion model on EMG + gaze data
+Run ablation: fusion vs EMG-only vs gaze-only classification accuracy
+Decision point June 7: if cross-attention F1 does not exceed late fusion by >3%, switch to concatenation-based fallback
+Produce confusion matrix + per-class F1
+
+
+Phase 3  —  Integration & Benchmarking  (June 8–25)
+Hardest dependency chain. Integration cannot happen until Medha and Heer both have exportable models. Benchmarking cannot happen until integration is complete.
+
+June 8–14  —  Model export + integration
+Medha: export CNN-LSTM to TFLite. Confirm it runs on Android CPU. Send Arjit model file + inference wrapper.
+Heer: export fusion model to ONNX. Confirm tensor dimensions match. Send Arjit.
+Heer: wire Arjit’s KVCacheManager and InferenceEngine into ContextDaemon and MainActivity
+Arjit: integrate both models into inference pipeline. Wire full flow: EMG → classifier → fusion → KV injection → LLM → TTS.
+If models not ready: Arjit proceeds with MockIntentGenerator for benchmarking — paper core is KV caching, not EMG.
+
+⚠️  Critical path note:
+If Medha’s TFLite export is not available by June 8, Arjit switches to mock generator and benchmarking proceeds. Do not block the critical path.
+
+June 15–25  —  Latency benchmarking  (Arjit primary)
+Baseline 1: LLM inference, no context, no cache
+Baseline 2: Standard RAG — full context prefill every call
+System: KV Cache Primed — intent injection only
+Measure TTFT per config across INT4, INT8, FP16 and N ∈ {50, 100, 200, 500} tokens
+30 trials per configuration — report mean + standard deviation
+Memory profiling: RAM usage per state, LRU eviction verification, 2GB budget compliance
+Drift overhead profiling: CPU % during MiniLM inference on efficiency cores
+💡 All benchmark results must be complete by June 25. This is non-negotiable for the paper timeline.
+
+
+Phase 4  —  Paper Writing  (June 26 – July 11)
+Heer leads the manuscript. Everyone owns their section.
+
+June 26–30  —  First drafts
+Heer: Introduction, Related Work, System Architecture overview
+Arjit: Implementation section (llama.cpp JNI bridge, KV cache manager, scoring function, drift detector, cold start, fallback)
+Medha: Dataset & Signal Processing section (NinaPro preprocessing, classifier architecture, k-ablation)
+
+July 1–5  —  Results + cross-review
+Heer: Results & Discussion using tables and plots from Phase 3
+All three: review and push back on each other’s sections
+Arjit: write cache invalidation algorithm as formal pseudocode block
+
+July 6–11  —  Final assembly
+Abstract (final), Conclusion, Ethics statement, References (IEEE format)
+Plagiarism check via iThenticate
+Format to IEEE Access two-column template
+All figures ≥ 300 DPI
+
+
+Phase 5  —  Submission  (July 12–15)
+Final proofread — all three
+Cover letter — Heer drafts, all approve
+Upload to IEEE Access submission portal
+Record submission ID — add to resume as “Under review at IEEE Access”
+
+
+4.  At-a-Glance Timeline
+Dates
+Arjit (Backend)
+Medha (ML/Input)
+Heer (App + Paper)
+Handoffs / Notes
+May 15–21
+llama.cpp setup + MockIntent
+NinaPro pipeline + embedding spec
+Android app + gaze + lit review
+Medha → Heer: EMG embedding spec by May 21
+May 22–31
+State router, KV cache, fallback, cold start
+CNN-LSTM classifier training
+ContextDaemon, GeofencingApi, BLE wakeup, UI
+Arjit → Heer: KVCacheManager API contract by June 1
+June 1–7
+Async drift detector (<5% CPU)
+k-ablation on DailyDialog
+Fusion training + ablation, F1 decision
+Medha → Arjit: F1 table by June 7
+June 8–14
+Full pipeline integration
+TFLite export → Arjit
+ONNX export → Arjit, wire app layer
+Both models to Arjit by June 8. Mock if not ready.
+June 15–25
+Latency + memory benchmarking
+Support / review
+Support + early related work draft
+All results locked June 25
+June 26–July 5
+Implementation section + pseudocode
+Dataset section + results review
+Intro, Related Work, Results
+First full draft of all sections
+July 6–11
+Review + memory budget section
+Review + references
+Final assembly + formatting
+Complete paper draft
+July 12–15
+Final review
+Final review
+Cover letter + submit
+Submission to IEEE Access
+
+
+
+5.  Critical Architectural Decisions
+5.1  EMG Pipeline Fallback  —  Mock Intent Generator
+The core paper contribution is KV Cache Priming, not EMG classification. If Medha’s TFLite model is not exportable by June 8, benchmarking must not block.
+Arjit implements MockIntentGenerator by end of Phase 1 (May 21): rule-based intent payloads simulating real classifier output
+All KV cache priming, latency benchmarking, and drift detection run against the mock generator independently
+Real EMG model is swapped in when ready. Results re-run if time permits.
+💡 This decouples the two contributions. Reviewers evaluate KV caching on its own merits.
+
+5.2  KV Cache Memory Management
+KV cache tensors are large. Unmanaged, they exceed the ~2GB RAM Android allocates to background services.
+Context length capped at N=500 tokens per state
+Caches quantized to INT4 before flash serialization
+Only top-3 states by S(cᵢ) held in active RAM at any time
+LRU eviction: least-recently-used cache evicted to flash when new state must load
+Memory budget documented with measured figures in paper Implementation section
+
+5.3  Semantic Drift Detector  —  Overhead Budget
+Preempt reviewer concern about running an embedding model continuously on-device.
+MiniLM-L6-v2 INT8 (~22MB) runs async on Android efficiency cores, post-generation only
+Triggered every N=3 turns (~1–2 second frequency)
+Target: <5% CPU utilization, measured and reported in ablation study
+Does not compete with llama.cpp inference — scheduled on efficiency cores explicitly
+k=3 justified empirically: Medha’s k-ablation F1 table (due June 7) provides the evidence
+
+5.4  Cold Start Handling
+GeofencingApi only fires on boundary crossing. A reboot inside an existing geofence never triggers the daemon.
+BOOT_COMPLETED receiver in AndroidManifest (Heer implements) — daemon wakes before user opens app
+Application.onCreate() checks for null llama.cpp RAM pointer (Arjit’s backend, Heer calls it)
+If null: active sweep — LocationManager.getLastKnownLocation() + clock + 3s BLE scan
+Scores all 50 states, loads top-3 KV caches before user interacts
+Two-tier fallback if cold start still running when user triggers intent:
+Tier 1: SQLite generic response via Android TTS — <50ms latency
+Tier 2: async llama.cpp prefill completes in background, upgrades from next intent onward
+
+5.5  Fusion Model Fallback
+Cross-attention fusion carries deployment risk on Android CPU under tight latency constraints.
+Primary: cross-attention fusion (Heer’s model) — EMG embedding + gaze vector → unified intent embedding
+Fallback: concatenation-based late fusion — simpler, lower latency, still publishable
+Decision point June 7: if cross-attention F1 does not exceed late fusion by >3%, switch to fallback and report both in ablation
+
+
+5.6  Contextual Bandit  —  Adaptive Response Selection
+Rather than generating a fixed response per intent, the system adapts phrasing style over time using a Contextual Multi-Armed Bandit (CMAB).
+Action space: S = {concise, polite, urgent} — prompt modifiers, not separate LLM calls. Single inference pass preserved.
+Update rule: wᵢ ← (1-α)·wᵢ + α·rₜ (EMA, α ∈ [0.1, 0.3]). Weights naturally bounded to [-2, 1] by reward range.
+Recent interactions weighted exponentially higher than old ones — correct for AAC where preferences drift with context.
+Reward signal (implicit, logged async, never in critical path): +1 accepted, -1 repeated, -2 caregiver override, 0 neutral.
+Selection: epsilon-greedy — argmax(wᵢ) with prob (1-ε), random with prob ε.
+Persistence: bandit_weights SQLite table (intent, state_id, style) → (weight REAL, count INTEGER). In-memory map at runtime, async flush to DB.
+New state initialization: wᵢ=0 ∀i → uniform exploration → EMA adapts quickly.
+Module: ResponseSelector.kt (Arjit). Reward triggers defined and fired by Heer from MainActivity.
+Cuttable: Yes — if implementation slips, remove without affecting core KV caching contribution.
+6.  Key Risks & Suggested Mitigations
+Risk
+Owner
+Suggested Mitigation
+[CRITICAL] Medha’s TFLite export not ready by June 8 — blocks pipeline integration
+Medha
+Arjit’s MockIntentGenerator is the fallback. Test TFLite export by June 1 as dry run. Flag issues immediately.
+[CRITICAL] KV cache size exceeds 2GB Android RAM budget
+Arjit
+N=500 token cap, INT4 quantization, top-3 only in RAM, LRU eviction. Measure and document in paper.
+Drift detector CPU overhead flagged by reviewer
+Arjit
+Measure <5% CPU on efficiency cores. Report profiling numbers in ablation. Run async, not in inference critical path.
+Cross-attention fusion too slow on Android CPU
+Heer
+Fallback to concatenation late fusion if F1 gap <3% at June 7 decision point. Report both in ablation.
+Cold start: RAM wiped on reboot, geofence never fires
+Heer + Arjit
+BOOT_COMPLETED receiver (Heer) + active sweep (Arjit backend). Two-tier fallback ensures no conversation halt.
+Snapdragon device unavailable for benchmarking
+Arjit
+Book device now. If unavailable: run benchmarks on PC first, rerun on device before submission.
+DailyDialog annotation too slow
+Medha
+Annotate 100 conversations minimum. Sufficient for F1 calculation. Don’t wait for perfect coverage.
+Placement season overlap (July 8+)
+
+
+All
+All benchmarking done by June 25. Writing can overlap with placements. Engineering cannot.
+Bandit weights reset on reboot if async flush not implemented correctly
+Arjit
+In-memory map must flush to SQLite before process kill. Use Android onTrimMemory() callback to trigger flush on low-memory warning
+
+
+
+7.  Tech Stack Reference
+Arjit — Backend / LLM
+llama.cpp (ARM64, NDK build) — KV cache APIs: llama_state_save_seq, llama_state_load_seq
+JNI (Java Native Interface) — C++ ↔ Kotlin bridge
+ONNX Runtime Android — MiniLM-L6-v2 INT8 for drift detection
+Model: Phi-3-Mini or Qwen2.5-1.5B, Q4_K_M quantization (~1.1–2.2GB)
+Room (SQLite) — 50 context states + fallback response store
+Weights & Biases — experiment tracking for all benchmark runs
+
+Medha — Input / ML
+Python + SciPy / NumPy — EMG signal filtering and windowing
+PyTorch — CNN-LSTM intent classifier
+TFLite / ONNX — model export for Android deployment
+scikit-learn — baseline classifiers and evaluation metrics
+NinaPro DB5 — public EMG dataset
+DailyDialog — topic-shift annotation corpus for k-ablation
+
+Heer — App / UI + Fusion
+Kotlin + Android SDK — app layer, ContextDaemon, UI
+Android APIs: GeofencingApi, BluetoothLeScanner + PendingIntent, WorkManager, AlarmManager, LocationManager
+MediaPipe Face Mesh — gaze fixation detection from front camera
+PyTorch — cross-attention fusion model training
+ONNX — fusion model export for Android
+
+Shared / Paper
+Overleaf (LaTeX) — IEEE Access two-column template
+Zotero — reference management
+GitHub — version control, mandatory (use it)
+iThenticate — plagiarism check before submission
+
+Target Journal
+PRIMARY: IEEE Access — open access, Scopus-indexed, ~4–6 week review. Applied systems + empirical benchmarking scope. Submit mid-July → “Under review at IEEE Access” on resume during placement season.
+Fallback: Computers in Biology and Medicine (Elsevier, Scopus Q1).
+NOT targeting AAAI — requires theoretical proofs, clinical user studies, SOTA comparisons. Not feasible on this timeline with simulated data.
+
+
+AACBridge  •  Capstone 2025–26  •  Last updated: April 2026
+This is a living document — edit freely.
