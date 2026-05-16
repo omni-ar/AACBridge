@@ -5,5 +5,19 @@ __pycache__/
 build/
 .gradle/
 *.pyc
-datasets/
-*.mat
+
+# Android Studio
+.idea/
+local.properties
+.cxx/
+externalNativeBuild/
+
+# Native objects
+*.o
+*.obj
+
+# OS
+.DS_Store
+Thumbs.db
+
+android/app/src/main/jniLibs/

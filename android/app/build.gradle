@@ -1,0 +1,72 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    namespace 'com.aacbridge'
+    compileSdk 34
+
+    // Configured for NDK r27c compatibility
+    ndkVersion "27.2.12479018" 
+
+    defaultConfig {
+        applicationId "com.aacbridge"
+        // minSdk 26 is a safe baseline for modern C++ features and llama.cpp requirements
+        minSdk 26
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+
+        externalNativeBuild {
+            cmake {
+                // Ensure C++17 support which is generally required by modern llama.cpp/ggml
+                cppFlags "-std=c++17"
+            }
+        }
+
+        ndk {
+            // Restrict ABI to arm64-v8a for Snapdragon edge-AI
+            abiFilters "arm64-v8a"
+        }
+    }
+
+    // Connects the external CMake build system to Gradle
+    externalNativeBuild {
+        cmake {
+            path "src/main/cpp/CMakeLists.txt"
+            version "3.22.1"
+        }
+    }
+
+    // Tells Gradle where to find prebuilt shared libraries (.so files)
+    sourceSets {
+        main {
+            jniLibs.srcDirs = ['src/main/jniLibs']
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+}
+
+dependencies {
+    // Keeping dependencies extremely minimal for a low-latency runtime
+    implementation 'androidx.core:core-ktx:1.12.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.11.0'
+    // Explicitly avoiding Jetpack Compose or other heavy UI libraries
+}
