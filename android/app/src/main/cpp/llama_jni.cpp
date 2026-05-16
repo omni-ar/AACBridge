@@ -194,7 +194,12 @@ int token_count =
                 true
         );
 
-session_tokens.resize(token_count);
+if (token_count < 0) {
+    int required = -token_count;
+    session_tokens.resize(required);
+} else {
+    session_tokens.resize(token_count);
+}
 
 llama_tokenize(
         vocab,
