@@ -353,3 +353,69 @@ Key decisions:
 - Persistence: bandit_weights SQLite table, async flush
 - Reward: implicit (+1/-1/-2/0), logged async, never in critical path
 - New state init: wi=0 -> uniform exploration -> EMA adapts quickly
+
+## 15. Phase 1 Completion Status (May 17, 2026)
+
+### Arjit - COMPLETE
+- llama.cpp compiled for Android ARM64 via NDK r27c
+- JNI bridge: llama_jni.cpp with initializeBackend, initializeModel,
+  saveKVCache, loadKVCache, runInference, release
+- LlamaBridge.kt as Kotlin object with external fun declarations
+- System.loadLibrary("aacbridge-jni") in companion init block
+- libomp.so manually added to jniLibs/arm64-v8a/ for OpenMP dependency
+- Tokenization fix: negative return = required buffer size, use -token_count
+- On-device inference verified: Qwen2.5-0.5B-Instruct Q4_K_M
+- Initial baseline latency:
+  - model initialization ~1.7s
+  - first inference response ~2.8s
+  (unoptimized, no KV priming)
+- MockIntentGenerator.kt + IntentPayload.kt complete
+- build.gradle, settings.gradle, gradle.properties, gradlew configured
+- Application.kt calls LlamaBridge.initializeBackend() in onCreate()
+- KV cache JNI hooks compiled but NOT end-to-end tested yet
+- Verified runtime pipeline:
+  Android App -> Kotlin -> JNI -> llama.cpp -> GGUF model -> generated response -> Kotlin log output
+
+### Medha - COMPLETE
+- NinaPro DB5 preprocessing: bandpass 20-450Hz, rectification, 200ms windowing
+- EMG embedding spec delivered: shape (1,64), float32, L2 normalized
+- dataset.py with NINAPRO_TO_AAC mapping and PyTorch Dataset
+- 01_eda.ipynb with 16 channels, 130267 samples
+- WARNING: NinaPro→AAC gesture mapping requires justification in paper methodology
+
+### Heer - UNCONFIRMED
+- Status unknown, sync checkpoint May 21
+
+## 16. Device Environment
+- Device: OnePlus 11R 5G
+- SoC: Snapdragon 8 Gen 1 (platform: taro)
+- ABI: arm64-v8a
+- Android API: 36
+- Runtime: On-device offline inference
+- Model path on device: /data/local/tmp/models/
+- Model used for testing: qwen2.5-0.5b-instruct-q4_k_m.gguf (~469MB)
+
+## 17. Key File Locations
+- JNI bridge: android/app/src/main/cpp/llama_jni.cpp
+- Kotlin bridge: android/app/src/main/java/com/aacbridge/inference/LlamaBridge.kt
+- Native libs: android/app/src/main/jniLibs/arm64-v8a/
+- Headers: android/app/src/main/cpp/include/
+- llama.cpp source: D:\projects\llama.cpp\
+- Models: D:\Models\
+
+## 18. Phase 2 Starting Point (May 22)
+
+Priority order for Arjit:
+1. StateRouter.kt - scoring function S(ci) = alpha*S_time + beta*S_gps + gamma*S_ble
+2. TimeScorer.kt, GPSScorer.kt, BLEScorer.kt
+3. KVCacheManager.kt - SQLite backed, LRU eviction, top-3 in RAM
+4. BootReceiver.kt + cold start active sweep
+5. Two-tier fallback
+
+CRITICAL edge case to handle first:
+When M=0 (no BLE devices):
+- R_ble = 0
+- gamma = 0
+- alpha + beta must renormalize to sum to 1
+
+Do NOT proceed without explicitly handling this edge case.
