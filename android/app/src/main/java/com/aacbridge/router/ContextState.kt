@@ -50,5 +50,11 @@ data class ContextState(
      * - bedside tablet
      * - room speaker
      */
-    val bleDevices: Map<String, Double>
+    val bleDevices: Map<String, Double>,
+
+    /**
+    * Absolute filesystem path to serialized
+    * llama.cpp KV cache binary.
+    */
+    val kvFilePath: String
 )

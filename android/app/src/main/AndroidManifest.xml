@@ -1,24 +1,88 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- ========================= -->
+    <!-- Location Permissions      -->
+    <!-- ========================= -->
+
+    <uses-permission
+        android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+    <uses-permission
+        android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <!-- ========================= -->
+    <!-- BLE Permissions           -->
+    <!-- ========================= -->
+
+    <uses-permission
+        android:name="android.permission.BLUETOOTH" />
+
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_ADMIN" />
+
+    <!-- Android 12+ -->
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_SCAN" />
+
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_CONNECT" />
+
+    <!-- ========================= -->
+    <!-- Boot Persistence          -->
+    <!-- ========================= -->
+
+    <uses-permission
+        android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
-        android:name=".Application"
+        android:name=".AACBridgeApplication"
         android:allowBackup="true"
         android:label="AACBridge"
         android:supportsRtl="true"
         android:theme="@style/Theme.Material3.DayNight.NoActionBar">
+
+        <!-- ===================== -->
+        <!-- Launcher Activity     -->
+        <!-- ===================== -->
 
         <activity
             android:name=".MainActivity"
             android:exported="true">
 
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER" />
+                <action
+                    android:name="android.intent.action.MAIN" />
+
+                <category
+                    android:name="android.intent.category.LAUNCHER" />
+
             </intent-filter>
 
         </activity>
+
+        <!-- ===================== -->
+        <!-- Boot Receiver         -->
+        <!-- ===================== -->
+
+        <receiver
+            android:name=".daemon.BootReceiver"
+            android:enabled="true"
+            android:exported="true">
+
+            <intent-filter>
+
+                <action
+                    android:name="android.intent.action.BOOT_COMPLETED" />
+
+                <action
+                    android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+
+            </intent-filter>
+
+        </receiver>
 
     </application>
 

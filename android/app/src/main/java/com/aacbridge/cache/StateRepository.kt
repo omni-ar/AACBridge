@@ -1,5 +1,5 @@
 package com.aacbridge.cache
-
+import com.aacbridge.router.ContextState
 /**
  * Persistent lookup contract for serialized KV cache paths.
  *
@@ -22,4 +22,6 @@ interface StateRepository {
     suspend fun getFilePath(
         stateId: String
     ): String?
+
+    suspend fun getAllContextStates(): List<ContextState>
 }
