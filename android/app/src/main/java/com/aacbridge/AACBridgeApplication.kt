@@ -1,6 +1,7 @@
 package com.aacbridge
 
 import android.app.Application
+import com.aacbridge.daemon.DriftDetector
 
 /**
  * Root Android application object.
@@ -31,5 +32,8 @@ class AACBridgeApplication : Application() {
             AppContainer(
                 application = this
             )
+            
+        // 1. START THE DAEMON HERE
+        DriftDetector.schedule(this)
     }
 }

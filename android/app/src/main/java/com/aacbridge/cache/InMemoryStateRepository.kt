@@ -22,13 +22,8 @@ class InMemoryStateRepository : StateRepository {
     private val states =
         mutableListOf<ContextState>()
 
-    override suspend fun getFilePath(
-        stateId: String
-    ): String? {
-
-        return states
-            .firstOrNull { it.stateId == stateId }
-            ?.kvFilePath
+    override suspend fun getFilePath(stateId: String): String? {
+    return null
     }
 
     override suspend fun getAllContextStates(): List<ContextState> {

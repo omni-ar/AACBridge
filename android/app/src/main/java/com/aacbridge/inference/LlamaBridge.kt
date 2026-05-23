@@ -6,7 +6,7 @@ package com.aacbridge.inference
  *
  * This object maps strictly to the functions exposed in `llama_jni.cpp`.
  */
-object LlamaBridge {
+object LlamaBridge : LlamaBridgeAdapter { // 1. INHERIT THE ADAPTER HERE
 
     init {
         // Loads libaacbridge-jni.so from the APK's lib/arm64-v8a/ directory
@@ -39,7 +39,7 @@ object LlamaBridge {
      * @param seqId The sequence ID to assign to the restored cache.
      * @return True on success, false if the file is invalid or missing.
      */
-    external fun loadKVCache(filepath: String, seqId: Int): Boolean
+    override external fun loadKVCache(filepath: String, seqId: Int): Boolean // 2. ADD THE OVERRIDE KEYWORD HERE
 
     /**
      * Executes the greedy-sampling generation loop on the input prompt.

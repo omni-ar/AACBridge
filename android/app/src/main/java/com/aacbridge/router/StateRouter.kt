@@ -24,14 +24,6 @@ package com.aacbridge.router
  * - access Room/SQLite
  * - trigger BLE scans
  * - perform async operations
- *
- * Architectural boundary:
- *
- * SensorSnapshot + ContextState list
- *              ↓
- *         StateRouter
- *              ↓
- *     Ranked context IDs
  */
 class StateRouter(
     private val timeScorer: TimeScorer,
@@ -44,37 +36,63 @@ class StateRouter(
         /**
          * Context states below this threshold are treated
          * as mathematically dead.
-         *
-         * Engineering rationale:
-         * Exponential decay mathematically approaches zero
-         * asymptotically but never reaches exact zero.
-         *
-         * Extremely low-relevance states should not consume:
-         * - RAM residency
-         * - KV cache loading bandwidth
-         * - eviction pressure
          */
         private const val DEAD_STATE_THRESHOLD = 0.01
     }
 
     /**
-     * Evaluates all candidate context states and returns
-     * the highest-relevance state IDs.
+     * Exposes raw mathematical relevance scores for all
+     * candidate states surviving the dead-state threshold.
      *
-     * Pipeline:
-     * 1. Score every state
-     * 2. Cull mathematically dead states
-     * 3. Sort descending by relevance
-     * 4. Return top-N IDs
+     * Required by:
+     * - DriftDetector
+     * - hysteresis margin evaluation
+     * - telemetry/debugging
      *
-     * @param snapshot Immutable live sensor snapshot.
+     * IMPORTANT:
+     * This method intentionally does NOT apply top-N limiting.
      *
-     * @param states Candidate semantic context states.
+     * @return Ordered list of:
+     * (stateId to relevanceScore)
+     */
+    fun getScoredStates(
+        snapshot: SensorSnapshot,
+        states: List<ContextState>
+    ): List<Pair<String, Double>> {
+
+        return states
+            .asSequence()
+
+            .map { state ->
+
+                state.stateId to calculateStateScore(
+                    snapshot = snapshot,
+                    state = state
+                )
+            }
+
+            .filter { (_, score) ->
+                score >= DEAD_STATE_THRESHOLD
+            }
+
+            .sortedByDescending { (_, score) ->
+                score
+            }
+
+            .toList()
+    }
+
+    /**
+     * Convenience wrapper for predictive cache loading.
      *
-     * @param limit Maximum number of active states to return.
-     * Defaults to HardwareConfig.MAX_ACTIVE_KV_STATES.
+     * Returns only the highest-ranked semantic state IDs.
      *
-     * @return Ordered list of highest-relevance state IDs.
+     * Internally delegates to:
+     * getScoredStates()
+     *
+     * This preserves backward compatibility with:
+     * - ActiveSweep
+     * - KVCacheManager orchestration
      */
     fun getTopContextIds(
         snapshot: SensorSnapshot,
@@ -86,36 +104,15 @@ class StateRouter(
             "limit must be > 0, received: $limit"
         }
 
-        return states
-            .asSequence()
-
-            // score states
-            .map { state ->
-                state.stateId to calculateStateScore(
-                    snapshot = snapshot,
-                    state = state
-                )
-            }
-
-            // cull mathematically dead states
-            .filter { (_, score) ->
-                score >= DEAD_STATE_THRESHOLD
-            }
-
-            // descending relevance
-            .sortedByDescending { (_, score) ->
-                score
-            }
-
-            // top-N only
+        return getScoredStates(
+            snapshot = snapshot,
+            states = states
+        )
             .take(limit)
 
-            // return IDs only
             .map { (stateId, _) ->
                 stateId
             }
-
-            .toList()
     }
 
     /**
@@ -127,27 +124,6 @@ class StateRouter(
      *      alpha * S_time +
      *      beta  * S_gps  +
      *      gamma * S_ble
-     *
-     * where:
-     * - alpha/beta/gamma are dynamically normalized
-     *   reliability weights
-     *
-     * - S_time/S_gps/S_ble are semantic similarity scores
-     *
-     * INVARIANT:
-     *
-     * The normalization denominator:
-     *
-     * totalWeight = wt + wg + wb
-     *
-     * is protected from divide-by-zero EXCLUSIVELY because:
-     *
-     * HardwareConfig.TIME_BASELINE_WEIGHT > 0.0
-     *
-     * If TIME_BASELINE_WEIGHT is ever externalized into
-     * runtime configuration, validation MUST enforce:
-     *
-     * TIME_BASELINE_WEIGHT > 0.0
      *
      * Dynamic reliability behavior:
      *
@@ -164,9 +140,9 @@ class StateRouter(
         state: ContextState
     ): Double {
 
-        // -------------------------------------------------
-        // 1. Temporal scoring (always available)
-        // -------------------------------------------------
+        // -----------------------------------------
+        // 1. Temporal scoring
+        // -----------------------------------------
 
         val wt = HardwareConfig.TIME_BASELINE_WEIGHT
 
@@ -175,9 +151,9 @@ class StateRouter(
             anchorHourDecimal = state.expectedTime
         )
 
-        // -------------------------------------------------
+        // -----------------------------------------
         // 2. GPS scoring
-        // -------------------------------------------------
+        // -----------------------------------------
 
         val wg: Double
         val sGps: Double
@@ -196,14 +172,13 @@ class StateRouter(
 
         } else {
 
-            // GPS modality unavailable
             wg = 0.0
             sGps = 0.0
         }
 
-        // -------------------------------------------------
+        // -----------------------------------------
         // 3. BLE scoring
-        // -------------------------------------------------
+        // -----------------------------------------
 
         val wb = bleScorer.calculateReliability(
             snapshot.detectedBleDevices
@@ -214,9 +189,9 @@ class StateRouter(
             registered = state.bleDevices
         )
 
-        // -------------------------------------------------
+        // -----------------------------------------
         // 4. Dynamic normalization
-        // -------------------------------------------------
+        // -----------------------------------------
 
         val totalWeight = wt + wg + wb
 
@@ -224,9 +199,9 @@ class StateRouter(
         val beta = wg / totalWeight
         val gamma = wb / totalWeight
 
-        // -------------------------------------------------
+        // -----------------------------------------
         // 5. Final convex combination
-        // -------------------------------------------------
+        // -----------------------------------------
 
         val finalScore =
             (alpha * sTime) +

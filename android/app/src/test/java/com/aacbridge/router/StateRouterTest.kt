@@ -26,8 +26,7 @@ class StateRouterTest {
             expectedTime = 10.0,
             lat = 0.0,
             lng = 0.0,
-            bleDevices = emptyMap(),
-            kvFilePath = "/tmp/morning_home.bin"
+            bleDevices = emptyMap()
         )
 
         val score = router.calculateStateScore(
@@ -72,8 +71,7 @@ class StateRouterTest {
             expectedTime = 0.0,
             lat = 0.0,
             lng = 0.0,
-            bleDevices = emptyMap(),
-            kvFilePath = "/tmp/irrelevant_state.bin"
+            bleDevices = emptyMap()
         )
 
         val results = router.getTopContextIds(
@@ -98,8 +96,7 @@ class StateRouterTest {
             expectedTime = 9.0,
             lat = 0.0,
             lng = 0.0,
-            bleDevices = emptyMap(),
-            kvFilePath = "/tmp/best_match.bin"
+            bleDevices = emptyMap()
         )
 
         val weakState = ContextState(
@@ -107,8 +104,7 @@ class StateRouterTest {
             expectedTime = 15.0,
             lat = 0.0,
             lng = 0.0,
-            bleDevices = emptyMap(),
-            kvFilePath = "/tmp/weak_match.bin"
+            bleDevices = emptyMap()
         )
 
         val results = router.getTopContextIds(
@@ -140,8 +136,7 @@ class StateRouterTest {
                 expectedTime = 8.0,
                 lat = 0.0,
                 lng = 0.0,
-                bleDevices = emptyMap(),
-                kvFilePath = "/tmp/state_$index.bin"
+                bleDevices = emptyMap()
             )
         }
 

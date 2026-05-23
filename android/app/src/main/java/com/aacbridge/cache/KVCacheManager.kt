@@ -1,6 +1,6 @@
 package com.aacbridge.cache
 
-import com.aacbridge.inference.LlamaBridge
+import com.aacbridge.inference.LlamaBridgeAdapter
 import com.aacbridge.router.HardwareConfig
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.withLock
@@ -35,7 +35,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
 class KVCacheManager(
     private val repository: StateRepository,
     private val mutexRegistry: CacheMutexRegistry,
-    private val jniBridge: LlamaBridge
+    private val jniBridge: LlamaBridgeAdapter
 ) {
 
     companion object {
@@ -300,5 +300,30 @@ class KVCacheManager(
         state.lastAccessed.set(
             System.currentTimeMillis()
         )
+    }
+
+        /**
+     * Lightweight residency check.
+     *
+     * Does NOT acquire inference ownership.
+     *
+     * Safe because:
+     * - only checks current residency snapshot
+     * - does not mutate refCount
+     * - avoids unnecessary acquire/release churn
+     */
+    fun isStateResident(
+        stateId: String
+    ): Boolean {
+
+        return activeStates[stateId]?.isActive == true
+    }
+
+    internal fun getActiveStateCount(): Int {
+    return activeStates.size
+    }
+
+    internal fun getAvailableSeqIdCount(): Int {
+        return availableSeqIds.size
     }
 }
