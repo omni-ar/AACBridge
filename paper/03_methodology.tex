@@ -1,0 +1,40 @@
+\section{Methodology}
+\label{sec:methodology}
+
+The core objective of AACBridge is to eliminate the latency bottleneck associated with dynamic prompt injection in large language models executing on mobile edge hardware. Instead of performing an $O(N)$ token prefill phase during inference, we introduce Context-Aware Predictive KV-Cache Priming (CAP-KVC). This approach amortizes the computational cost of context ingestion by executing it preemptively as a background process.
+
+\subsection{System Execution Lifecycle}
+The architecture relies on a strictly defined, unidirectional orchestration pipeline to ensure predictive accuracy without stalling the user-facing UI thread:
+
+\begin{enumerate}
+    \item \textbf{Sensor Acquisition:} The system concurrently polls available hardware sensors (GPS, BLE, and system clock) to generate an immutable \texttt{SensorSnapshot}.
+    \item \textbf{Deterministic Routing:} The snapshot is passed to the \texttt{StateRouter}, which evaluates all registered environmental contexts using a convex scoring function.
+    \item \textbf{Cache Orchestration:} The top-$k$ ranked contexts are pushed to the \texttt{KVCacheManager}, which manages their residency within a native ring buffer to satisfy the device's strict RAM budget.
+    \item \textbf{Resident Inference:} Upon user interaction (intent generation via the CNN-LSTM pipeline), the system directly injects intent tokens into the pre-loaded KV cache, achieving sub-500ms Time To First Token (TTFT).
+    \item \textbf{Drift Correction:} Following inference, an asynchronous daemon executes a hysteresis-gated cosine similarity check against the semantic vector of the recent conversation to detect topic drift.
+\end{enumerate}
+
+\subsection{Deterministic Context Scoring}
+We eschew neural network-based predictive modeling in favor of a deterministic scoring equation to guarantee bounds on battery usage and execution time. A semantic context $c_i$ is evaluated as a convex combination of three environmental anchors:
+
+\begin{equation}
+S(c_i) = \alpha \cdot S_{time} + \beta \cdot S_{gps} + \gamma \cdot S_{ble}
+\end{equation}
+
+Where the sum of the dynamic reliability weights ($\alpha + \beta + \gamma$) strictly equals $1$.
+
+\subsubsection{Temporal and Spatial Anchors}
+The temporal score $S_{time}$ utilizes a circular distance function to handle midnight wraparounds seamlessly, applying a Gaussian decay ($\sigma = 2.0$ hours) to accommodate expected clinical deviations (e.g., a caregiver delay). The spatial score $S_{gps}$ leverages a Haversine great-circle calculation subjected to an exponential decay ($\lambda = 0.1$, translating to a 100m contextual boundary). 
+
+\subsubsection{Dynamic Reliability Normalization}
+The critical innovation of the router is its resilience to hardware failure. Time acts as the baseline reliability anchor ($\alpha \geq 0.4$). The GPS weight ($\beta$) decays exponentially based on reported accuracy radii. The BLE weight ($\gamma$) relies on a sigmoid activation curve mapping RSSI values. Crucially, if $M=0$ (no BLE signals detected), $\gamma$ immediately zeroes out. The system dynamically redistributes the missing weight mass to $\alpha$ and $\beta$, preserving the convex property and preventing divide-by-zero crashes. To conserve CPU cycles during cache eviction, asymptotic states scoring below an empirical threshold of $0.01$ are culled from the routing pool.
+
+\subsection{Asynchronous Semantic Drift Detection}
+Environmental sensors predict physical location but cannot verify conversation topics. The semantic drift detector periodically bridges this gap. Following a localized sequence of user generations, the system computes an INT8-quantized embedding (utilizing an ONNX-Runtime deployment of \texttt{all-MiniLM-L6-v2}) of the most recent $k=3$ conversational turns. 
+
+The $k=3$ window was empirically chosen via ablation to represent a localized semantic centroid; smaller windows introduce high variance from sparse AAC utterances, while larger windows suffer from signal dilution. The resulting semantic vector is compared via cosine similarity against the baseline cache context. If the similarity falls below a defined threshold, the cache is invalidated.
+
+To prevent cache thrashing in noisy sensor environments, state replacements are gated by a hysteresis margin. The background daemon demands a relative score delta of $0.10$ between the candidate state and the weakest resident state before authorizing the expensive IO operations required to swap the native memory buffer.
+
+\subsection{Two-Tier Inference Fallback}
+If a user triggers an intent before the background daemon has successfully pre-loaded the required context (a ``cold miss''), the system employs a two-tier fallback pipeline. Tier 1 executes an immediate generic response via localized Android SQLite lookup and Text-To-Speech (TTS), completing in $<50$ms to preserve immediate conversational agency. Tier 2 initiates an asynchronous, standard RAG prefill on the backend. Subsequent user intents are seamlessly upgraded to contextual inference once Tier 2 completes.

@@ -1,0 +1,32 @@
+\section{Experiments}
+\label{sec:experiments}
+
+The experimental evaluation of the AACBridge architecture isolates the latency impact of the Context-Aware Predictive KV-Cache Priming (CAP-KVC) mechanism against standard edge-inference baselines. To ensure strict reproducibility and accurate TTFT (Time To First Token) profiling, all benchmarks are explicitly constrained to target hardware and localized execution environments.
+
+\subsection{Experimental Setup and Hardware Environment}
+\label{subsec:hardware}
+
+All system benchmarks are executed on a OnePlus 11R 5G smartphone, equipped with a Snapdragon 8 Gen 1 (taro platform) System-on-Chip (SoC) and 8GB of RAM. The Android OS targets API level 36. 
+
+To guarantee that tensor mathematics leverage the maximum capability of the Snapdragon hardware's NEON SIMD instructions, the application is strictly compiled for the \texttt{arm64-v8a} ABI. Fallback evaluation paths utilizing 32-bit ARM architectures or x86 emulators are intentionally excluded, as their artificial latency profiles misrepresent real-world edge execution.
+
+\subsection{Model Configuration and Memory Footprint}
+\label{subsec:modelsetup}
+
+The core language modeling is driven by the \texttt{llama.cpp} native backend. The baseline evaluation model is configured as Qwen2.5-0.5B-Instruct, compressed using 4-bit block-wise quantization (\texttt{Q4\_K\_M}), resulting in an approximate filesystem footprint of 469MB. The \texttt{.gguf} model artifacts are pushed externally to the Android user data partition (\texttt{/data/local/tmp/models/}) and directly memory-mapped by the C++ engine to bypass JVM heap allocation constraints.
+
+\subsection{Baseline and System Configurations}
+\label{subsec:baselines}
+
+To isolate the latency improvements generated exclusively by the predictive cache orchestration layer, we evaluate three distinct inference pipeline configurations:
+
+\begin{enumerate}
+    \item \textbf{Zero-Context Inference (Baseline 1):} The LLM executes a generation sequence using only the user's intent tokens, completely devoid of background context. This establishes the absolute hardware floor for TTFT.
+    \item \textbf{Standard RAG Inference (Baseline 2):} Represents the current state-of-the-art for contextually aware edge AAC. The environmental context is retrieved, concatenated with the user's intent, and passed into the LLM at inference time, triggering a full $O(N)$ token prefill phase.
+    \item \textbf{CAP-KVC (Proposed System):} The KV Cache Manager predictively pre-computes the environmental context into a native \texttt{seqId} slot in the background. At inference time, only the user intent tokens are injected into the resident cache.
+\end{enumerate}
+
+\subsection{Benchmark Orchestration via Mock Intent Generation}
+\label{subsec:mockgen}
+
+The total system pipeline relies on a Surface EMG (sEMG) wearable to generate intent classifications via a CNN-LSTM model. However, to explicitly decouple the LLM backend latency metrics from the variances of the upstream bio-signal processing layer, the Phase 3 benchmarking employs a JVM \texttt{MockIntentGenerator}. This class generates deterministic, rule-based \texttt{IntentPayload} objects, allowing for precise, isolated millisecond-level profiling of the JNI boundary and the \texttt{llama.cpp} generation loop.
