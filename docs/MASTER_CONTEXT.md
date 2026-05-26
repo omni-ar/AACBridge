@@ -419,3 +419,102 @@ When M=0 (no BLE devices):
 - alpha + beta must renormalize to sum to 1
 
 Do NOT proceed without explicitly handling this edge case.
+
+## 19. Phase 2 Completion Status (May 23, 2026)
+
+### Arjit - COMPLETE
+
+**Router Package (com.aacbridge.router)** — 9 files, 14 tests green
+- `HardwareConfig.kt` — MAX_ACTIVE_KV_STATES=3, TIME_BASELINE_WEIGHT=0.4
+- `GpsLocation.kt` — atomic validated GPS type, validation in init block
+- `Rssi.kt` — @JvmInline value class, enforces [-127, 0] dBm range
+- `SensorSnapshot.kt` — immutable frozen hardware state, no Android types
+- `ContextState.kt` — routing domain object only, does NOT contain kvFilePath
+- `TimeScorer.kt` — circular Gaussian decay, sigma=2.0h, fault-tolerant normalization
+- `GPSScorer.kt` — Haversine, lambda=0.1km, lambdaAccuracy=50m, decoupled reliability
+- `BLEScorer.kt` — static weight match score decoupled from RSSI reliability weight
+- `StateRouter.kt` — getScoredStates() + getTopContextIds() wrapper, cull threshold 0.01
+
+**Cache Package (com.aacbridge.cache)** — 5 files, 4 tests green
+- `CacheState.kt` — metadata only: stateId, kvFilePath, seqId, AtomicLong lastAccessed, AtomicInteger refCount, @Volatile isActive
+- `CacheMutexRegistry.kt` — ConcurrentHashMap<String, Mutex>, per-state locking only
+- `StateRepository.kt` — interface: getFilePath() + getAllContextStates()
+- `LlamaBridgeAdapter.kt` — interface: loadKVCache(filepath, seqId) for JVM testability
+- `KVCacheManager.kt` — seqId pool [0,1,2], LRU eviction, 4-layer concurrency model
+
+**Daemon Package (com.aacbridge.daemon)** — 3 files
+- `ActiveSweep.kt` — concurrent GPS+BLE acquisition, withTimeoutOrNull(3000ms) BLE, invokeOnCancellation cleanup
+- `BootReceiver.kt` — goAsync() + GlobalScope.launch(Dispatchers.IO) + finally { pendingResult.finish() }
+- `DriftDetector.kt` — CoroutineWorker, 15min polling, HYSTERESIS_MARGIN=0.10, BLE-bypass snapshot
+
+**Fallback Package (com.aacbridge.fallback)** — 3 files
+- `FallbackRouter.kt` — Tier 1 <50ms SQLite, Tier 2 async llama.cpp upgrade
+- `FallbackRepository.kt` — interface
+- `InMemoryFallbackRepository.kt` — temporary, 6 intent→response mappings
+
+**Application Wiring**
+- `AACBridgeApplication.kt` — extends Application, initializes AppContainer, calls DriftDetector.schedule(this)
+- `AppContainer.kt` — manual DI, no Hilt/Dagger/Koin, wires all dependencies
+- `AndroidManifest.xml` — BootReceiver registered, all permissions declared
+
+**Build Status:** `.\gradlew.bat test` → BUILD SUCCESSFUL, 18 tests passing
+
+### Medha - STATUS UNKNOWN
+- k-ablation F1 table due June 7
+- TFLite export dry run due June 1
+
+### Heer - STATUS UNKNOWN
+- Fusion F1 decision due June 7
+- ONNX export due June 8
+
+## 20. Critical Architectural Decisions Made in Phase 2
+
+- **Decision 1: seqId ownership model**
+  llama.cpp owns KV memory through seqIds, not file paths. KVCacheManager maps semantic states onto native ring buffer slots [0,1,2]. No freeKVCache() exists — evicting a slot returns its seqId to the pool for overwriting. Invariant: activeStates.size + availableSeqIds.size == MAX_ACTIVE_KV_STATES always.
+- **Decision 2: ContextState does not own kvFilePath**
+  File paths are StateRepository's concern. ContextState is a pure routing domain object. This was an architectural correction made during Phase 2 after an early mistake.
+- **Decision 3: LlamaBridgeAdapter interface**
+  LlamaBridge object implements LlamaBridgeAdapter interface. This decouples JVM tests from JNI. KVCacheManager depends on the interface, not the concrete singleton.
+- **Decision 4: releaseState() does not acquire mutex**
+  Safe because after isActive=false, refCount is monotonically decreasing. Proven formally. Atomic decrement is sufficient.
+- **Decision 5: DriftDetector uses BLE-blind snapshot**
+  Battery protection. Both candidate and resident states evaluated against same BLE-blind snapshot — delta remains mathematically valid even if absolute scores are deflated.
+- **Decision 6: Open-Closed for getScoredStates()**
+  Added getScoredStates() returning raw scores for DriftDetector hysteresis. getTopContextIds() refactored as wrapper. ActiveSweep contract unchanged.
+
+## 21. Assumptions Requiring Paper Documentation
+
+| Assumption | Value | Justification Status |
+| --- | --- | --- |
+| TIME_BASELINE_WEIGHT | 0.4 | Analytical — prevents divide-by-zero, suppresses time when physical sensors available |
+| sigmaHours | 2.0h | Clinical — 2hr caregiver delay → ~60% score, not catastrophic |
+| lambdaKm | 0.1km | Clinical — 100m is meaningful AAC context boundary |
+| lambdaAccuracyMeters | 50m | Empirical — indoor Wi-Fi accuracy 15-50m retains partial weight |
+| HYSTERESIS_MARGIN | 0.10 | Analytical — not empirically validated, must tune on device |
+| DEAD_STATE_THRESHOLD | 0.01 | Floating-point epsilon — asymptotic states culled |
+| k=3 drift window | 3 turns | Pending Medha's k-ablation F1 table (due June 7) |
+| BLE_SCAN_WINDOW_MS | 3000ms | Chosen for cold start budget — not benchmarked |
+| EVICTION_POLL_INTERVAL_MS | 10ms | Chosen to avoid busy-spin — not benchmarked |
+
+## 22. Phase 3 Prerequisites (Must Complete Before June 8)
+
+**Critical — benchmarking blocked without these:**
+1. **Room-backed StateRepository** — InMemoryStateRepository always returns null for getFilePath(), causing KVCacheManager.loadTopStates() to skip every load silently
+2. **saveKVCache() lifecycle** — currently no code calls LlamaBridge.saveKVCache(). Without serialization, cold start recovery has nothing to load. Must decide: who calls it, when, after which event
+3. **Real-device smoke test** — connect phone, confirm AACBridgeApplication.onCreate() completes without JNI crash
+
+**Important but not blocking:**
+4. HYSTERESIS_MARGIN empirical tuning on device
+5. seqId overwrite behavior validation on Snapdragon with real GGUF model
+6. Room-backed FallbackRepository
+
+## 23. Open Architectural Question — saveKVCache() Lifecycle
+
+**Current state:** `LlamaBridge.saveKVCache(filepath, seqId)` exists in JNI but is never called from Kotlin.
+**The question:** When does the system serialize a newly primed KV cache to disk?
+**Options:**
+- After ContextDaemon primes context on first load — save immediately after prefill
+- After first successful inference in a new context — lazy serialization
+- Explicitly triggered by KVCacheManager after verifying the seqId is stable
+
+This must be resolved before Phase 3 benchmarking. An unresolved save path means the cache is only ever loaded from stale or nonexistent files.
