@@ -1,0 +1,1111 @@
+﻿diff --git a/android/app/build.gradle b/android/app/build.gradle
+index ce605a2..df2f137 100644
+--- a/android/app/build.gradle
++++ b/android/app/build.gradle
+@@ -53,6 +53,10 @@ android {
+         }
+     }
+ 
++    packagingOptions {
++        pickFirst 'lib/arm64-v8a/libc++_shared.so'
++    }
++
+     compileOptions {
+         sourceCompatibility JavaVersion.VERSION_17
+         targetCompatibility JavaVersion.VERSION_17
+@@ -70,6 +74,15 @@ dependencies {
+     implementation 'com.google.android.material:material:1.11.0'
+     implementation "androidx.work:work-runtime-ktx:2.9.0"
+ 
++    // Approved explicit coroutine dependency
++    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
++
++    // Google Play Services Location for GpsCollector
++    implementation 'com.google.android.gms:play-services-location:21.2.0'
++
++    // MediaPipe Vision Tasks for Face Mesh / Gaze Tracking
++    implementation 'com.google.mediapipe:tasks-vision:0.10.14'
++
+     // Unit testing
+     testImplementation 'junit:junit:4.13.2'
+     testImplementation "org.jetbrains.kotlin:kotlin-test:1.9.0"
+diff --git a/android/app/src/main/AndroidManifest.xml b/android/app/src/main/AndroidManifest.xml
+index 1588396..58bb532 100644
+--- a/android/app/src/main/AndroidManifest.xml
++++ b/android/app/src/main/AndroidManifest.xml
+@@ -36,6 +36,13 @@
+     <uses-permission
+         android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+ 
++    <!-- ========================= -->
++    <!-- Camera (MediaPipe Gaze)   -->
++    <!-- ========================= -->
++
++    <uses-permission
++        android:name="android.permission.CAMERA" />
++
+     <application
+         android:name=".AACBridgeApplication"
+         android:allowBackup="true"
+@@ -84,6 +91,15 @@
+ 
+         </receiver>
+ 
++        <!-- ===================== -->
++        <!-- Context Daemon        -->
++        <!-- ===================== -->
++
++        <service
++            android:name=".daemon.ContextDaemon"
++            android:enabled="true"
++            android:exported="false" />
++
+     </application>
+ 
+ </manifest>
+\ No newline at end of file
+diff --git a/android/app/src/main/java/com/aacbridge/FallbackRouter.kt b/android/app/src/main/java/com/aacbridge/FallbackRouter.kt
+index e69de29..151aa19 100644
+--- a/android/app/src/main/java/com/aacbridge/FallbackRouter.kt
++++ b/android/app/src/main/java/com/aacbridge/FallbackRouter.kt
+@@ -0,0 +1,66 @@
++package com.aacbridge
++
++import android.util.Log
++import com.aacbridge.fallback.InMemoryFallbackRepository
++import com.aacbridge.inference.MockIntentGenerator
++
++/**
++ * Staged app-layer fallback routing.
++ *
++ * Current flow (Phase 1):
++ * MockIntentGenerator -> IntentPayload -> FallbackRouter
++ *
++ * PURPOSE:
++ * Provides safe offline/testing AAC interaction before
++ * full InferenceEngine integration is complete.
++ *
++ * Responsibilities:
++ * - generate temporary AAC responses via mock intents
++ * - support staged UI interaction
++ * - reduce JNI dependency for every interaction
++ * - allow UI iteration before final inference integration
++ *
++ * This router is intentionally lightweight and deterministic.
++ */
++class FallbackRouter {
++
++    companion object {
++        private const val TAG = "FallbackRouter"
++    }
++
++    private val mockIntentGenerator = MockIntentGenerator()
++    private val fallbackRepository = InMemoryFallbackRepository()
++
++    /**
++     * Generates a mock intent and resolves a fallback response.
++     *
++     * @return Pair of (intentLabel, responseText) for UI display.
++     */
++    suspend fun generateFallbackResponse(): Pair<String, String> {
++        val payload = mockIntentGenerator.generate()
++        Log.d(TAG, "Generated mock intent: ${payload.intentLabel} (confidence=${payload.confidence})")
++
++        val response = fallbackRepository.getFallbackResponse(
++            intent = payload.intentLabel,
++            stateId = null
++        ) ?: "Please wait a moment."
++
++        return Pair(payload.intentLabel, response)
++    }
++
++    /**
++     * Resolves a fallback response for a specific intent label.
++     *
++     * Used when intent source is gaze tracking or manual UI trigger
++     * rather than MockIntentGenerator.
++     *
++     * @param intentLabel one of: confirm, reject, scroll, select, call-help
++     * @return fallback response text
++     */
++    suspend fun resolveResponse(intentLabel: String): String {
++        return fallbackRepository.getFallbackResponse(
++            intent = intentLabel,
++            stateId = null
++        ) ?: "Please wait a moment."
++    }
++}
+diff --git a/android/app/src/main/java/com/aacbridge/MainActivity.kt b/android/app/src/main/java/com/aacbridge/MainActivity.kt
+index e2c9b69..75b7057 100644
+--- a/android/app/src/main/java/com/aacbridge/MainActivity.kt
++++ b/android/app/src/main/java/com/aacbridge/MainActivity.kt
+@@ -1,25 +1,89 @@
+ package com.aacbridge
+ 
++import android.Manifest
++import android.content.Intent
++import android.content.pm.PackageManager
++import android.graphics.Color
++import android.graphics.Typeface
++import android.graphics.drawable.GradientDrawable
+ import android.os.Bundle
+ import android.util.Log
++import android.view.Gravity
++import android.view.View
++import android.widget.*
+ import androidx.appcompat.app.AppCompatActivity
++import androidx.core.app.ActivityCompat
++import androidx.core.content.ContextCompat
++import com.aacbridge.daemon.ContextDaemon
++import com.aacbridge.gaze.GazeTracker
+ import com.aacbridge.inference.LlamaBridge
+-import kotlin.concurrent.thread
++import kotlinx.coroutines.*
++import java.util.Locale
+ 
++/**
++ * AACBridge main activity.
++ *
++ * PRESERVES existing JNI bootstrap flow:
++ * LlamaBridge.initializeModel()
++ * LlamaBridge.runInference()
++ *
++ * Incrementally evolved into production-grade AAC UI with:
++ * - daemon integration entrypoint
++ * - fallback interaction layer
++ * - gaze tracking integration
++ * - inference state visualization
++ * - TTS output
++ */
+ class MainActivity : AppCompatActivity() {
+ 
+     companion object {
+         private const val TAG = "AACBridge"
++        private const val PERMISSIONS_REQUEST = 1001
++        private val REQUIRED_PERMISSIONS = arrayOf(
++            Manifest.permission.ACCESS_FINE_LOCATION,
++            Manifest.permission.ACCESS_COARSE_LOCATION,
++            Manifest.permission.BLUETOOTH_SCAN,
++            Manifest.permission.BLUETOOTH_CONNECT,
++            Manifest.permission.CAMERA
++        )
+     }
+ 
++    private val activityScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
++
++    private lateinit var fallbackRouter: FallbackRouter
++    private lateinit var speechManager: SpeechOutputManager
++    private var gazeTracker: GazeTracker? = null
++
++    // UI elements
++    private lateinit var statusText: TextView
++    private lateinit var responseText: TextView
++    private lateinit var intentLogText: TextView
++    private lateinit var daemonStatusText: TextView
++    private lateinit var cacheStatusText: TextView
++    private lateinit var inferenceTimingText: TextView
++
+     override fun onCreate(savedInstanceState: Bundle?) {
+         super.onCreate(savedInstanceState)
+ 
+-        thread {
++        // Initialize app-layer components
++        fallbackRouter = FallbackRouter()
++        speechManager = SpeechOutputManager(this)
+ 
+-            try {
++        // Build UI
++        setContentView(buildLayout())
+ 
++        // Request runtime permissions
++        if (!hasPermissions()) {
++            ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, PERMISSIONS_REQUEST)
++        }
++
++        // =====================================================
++        // PRESERVED: Existing JNI bootstrap / smoke-test flow
++        // =====================================================
++        thread {
++            try {
+                 Log.d(TAG, "Initializing model...")
++                updateStatus("MODEL: Initializing...")
+ 
+                 val initialized = LlamaBridge.initializeModel(
+                     "/data/local/tmp/models/qwen2.5-0.5b-instruct-q4_k_m.gguf"
+@@ -29,21 +93,253 @@ class MainActivity : AppCompatActivity() {
+ 
+                 if (!initialized) {
+                     Log.e(TAG, "Model initialization failed")
++                    updateStatus("MODEL: Failed")
+                     return@thread
+                 }
+ 
++                updateStatus("MODEL: Loaded")
++
+                 Log.d(TAG, "Running inference...")
+ 
+                 val output = LlamaBridge.runInference("User: Hello\nAssistant:")
+ 
+                 Log.d(TAG, "Inference output: $output")
+-
+                 Log.d(TAG, "Inference completed successfully")
+ 
+-            } catch (e: Exception) {
++                updateStatus("MODEL: Ready")
+ 
++            } catch (e: Exception) {
+                 Log.e(TAG, "Inference pipeline crashed", e)
++                updateStatus("MODEL: Offline (fallback active)")
++            }
++        }
++
++        // Start ContextDaemon background service
++        try {
++            startService(Intent(this, ContextDaemon::class.java))
++            runOnUiThread { daemonStatusText.text = "DAEMON: Running" }
++        } catch (e: Exception) {
++            Log.e(TAG, "Failed to start ContextDaemon", e)
++        }
++
++        // Initialize gaze tracker
++        initGazeTracker()
++    }
++
++    /**
++     * Convenience wrapper to call kotlin.concurrent.thread
++     * preserving the existing code pattern from the original
++     * MainActivity.
++     */
++    private fun thread(block: () -> Unit) {
++        kotlin.concurrent.thread(block = block)
++    }
++
++    private fun initGazeTracker() {
++        gazeTracker = GazeTracker(this) { intentLabel ->
++            runOnUiThread { handleIntent(intentLabel) }
++        }
++    }
++
++    /**
++     * Handles an AAC intent from any source:
++     * gaze tracking, manual button press, or mock generator.
++     */
++    private fun handleIntent(intentLabel: String) {
++        intentLogText.text = "Intent: ${intentLabel.uppercase(Locale.ROOT)} @ ${System.currentTimeMillis()}"
++
++        activityScope.launch {
++            val response = fallbackRouter.resolveResponse(intentLabel)
++            responseText.text = response
++            speechManager.speak(response)
++
++            Log.d(TAG, "Intent: $intentLabel -> Response: $response")
++        }
++    }
++
++    private fun updateStatus(status: String) {
++        runOnUiThread { statusText.text = status }
++    }
++
++    private fun hasPermissions(): Boolean {
++        return REQUIRED_PERMISSIONS.all {
++            ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
++        }
++    }
++
++    override fun onRequestPermissionsResult(
++        requestCode: Int,
++        permissions: Array<out String>,
++        grantResults: IntArray
++    ) {
++        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
++        if (requestCode == PERMISSIONS_REQUEST) {
++            if (!grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
++                Toast.makeText(this, "Some permissions denied. GPS/BLE/Camera may be limited.", Toast.LENGTH_LONG).show()
+             }
+         }
+     }
++
++    // =========================================================
++    // UI Construction ΓÇö Programmatic Material Design
++    // =========================================================
++
++    private fun buildLayout(): View {
++        val root = ScrollView(this).apply {
++            setBackgroundColor(Color.parseColor("#0F172A"))
++            isFillViewport = true
++        }
++
++        val content = LinearLayout(this).apply {
++            orientation = LinearLayout.VERTICAL
++            setPadding(48, 48, 48, 48)
++        }
++
++        // Header
++        content.addView(TextView(this).apply {
++            text = "AACBridge"
++            setTextColor(Color.WHITE)
++            textSize = 28f
++            setTypeface(null, Typeface.BOLD)
++        })
++        content.addView(TextView(this).apply {
++            text = "Predictive KV-Cache Edge LLM for AAC"
++            setTextColor(Color.parseColor("#94A3B8"))
++            textSize = 13f
++            setPadding(0, 0, 0, 32)
++        })
++
++        // Status indicators row
++        val statusRow = LinearLayout(this).apply {
++            orientation = LinearLayout.HORIZONTAL
++            setPadding(0, 0, 0, 32)
++        }
++        statusText = makeStatusBadge("MODEL: Loading...")
++        daemonStatusText = makeStatusBadge("DAEMON: Starting")
++        cacheStatusText = makeStatusBadge("CACHE: Idle")
++        statusRow.addView(statusText)
++        statusRow.addView(daemonStatusText)
++        statusRow.addView(cacheStatusText)
++        content.addView(statusRow)
++
++        // Section: Intent Targets
++        content.addView(makeSectionLabel("EYE-GAZE TARGETS (400ms Dwell)"))
++
++        val grid = GridLayout(this).apply {
++            columnCount = 2
++            rowCount = 3
++            setPadding(0, 8, 0, 24)
++        }
++        val targets = listOf("confirm", "reject", "scroll", "select", "call-help")
++        targets.forEach { target ->
++            val isEmergency = target == "call-help"
++            val btn = Button(this).apply {
++                text = target.uppercase(Locale.ROOT)
++                setTextColor(Color.WHITE)
++                textSize = 14f
++                setTypeface(null, Typeface.BOLD)
++                val bg = GradientDrawable().apply {
++                    setColor(if (isEmergency) Color.parseColor("#DC2626") else Color.parseColor("#1E293B"))
++                    cornerRadius = 16f
++                    setStroke(2, Color.parseColor("#475569"))
++                }
++                background = bg
++                setOnClickListener { handleIntent(target) }
++                isAllCaps = false
++            }
++            val params = GridLayout.LayoutParams().apply {
++                width = 0
++                height = GridLayout.LayoutParams.WRAP_CONTENT
++                columnSpec = if (isEmergency) GridLayout.spec(0, 2, 1f) else GridLayout.spec(GridLayout.UNDEFINED, 1f)
++                setMargins(8, 8, 8, 8)
++            }
++            grid.addView(btn, params)
++        }
++        content.addView(grid)
++
++        // Section: Intent Log
++        content.addView(makeSectionLabel("INTENT EVENT LOG"))
++        intentLogText = TextView(this).apply {
++            text = "Waiting for gaze or button input..."
++            setTextColor(Color.parseColor("#10B981"))
++            setTypeface(Typeface.MONOSPACE)
++            textSize = 12f
++            setBackgroundColor(Color.parseColor("#1E293B"))
++            setPadding(24, 24, 24, 24)
++        }
++        content.addView(intentLogText)
++        content.addView(spacer())
++
++        // Section: AAC Response
++        content.addView(makeSectionLabel("AAC RESPONSE OUTPUT"))
++        responseText = TextView(this).apply {
++            text = "Ready ΓÇö trigger an intent to generate response."
++            setTextColor(Color.WHITE)
++            textSize = 18f
++            setBackgroundColor(Color.parseColor("#1E293B"))
++            setPadding(24, 32, 24, 32)
++            minHeight = 120
++        }
++        content.addView(responseText)
++        content.addView(spacer())
++
++        // Section: Inference Timing (future benchmark integration point)
++        content.addView(makeSectionLabel("LATENCY METRICS"))
++        inferenceTimingText = TextView(this).apply {
++            text = "TTFT: -- ms  |  Cache: -- ms  |  Daemon: -- ms"
++            setTextColor(Color.parseColor("#64748B"))
++            textSize = 11f
++            setTypeface(Typeface.MONOSPACE)
++            setBackgroundColor(Color.parseColor("#1E293B"))
++            setPadding(24, 16, 24, 16)
++        }
++        content.addView(inferenceTimingText)
++
++        root.addView(content)
++        return root
++    }
++
++    private fun makeStatusBadge(text: String): TextView {
++        return TextView(this).apply {
++            this.text = text
++            setTextColor(Color.WHITE)
++            textSize = 9f
++            setTypeface(null, Typeface.BOLD)
++            val bg = GradientDrawable().apply {
++                setColor(Color.parseColor("#334155"))
++                cornerRadius = 8f
++            }
++            background = bg
++            setPadding(16, 6, 16, 6)
++            layoutParams = LinearLayout.LayoutParams(
++                LinearLayout.LayoutParams.WRAP_CONTENT,
++                LinearLayout.LayoutParams.WRAP_CONTENT
++            ).apply { setMargins(0, 0, 12, 0) }
++        }
++    }
++
++    private fun makeSectionLabel(text: String): TextView {
++        return TextView(this).apply {
++            this.text = text
++            setTextColor(Color.parseColor("#64748B"))
++            textSize = 11f
++            setTypeface(null, Typeface.BOLD)
++            setPadding(0, 16, 0, 8)
++        }
++    }
++
++    private fun spacer(): View {
++        return View(this).apply {
++            layoutParams = LinearLayout.LayoutParams(
++                LinearLayout.LayoutParams.MATCH_PARENT, 24
++            )
++        }
++    }
++
++    override fun onDestroy() {
++        super.onDestroy()
++        activityScope.cancel()
++        gazeTracker?.close()
++        speechManager.shutdown()
++    }
+ }
+\ No newline at end of file
+diff --git a/android/app/src/main/java/com/aacbridge/SpeechOutputManager.kt b/android/app/src/main/java/com/aacbridge/SpeechOutputManager.kt
+index e69de29..4334370 100644
+--- a/android/app/src/main/java/com/aacbridge/SpeechOutputManager.kt
++++ b/android/app/src/main/java/com/aacbridge/SpeechOutputManager.kt
+@@ -0,0 +1,64 @@
++package com.aacbridge
++
++import android.content.Context
++import android.speech.tts.TextToSpeech
++import android.util.Log
++import java.util.Locale
++
++/**
++ * Android TextToSpeech wrapper for AAC voice output.
++ *
++ * Converts LLM responses and fallback text into
++ * spoken audio for the AAC user.
++ *
++ * Lifecycle:
++ * - initialized in AppContainer / MainActivity
++ * - shutdown() must be called in onDestroy()
++ */
++class SpeechOutputManager(context: Context) : TextToSpeech.OnInitListener {
++
++    companion object {
++        private const val TAG = "SpeechOutputManager"
++    }
++
++    private val tts: TextToSpeech = TextToSpeech(context, this)
++    private var isReady = false
++
++    override fun onInit(status: Int) {
++        if (status == TextToSpeech.SUCCESS) {
++            val result = tts.setLanguage(Locale.US)
++            isReady = result != TextToSpeech.LANG_MISSING_DATA &&
++                      result != TextToSpeech.LANG_NOT_SUPPORTED
++            if (isReady) {
++                Log.d(TAG, "TTS initialized successfully")
++            } else {
++                Log.e(TAG, "TTS language not supported")
++            }
++        } else {
++            Log.e(TAG, "TTS initialization failed")
++        }
++    }
++
++    /**
++     * Speaks the given text immediately.
++     *
++     * Flushes any queued utterances to ensure
++     * low-latency response for AAC users.
++     */
++    fun speak(text: String) {
++        if (isReady) {
++            tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
++        } else {
++            Log.w(TAG, "TTS not ready, skipping: $text")
++        }
++    }
++
++    fun stop() {
++        tts.stop()
++    }
++
++    fun shutdown() {
++        tts.stop()
++        tts.shutdown()
++    }
++}
+diff --git a/android/app/src/main/java/com/aacbridge/daemon/ContextDaemon.kt b/android/app/src/main/java/com/aacbridge/daemon/ContextDaemon.kt
+index e69de29..e4039be 100644
+--- a/android/app/src/main/java/com/aacbridge/daemon/ContextDaemon.kt
++++ b/android/app/src/main/java/com/aacbridge/daemon/ContextDaemon.kt
+@@ -0,0 +1,109 @@
++package com.aacbridge.daemon
++
++import android.app.Service
++import android.content.Intent
++import android.os.IBinder
++import android.util.Log
++import com.aacbridge.AACBridgeApplication
++import kotlinx.coroutines.*
++
++/**
++ * Lightweight Android orchestration layer around
++ * the existing ActiveSweep implementation.
++ *
++ * IMPORTANT:
++ * This service does NOT duplicate GPS/BLE logic.
++ * ActiveSweep already owns context acquisition.
++ *
++ * ContextDaemon only orchestrates the execution
++ * lifecycle of the existing backend pipeline:
++ *
++ * ContextDaemon
++ * -> ActiveSweep
++ * -> StateRouter
++ * -> KVCacheManager
++ *
++ * Responsibilities:
++ * - lifecycle-safe coroutine orchestration
++ * - periodic context sweeps via ActiveSweep
++ * - safe cancellation handling
++ * - low-memory-safe execution
++ * - battery-conscious scheduling
++ */
++class ContextDaemon : Service() {
++
++    companion object {
++        private const val TAG = "ContextDaemon"
++
++        /**
++         * Sweep interval in milliseconds.
++         *
++         * 60 seconds balances battery consumption
++         * against context freshness for AAC usage.
++         */
++        private const val SWEEP_INTERVAL_MS = 60_000L
++    }
++
++    private val serviceJob = SupervisorJob()
++    private val serviceScope = CoroutineScope(Dispatchers.IO + serviceJob)
++
++    private var sweepJob: Job? = null
++
++    override fun onCreate() {
++        super.onCreate()
++        Log.d(TAG, "ContextDaemon created")
++    }
++
++    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
++        Log.d(TAG, "ContextDaemon started")
++        startPeriodicSweep()
++        return START_STICKY
++    }
++
++    /**
++     * Launches periodic ActiveSweep execution.
++     *
++     * Each sweep delegates entirely to the existing
++     * ActiveSweep implementation which handles:
++     * - GPS acquisition
++     * - BLE scanning
++     * - SensorSnapshot construction
++     * - StateRouter scoring
++     * - KVCacheManager loading
++     */
++    private fun startPeriodicSweep() {
++        if (sweepJob?.isActive == true) return
++
++        sweepJob = serviceScope.launch {
++            while (isActive) {
++                try {
++                    val app = application as? AACBridgeApplication
++                    if (app != null) {
++                        Log.d(TAG, "Executing periodic context sweep...")
++                        app.appContainer.activeSweep.executeSweep()
++                        Log.d(TAG, "Context sweep completed")
++                    }
++                } catch (e: CancellationException) {
++                    throw e
++                } catch (e: Exception) {
++                    Log.e(TAG, "Context sweep failed", e)
++                }
++                delay(SWEEP_INTERVAL_MS)
++            }
++        }
++    }
++
++    override fun onBind(intent: Intent?): IBinder? = null
++
++    override fun onLowMemory() {
++        super.onLowMemory()
++        Log.w(TAG, "Low memory ΓÇö pausing sweep")
++        sweepJob?.cancel()
++    }
++
++    override fun onDestroy() {
++        super.onDestroy()
++        serviceJob.cancel()
++        Log.d(TAG, "ContextDaemon destroyed")
++    }
++}
+diff --git a/android/app/src/main/java/com/aacbridge/fusion/FusionInference.kt b/android/app/src/main/java/com/aacbridge/fusion/FusionInference.kt
+new file mode 100644
+index 0000000..a2c1159
+--- /dev/null
++++ b/android/app/src/main/java/com/aacbridge/fusion/FusionInference.kt
+@@ -0,0 +1,42 @@
++package com.aacbridge.fusion
++
++import android.util.Log
++
++/**
++ * Lightweight Android integration shell for
++ * cross-attention / late fusion inference.
++ *
++ * Current state:
++ * Placeholder pass-through that returns gaze target
++ * as the fused intent. Actual ONNX model integration
++ * will replace this once Heer exports the fusion model.
++ *
++ * Decision point: June 7
++ * Cross-attention vs late fusion based on F1 gap.
++ *
++ * DO NOT implement heavy inference logic here yet.
++ */
++class FusionInference {
++
++    companion object {
++        private const val TAG = "FusionInference"
++    }
++
++    /**
++     * Placeholder fusion pass-through.
++     *
++     * Currently returns the gaze target directly
++     * as the fused intent label. This will be replaced
++     * with actual cross-attention or late fusion inference
++     * once the ONNX model is exported.
++     */
++    fun fuse(input: FusionInput): FusionOutput {
++        Log.d(TAG, "Fusion placeholder: passing through gaze target '${input.gazeTarget}'")
++
++        return FusionOutput(
++            intentLabel = input.gazeTarget,
++            confidence = 1.0f,
++            timestampMs = System.currentTimeMillis()
++        )
++    }
++}
+diff --git a/android/app/src/main/java/com/aacbridge/fusion/FusionInput.kt b/android/app/src/main/java/com/aacbridge/fusion/FusionInput.kt
+new file mode 100644
+index 0000000..b5a1461
+--- /dev/null
++++ b/android/app/src/main/java/com/aacbridge/fusion/FusionInput.kt
+@@ -0,0 +1,37 @@
++package com.aacbridge.fusion
++
++/**
++ * Lightweight Android integration placeholder for
++ * cross-attention fusion model inputs.
++ *
++ * Represents combined sensor signals:
++ * - EMG embedding from CNN-LSTM classifier
++ * - gaze fixation vector from MediaPipe
++ *
++ * Contract defined by Medha (EMG) and Heer (gaze).
++ *
++ * EMG embedding spec: shape (1,64), float32, L2 normalized
++ */
++data class FusionInput(
++    val emgEmbedding: FloatArray,
++    val gazeVector: FloatArray,
++    val gazeTarget: String,
++    val timestampMs: Long
++) {
++    override fun equals(other: Any?): Boolean {
++        if (this === other) return true
++        if (other !is FusionInput) return false
++        return emgEmbedding.contentEquals(other.emgEmbedding) &&
++               gazeVector.contentEquals(other.gazeVector) &&
++               gazeTarget == other.gazeTarget &&
++               timestampMs == other.timestampMs
++    }
++
++    override fun hashCode(): Int {
++        var result = emgEmbedding.contentHashCode()
++        result = 31 * result + gazeVector.contentHashCode()
++        result = 31 * result + gazeTarget.hashCode()
++        result = 31 * result + timestampMs.hashCode()
++        return result
++    }
++}
+diff --git a/android/app/src/main/java/com/aacbridge/fusion/FusionOutput.kt b/android/app/src/main/java/com/aacbridge/fusion/FusionOutput.kt
+new file mode 100644
+index 0000000..03c02c0
+--- /dev/null
++++ b/android/app/src/main/java/com/aacbridge/fusion/FusionOutput.kt
+@@ -0,0 +1,16 @@
++package com.aacbridge.fusion
++
++/**
++ * Lightweight Android integration placeholder for
++ * cross-attention fusion model outputs.
++ *
++ * Represents the unified intent classification
++ * after EMG x gaze fusion.
++ *
++ * 5 intent classes: confirm, reject, scroll, select, call-help
++ */
++data class FusionOutput(
++    val intentLabel: String,
++    val confidence: Float,
++    val timestampMs: Long
++)
+diff --git a/android/app/src/main/java/com/aacbridge/gaze/GazeTracker.kt b/android/app/src/main/java/com/aacbridge/gaze/GazeTracker.kt
+new file mode 100644
+index 0000000..c08a69c
+--- /dev/null
++++ b/android/app/src/main/java/com/aacbridge/gaze/GazeTracker.kt
+@@ -0,0 +1,155 @@
++package com.aacbridge.gaze
++
++import android.content.Context
++import android.util.Log
++import com.google.mediapipe.tasks.core.BaseOptions
++import com.google.mediapipe.tasks.vision.core.RunningMode
++import com.google.mediapipe.tasks.vision.facelandmarker.FaceLandmarker
++import com.google.mediapipe.tasks.vision.facelandmarker.FaceLandmarkerResult
++
++/**
++ * MediaPipe Face Mesh gaze tracking for AAC interaction.
++ *
++ * Responsibilities:
++ * - Face Mesh landmark detection
++ * - 400ms dwell threshold enforcement
++ * - fixation target mapping to AAC intents
++ *
++ * Targets:
++ * - confirm
++ * - reject
++ * - scroll
++ * - select
++ * - call-help
++ *
++ * IMPORTANT:
++ * This layer emits ONLY UI-level intent events.
++ * It does NOT invoke JNI, KV cache, or backend routing.
++ * Gaze logic is fully isolated from native systems.
++ */
++class GazeTracker(
++    private val context: Context,
++    private val onGazeIntent: (String) -> Unit
++) {
++
++    companion object {
++        private const val TAG = "GazeTracker"
++        private const val DWELL_THRESHOLD_MS = 400L
++    }
++
++    private var faceLandmarker: FaceLandmarker? = null
++    private var currentTarget: String? = null
++    private var dwellStartTime: Long = 0L
++
++    init {
++        initializeFaceLandmarker()
++    }
++
++    private fun initializeFaceLandmarker() {
++        try {
++            val baseOptions = BaseOptions.builder()
++                .setModelAssetPath("face_landmarker.task")
++                .build()
++
++            val options = FaceLandmarker.FaceLandmarkerOptions.builder()
++                .setBaseOptions(baseOptions)
++                .setMinFaceDetectionConfidence(0.5f)
++                .setMinFacePresenceConfidence(0.5f)
++                .setMinFaceTrackingConfidence(0.5f)
++                .setRunningMode(RunningMode.LIVE_STREAM)
++                .setResultListener { result, _ -> processResult(result) }
++                .setErrorListener { e -> Log.e(TAG, "FaceLandmarker error: ${e.message}") }
++                .build()
++
++            faceLandmarker = FaceLandmarker.createFromOptions(context, options)
++            Log.d(TAG, "FaceLandmarker initialized")
++        } catch (e: Exception) {
++            Log.w(TAG, "FaceLandmarker init failed (model asset may be missing). " +
++                       "Gaze tracking will use manual/simulated input only.", e)
++        }
++    }
++
++    /**
++     * Processes FaceLandmarker results to determine gaze target.
++     *
++     * Uses eye center vs nose tip displacement to resolve
++     * horizontal and vertical gaze direction.
++     */
++    private fun processResult(result: FaceLandmarkerResult) {
++        val faces = result.faceLandmarks()
++        if (faces.isNullOrEmpty()) {
++            resetDwell()
++            return
++        }
++
++        val face = faces[0]
++
++        // MediaPipe landmark indices:
++        // 4 = nose tip, 33 = left eye inner, 362 = right eye inner
++        val noseTip = face[4]
++        val leftEye = face[33]
++        val rightEye = face[362]
++
++        val eyeCenterX = (leftEye.x() + rightEye.x()) / 2f
++        val eyeCenterY = (leftEye.y() + rightEye.y()) / 2f
++
++        val deltaX = noseTip.x() - eyeCenterX
++        val deltaY = noseTip.y() - eyeCenterY
++
++        val target = mapGazeToTarget(deltaX, deltaY)
++        updateDwell(target)
++    }
++
++    /**
++     * Maps gaze displacement to one of 5 AAC intent targets.
++     *
++     * Layout:
++     *   top-left=confirm    top-right=reject
++     *   bottom-left=scroll  bottom-right=select
++     *   center=call-help
++     */
++    private fun mapGazeToTarget(deltaX: Float, deltaY: Float): String {
++        return when {
++            deltaX < -0.02f && deltaY < -0.01f -> "confirm"
++            deltaX > 0.02f && deltaY < -0.01f  -> "reject"
++            deltaX < -0.02f && deltaY > 0.01f   -> "scroll"
++            deltaX > 0.02f && deltaY > 0.01f    -> "select"
++            else -> "call-help"
++        }
++    }
++
++    /**
++     * Public method for manual/simulated gaze input.
++     *
++     * Allows UI buttons or test harnesses to trigger
++     * dwell-based intent without real camera input.
++     */
++    fun simulateGaze(target: String) {
++        updateDwell(target)
++    }
++
++    private fun updateDwell(target: String) {
++        val now = System.currentTimeMillis()
++
++        if (target == currentTarget) {
++            if (now - dwellStartTime >= DWELL_THRESHOLD_MS) {
++                Log.d(TAG, "Dwell threshold reached: $target")
++                onGazeIntent(target)
++                dwellStartTime = now // prevent rapid re-firing
++            }
++        } else {
++            currentTarget = target
++            dwellStartTime = now
++        }
++    }
++
++    fun resetDwell() {
++        currentTarget = null
++        dwellStartTime = 0L
++    }
++
++    fun close() {
++        faceLandmarker?.close()
++        faceLandmarker = null
++    }
++}
+diff --git a/implementation_plan.md b/implementation_plan.md
+new file mode 100644
+index 0000000..6f0c35f
+--- /dev/null
++++ b/implementation_plan.md
+@@ -0,0 +1,157 @@
++# Implementation Plan - AACBridge Android App Layer Integration
++
++This document outlines the design and implementation strategy for building and integrating the Android app-layer components for **AACBridge**. 
++
++The goal is to seamlessly connect the Android application environment (GPS, Bluetooth, Camera, and UI) with the existing stable native/JNI backend designed by Arjit. We will not modify the native/C++ code or rewrite backend concurrency/scoring/caching logic.
++
++---
++
++## Goal Description
++
++Integrate the Android app layer with the pre-existing, stable native backend systems. The app layer is responsible for:
++1. **Context Collection**: High-fidelity GPS and BLE acquisition.
++2. **ContextDaemon Wiring**: Orchestrating periodic background context updates.
++3. **MediaPipe Gaze Tracking**: Setting up Face Mesh gaze tracking with a 400ms dwell threshold and visual fixation target mapping.
++4. **Fusion Shell**: A lightweight integration shell combining eye gaze with EMG classification embeddings.
++5. **UI Layer & TTS**: Lightweight, low-latency layout UI with intent controls, fallback indicators, debug logs, and Text-to-Speech (TTS) readout.
++
++---
++
++## User Review Required
++
++We propose to add two external libraries to the project to fulfill our requirements:
++1. **Google Play Services Location**: `com.google.android.gms:play-services-location:21.2.0` ΓÇö Required for modern, power-balanced `FusedLocationProviderClient`.
++2. **MediaPipe Face Mesh Tasks**: `com.google.mediapipe:tasks-vision:0.10.14` ΓÇö Required for highly accurate and low-latency facial landmark/gaze tracking.
++
++> [!NOTE]
++> The app's `build.gradle` explicitly states: `// Explicitly avoiding Jetpack Compose or other heavy UI libraries`.
++> To respect this, we will build a beautiful, high-performance **Material Design XML Programmatic UI** directly in Kotlin code or using simple XML layouts, avoiding the massive runtime/startup overhead of Jetpack Compose. This ensures our TTFT (Time to First Token) remains under the 500ms budget limit.
++
++---
++
++## Open Questions
++
++> [!IMPORTANT]
++> **Q1: Gaze Tracking Camera UI**
++> Should the `GazeOverlay` display the raw camera preview stream directly on the screen (e.g. inside a tiny thumbnail), or should it run the eye-tracking silently in the background and only project visual cue overlays (like a floating pointer dot showing where the user is looking)?
++> *Antigravity Recommendation:* We recommend running the eye-tracking silently behind the scenes, using a small floating calibration/debug reticle overlay. This prevents screen clutter and respects the user's privacy while conserving rendering overhead.
++>
++> **Q2: Seed Data/Context States**
++> Since the Room state repository is not yet finalized, what default context states (e.g., "Home Mom", "Office", "Car") should we seed in the repository to make sure the scoring router runs end-to-end?
++> *Antigravity Recommendation:* We will seed `InMemoryStateRepository` with 3 robust default states containing realistic GPS coordinates and BLE MAC addresses.
++
++---
++
++## Proposed Changes
++
++We will introduce and modify several files within the `com.aacbridge` package.
++
++```mermaid
++graph TD
++    A[MainActivity UI] --> B[GazeTracker MediaPipe]
++    A --> C[FusionInference Shell]
++    A --> D[SpeechOutputManager TTS]
++    E[ContextDaemon Service] --> F[ActiveSweep]
++    F --> G[ContextSnapshotProvider]
++    G --> H[GpsCollector FusedLocation]
++    G --> I[BleScanner LowLatency]
++```
++
++---
++
++### 1. Build and Configuration
++
++#### [MODIFY] [build.gradle](file:///c:/Users/ADMIN/.gemini/antigravity-ide/scratch/AACBridge_00/android/app/build.gradle)
++- Add dependencies for Play Services Location and MediaPipe tasks.
++- Add packaging options if needed for ONNX/MediaPipe binary assets.
++
++#### [MODIFY] [AndroidManifest.xml](file:///c:/Users/ADMIN/.gemini/antigravity-ide/scratch/AACBridge_00/android/app/src/main/AndroidManifest.xml)
++- Request `android.permission.CAMERA` for MediaPipe Face Mesh.
++- Register `com.aacbridge.daemon.ContextDaemon` as a background/started service.
++
++---
++
++### 2. Context Collection Component (`com.aacbridge.context`)
++
++#### [NEW] [GpsCollector.kt](file:///c:/Users/ADMIN/.gemini/antigravity-ide/scratch/AACBridge_00/android/app/src/main/java/com/aacbridge/context/GpsCollector.kt)
++- Wraps `FusedLocationProviderClient`.
++- Implements `getCurrentLocation()` returning `GpsLocation` with `PRIORITY_BALANCED_POWER_ACCURACY`.
++- Decouples callback to coroutine suspend functions using `suspendCancellableCoroutine`.
++- Gracefully handles permission issues and null locations.
++
++#### [NEW] [BleScanner.kt](file:///c:/Users/ADMIN/.gemini/antigravity-ide/scratch/AACBridge_00/android/app/src/main/java/com/aacbridge/context/BleScanner.kt)
++- Uses `BluetoothLeScanner` under `SCAN_MODE_LOW_LATENCY`.
++- Standardizes a 3-second max scan using `withTimeoutOrNull`.
++- Ensures it always returns an empty map if no devices are detected (never `null`).
++
++#### [NEW] [ContextSnapshotProvider.kt](file:///c:/Users/ADMIN/.gemini/antigravity-ide/scratch/AACBridge_00/android/app/src/main/java/com/aacbridge/context/ContextSnapshotProvider.kt)
++- Orchestrates `GpsCollector` and `BleScanner`.
++- Obtains the current decimal hour and constructs a validated `SensorSnapshot`.
++
++---
++
++### 3. Context Daemon wiring (`com.aacbridge.daemon`)
++
++#### [MODIFY] [ContextDaemon.kt](file:///c:/Users/ADMIN/.gemini/antigravity-ide/scratch/AACBridge_00/android/app/src/main/java/com/aacbridge/daemon/ContextDaemon.kt)
++- Turn `ContextDaemon` into an Android `Service` orchestration container.
++- Set up a periodic background sweep loop (e.g. every 60 seconds) executing `ActiveSweep.executeSweep()`.
++- Ensure started sticky for lifecycle persistence.
++
++---
++
++### 4. MediaPipe Gaze Tracking (`com.aacbridge.gaze`)
++
++#### [NEW] [GazeTracker.kt](file:///c:/Users/ADMIN/.gemini/antigravity-ide/scratch/AACBridge_00/android/app/src/main/java/com/aacbridge/gaze/GazeTracker.kt)
++- Orchestrates MediaPipe FaceMesh (`FaceLandmarker`).
++- Tracks coordinates of eyes/pupils to resolve looking vectors.
++- Implements **Dwell-Time selection**:
++  - Target areas corresponding to "confirm", "reject", "scroll", "select", "call-help".
++  - If gaze focuses on a target for >= 400ms, emit a UI-level intent event.
++  - Reset timers instantly on target change to prevent accidental triggers.
++- Provides fallback to interactive button touch triggers.
++
++---
++
++### 5. Fusion Shell Integration (`com.aacbridge.fusion`)
++
++#### [NEW] [FusionInput.kt](file:///c:/Users/ADMIN/.gemini/antigravity-ide/scratch/AACBridge_00/android/app/src/main/java/com/aacbridge/fusion/FusionInput.kt)
++- Data model representing the EMG classifier output embedding + raw gaze tracking inputs.
++
++#### [NEW] [FusionOutput.kt](file:///c:/Users/ADMIN/.gemini/antigravity-ide/scratch/AACBridge_00/android/app/src/main/java/com/aacbridge/fusion/FusionOutput.kt)
++- Data model representing the fused classification label, confidence, and unified intent embedding.
++
++#### [NEW] [FusionInference.kt](file:///c:/Users/ADMIN/.gemini/antigravity-ide/scratch/AACBridge_00/android/app/src/main/java/com/aacbridge/fusion/FusionInference.kt)
++- Shell wrapper class.
++- Runs cross-attention intent fusion mapping. Gracefully performs late fusion fallback if needed.
++
++---
++
++### 6. Core Application & UI (`com.aacbridge`)
++
++#### [NEW] [SpeechOutputManager.kt](file:///c:/Users/ADMIN/.gemini/antigravity-ide/scratch/AACBridge_00/android/app/src/main/java/com/aacbridge/SpeechOutputManager.kt)
++- Wraps Android `TextToSpeech` API.
++- Converts LLM text responses and fallbacks to speech instantly.
++
++#### [MODIFY] [AppContainer.kt](file:///c:/Users/ADMIN/.gemini/antigravity-ide/scratch/AACBridge_00/android/app/src/main/java/com/aacbridge/AppContainer.kt)
++- Register `SpeechOutputManager`, `FusionInference`, and other app-layer dependencies into the graph.
++
++#### [MODIFY] [MainActivity.kt](file:///c:/Users/ADMIN/.gemini/antigravity-ide/scratch/AACBridge_00/android/app/src/main/java/com/aacbridge/MainActivity.kt)
++- Create a stunning modern UI with:
++  - **Dynamic Reticle View**: Overlays a visual indicator of current gaze fixation.
++  - **Intent Buttons Dashboard**: Highlighting "confirm", "reject", "scroll", "select", "call-help" with direct touch fallback.
++  - **Response Panel**: Smooth card layout displaying generation results (fallback and upgraded offline inference).
++  - **Metrics Bar**: Showcasing real-time TTFT and prefill latency benchmarks in clean graphs or text panels.
++
++---
++
++## Verification Plan
++
++### Automated Compilation Tests
++- Run `.\gradlew.bat assembleDebug` to verify that all new packages and imports compile flawlessly.
++- Execute the test suite `.\gradlew.bat test` to guarantee no JNI or router regressions.
++
++### Manual Verification
++- Deploy to OnePlus 11R via ADB.
++- Confirm successful initialization of llama.cpp without JNI crash or memory issues.
++- Verify GPS & BLE scanning logs.
++- Test fallback speech synthesis and main intent actions.

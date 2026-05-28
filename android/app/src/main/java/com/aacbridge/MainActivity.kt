@@ -19,6 +19,10 @@ import com.aacbridge.gaze.GazeTracker
 import com.aacbridge.inference.LlamaBridge
 import kotlinx.coroutines.*
 import java.util.Locale
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageAnalysis
+import androidx.camera.lifecycle.ProcessCameraProvider
+import java.util.concurrent.Executors
 
 /**
  * AACBridge main activity.
@@ -116,7 +120,7 @@ class MainActivity : AppCompatActivity() {
 
         // Start ContextDaemon background service
         try {
-            startService(Intent(this, ContextDaemon::class.java))
+            ContextCompat.startForegroundService(this, Intent(this, ContextDaemon::class.java))
             runOnUiThread { daemonStatusText.text = "DAEMON: Running" }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to start ContextDaemon", e)
@@ -139,6 +143,32 @@ class MainActivity : AppCompatActivity() {
         gazeTracker = GazeTracker(this) { intentLabel ->
             runOnUiThread { handleIntent(intentLabel) }
         }
+        startCameraAnalysis()
+    }
+
+    private fun startCameraAnalysis() {
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+        cameraProviderFuture.addListener({
+            val cameraProvider = cameraProviderFuture.get()
+            
+            val imageAnalyzer = ImageAnalysis.Builder()
+                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                .build()
+                .also {
+                    it.setAnalyzer(Executors.newSingleThreadExecutor()) { imageProxy ->
+                        gazeTracker?.processImageProxy(imageProxy)
+                    }
+                }
+
+            val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
+
+            try {
+                cameraProvider.unbindAll()
+                cameraProvider.bindToLifecycle(this, cameraSelector, imageAnalyzer)
+            } catch(exc: Exception) {
+                Log.e(TAG, "Camera analysis binding failed", exc)
+            }
+        }, ContextCompat.getMainExecutor(this))
     }
 
     /**

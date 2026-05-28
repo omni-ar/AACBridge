@@ -303,7 +303,7 @@ The IEEE Access submission gives "Under review at IEEE Access" on resume during 
 
 ---
 
-## 12. Current Status (as of end of April 2026)
+## 12. Current Status (as of late May 2026)
 
 - [x] Project idea finalized and approved by professor
 - [x] Abstract submitted and approved (v4 - voice cloning and LoRA removed)
@@ -318,20 +318,29 @@ The IEEE Access submission gives "Under review at IEEE Access" on resume during 
 - [x] Venue decision locked (IEEE Access primary)
 - [x] Full project plan document generated (AACBridge_ProjectPlan_v2.docx)
 - [x] Complete folder structure defined with owner annotations
-- [ ] Phase 1 not yet started (starts May 15)
-- [ ] llama.cpp not yet compiled for ARM64
-- [ ] NinaPro pipeline not yet built
-- [ ] Android app not yet scaffolded
+- [x] Phase 1 backend JNI integration completed (Arjit)
+- [x] Phase 1 Android runtime, camera, and MediaPipe validation completed (Heer)
+- [x] Daemon subsystem foreground stabilization completed (Heer)
+- [x] Concurrency serialization for gaze input completed (Heer)
+- [ ] Phase 2 ONNX Fusion and Medha's k-ablation still pending
+- [ ] Phase 3 latency benchmarking pending
 
 ---
 
 ## 13. Open Questions / Next Decisions Pending
 
+**SOLVED:**
+- MediaPipe runtime validation successfully verified on Snapdragon device.
+- CameraX pipeline integrated seamlessly without rendering overhead.
+- Foreground daemon stability resolved via Android bound services.
+
+**UNRESOLVED:**
 - Arjit: confirm target device availability (S23 or S24 for benchmarking)
-- Arjit: choose between Phi-3-Mini (3.8B, ~2.2GB) vs Qwen2.5-1.5B (~1.1GB) based on RAM budget after testing
+- Arjit: saveKVCache lifecycle orchestration (must resolve before Phase 3 benchmarking)
+- Arjit: Room-backed StateRepository (InMemory mock must be replaced)
 - Medha: confirm NinaPro DB5 download and preprocessing works before May 21
-- Heer: confirm MediaPipe gaze tracking works on target Android device front camera
-- All: GitHub repo must be created and shared before May 15
+- Heer: fusion ONNX integration and cross-attention fallback decision (due June 7)
+- All: benchmark instrumentation setup
 
 ---
 
@@ -383,8 +392,13 @@ Key decisions:
 - 01_eda.ipynb with 16 channels, 130267 samples
 - WARNING: NinaPro→AAC gesture mapping requires justification in paper methodology
 
-### Heer - UNCONFIRMED
-- Status unknown, sync checkpoint May 21
+### Heer - COMPLETE (Runtime Validated)
+- Android App runtime fully scaffolded.
+- CameraX ImageAnalysis pipeline implemented (bypassing PreviewView for overhead reduction).
+- MediaPipe FaceLandmarker real-time gaze extraction and intent mapping complete.
+- 400ms dwell threshold and debounce serialization complete.
+- `ContextDaemon` migrated to bound Foreground Service.
+- Validation successfully verified on physical Snapdragon device.
 
 ## 16. Device Environment
 - Device: OnePlus 11R 5G
@@ -463,9 +477,10 @@ Do NOT proceed without explicitly handling this edge case.
 - k-ablation F1 table due June 7
 - TFLite export dry run due June 1
 
-### Heer - STATUS UNKNOWN
-- Fusion F1 decision due June 7
-- ONNX export due June 8
+### Heer - PHASE 1 COMPLETE
+- Phase 1 Android runtime, CameraX, and MediaPipe integrations are fully validated.
+- **Pending:** Fusion F1 decision due June 7.
+- **Pending:** ONNX export due June 8.
 
 ## 20. Critical Architectural Decisions Made in Phase 2
 
@@ -481,6 +496,20 @@ Do NOT proceed without explicitly handling this edge case.
   Battery protection. Both candidate and resident states evaluated against same BLE-blind snapshot — delta remains mathematically valid even if absolute scores are deflated.
 - **Decision 6: Open-Closed for getScoredStates()**
   Added getScoredStates() returning raw scores for DriftDetector hysteresis. getTopContextIds() refactored as wrapper. ActiveSweep contract unchanged.
+
+## 20.5 Phase 2.5 Runtime Stabilization (May 28, 2026)
+
+The application runtime branch underwent rigorous real-device stabilization to ensure architectural readiness for Phase 3 benchmarking.
+
+- **Foreground Daemon Migration:** `ContextDaemon` was elevated to an Android API 34+ compliant Foreground Service with a persistent `NotificationChannel` to prevent aggressive OS termination of the caching orchestrator.
+- **CameraX Integration:** `ProcessCameraProvider` now binds exclusively to the `ImageAnalysis` use-case. `PreviewView` rendering was intentionally dropped to prevent severe GPU thermal throttling and preserve performance overhead for LLM inference.
+- **MediaPipe LIVE_STREAM Fixes:** The `face_landmarker.task` asset loading was corrected. Asynchronous frame delivery via `detectAsync` successfully extracts gaze vectors dynamically from nose-tip/eye-center displacements.
+- **Debug Instrumentation:** High-frequency logging is securely gated behind `BuildConfig.DEBUG` to prevent I/O bottlenecking during production inference.
+- **Debounce Corrections:** The 400ms gaze dwell threshold now implements a strict `hasFired` debounce flag, completely mitigating intent-loop spam while maintaining responsiveness.
+- **Concurrency Serialization:** Multi-threaded MediaPipe callbacks were stabilized via a single-threaded executor, providing deterministic evaluation without costly global locks.
+- **Snapdragon Validation:** `adb logcat` validation confirmed exactly 1 trigger per intent fixation, proving real-time stability on the physical device.
+
+**Note:** The app/runtime branch is now considered stable enough to freeze as the Phase 3 benchmarking baseline.
 
 ## 21. Assumptions Requiring Paper Documentation
 

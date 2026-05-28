@@ -6,6 +6,10 @@ import com.google.mediapipe.tasks.core.BaseOptions
 import com.google.mediapipe.tasks.vision.core.RunningMode
 import com.google.mediapipe.tasks.vision.facelandmarker.FaceLandmarker
 import com.google.mediapipe.tasks.vision.facelandmarker.FaceLandmarkerResult
+import androidx.camera.core.ImageProxy
+import com.google.mediapipe.framework.image.BitmapImageBuilder
+import java.util.concurrent.Executors
+import com.aacbridge.BuildConfig
 
 /**
  * MediaPipe Face Mesh gaze tracking for AAC interaction.
@@ -35,11 +39,18 @@ class GazeTracker(
     companion object {
         private const val TAG = "GazeTracker"
         private const val DWELL_THRESHOLD_MS = 400L
+
+        // Hardcoded thresholds mapped to AAC intent areas
+        private const val THRESHOLD_X = 0.02f
+        private const val THRESHOLD_Y = 0.01f
     }
 
     private var faceLandmarker: FaceLandmarker? = null
     private var currentTarget: String? = null
     private var dwellStartTime: Long = 0L
+    private var hasFired: Boolean = false
+
+    private val dwellExecutor = Executors.newSingleThreadExecutor()
 
     init {
         initializeFaceLandmarker()
@@ -55,10 +66,10 @@ class GazeTracker(
                 .setBaseOptions(baseOptions)
                 .setMinFaceDetectionConfidence(0.5f)
                 .setMinFacePresenceConfidence(0.5f)
-                .setMinFaceTrackingConfidence(0.5f)
+                .setMinTrackingConfidence(0.5f)
                 .setRunningMode(RunningMode.LIVE_STREAM)
-                .setResultListener { result, _ -> processResult(result) }
-                .setErrorListener { e -> Log.e(TAG, "FaceLandmarker error: ${e.message}") }
+                .setResultListener { result: FaceLandmarkerResult, _ -> processResult(result) }
+                .setErrorListener { e: RuntimeException -> Log.e(TAG, "FaceLandmarker error: ${e.message}") }
                 .build()
 
             faceLandmarker = FaceLandmarker.createFromOptions(context, options)
@@ -66,6 +77,35 @@ class GazeTracker(
         } catch (e: Exception) {
             Log.w(TAG, "FaceLandmarker init failed (model asset may be missing). " +
                        "Gaze tracking will use manual/simulated input only.", e)
+        }
+    }
+
+    /**
+     * Processes live camera frames from CameraX ImageAnalysis.
+     */
+    fun processImageProxy(imageProxy: ImageProxy) {
+        if (faceLandmarker == null) {
+            imageProxy.close()
+            return
+        }
+
+        try {
+            if (BuildConfig.DEBUG) {
+                Log.d(TAG, "Camera frame received")
+            }
+            // CameraX 1.3.0+ supports direct toBitmap() with rotation applied
+            val bitmap = imageProxy.toBitmap()
+            val mpImage = BitmapImageBuilder(bitmap).build()
+            val timestampMs = imageProxy.imageInfo.timestamp / 1_000_000
+            
+            if (BuildConfig.DEBUG) {
+                Log.d(TAG, "detectAsync invoked")
+            }
+            faceLandmarker?.detectAsync(mpImage, timestampMs)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error processing image proxy", e)
+        } finally {
+            imageProxy.close()
         }
     }
 
@@ -80,6 +120,10 @@ class GazeTracker(
         if (faces.isNullOrEmpty()) {
             resetDwell()
             return
+        }
+
+        if (BuildConfig.DEBUG) {
+            Log.d(TAG, "Face landmarks detected")
         }
 
         val face = faces[0]
@@ -97,7 +141,12 @@ class GazeTracker(
         val deltaY = noseTip.y() - eyeCenterY
 
         val target = mapGazeToTarget(deltaX, deltaY)
-        updateDwell(target)
+        if (BuildConfig.DEBUG) {
+            Log.d(TAG, "Resolved gaze target: $target (deltaX=$deltaX, deltaY=$deltaY)")
+        }
+        dwellExecutor.execute {
+            updateDwell(target)
+        }
     }
 
     /**
@@ -110,10 +159,10 @@ class GazeTracker(
      */
     private fun mapGazeToTarget(deltaX: Float, deltaY: Float): String {
         return when {
-            deltaX < -0.02f && deltaY < -0.01f -> "confirm"
-            deltaX > 0.02f && deltaY < -0.01f  -> "reject"
-            deltaX < -0.02f && deltaY > 0.01f   -> "scroll"
-            deltaX > 0.02f && deltaY > 0.01f    -> "select"
+            deltaX < -THRESHOLD_X && deltaY < -THRESHOLD_Y -> "confirm"
+            deltaX > THRESHOLD_X && deltaY < -THRESHOLD_Y  -> "reject"
+            deltaX < -THRESHOLD_X && deltaY > THRESHOLD_Y   -> "scroll"
+            deltaX > THRESHOLD_X && deltaY > THRESHOLD_Y    -> "select"
             else -> "call-help"
         }
     }
@@ -125,7 +174,9 @@ class GazeTracker(
      * dwell-based intent without real camera input.
      */
     fun simulateGaze(target: String) {
-        updateDwell(target)
+        dwellExecutor.execute {
+            updateDwell(target)
+        }
     }
 
     private fun updateDwell(target: String) {
@@ -133,23 +184,30 @@ class GazeTracker(
 
         if (target == currentTarget) {
             if (now - dwellStartTime >= DWELL_THRESHOLD_MS) {
-                Log.d(TAG, "Dwell threshold reached: $target")
-                onGazeIntent(target)
-                dwellStartTime = now // prevent rapid re-firing
+                if (!hasFired) {
+                    Log.d(TAG, "Dwell threshold reached: $target")
+                    onGazeIntent(target)
+                    hasFired = true
+                }
             }
         } else {
             currentTarget = target
             dwellStartTime = now
+            hasFired = false
         }
     }
 
     fun resetDwell() {
-        currentTarget = null
-        dwellStartTime = 0L
+        dwellExecutor.execute {
+            currentTarget = null
+            dwellStartTime = 0L
+            hasFired = false
+        }
     }
 
     fun close() {
         faceLandmarker?.close()
         faceLandmarker = null
+        dwellExecutor.shutdown()
     }
 }

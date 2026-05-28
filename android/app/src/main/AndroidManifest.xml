@@ -37,11 +37,26 @@
         android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <!-- ========================= -->
+    <!-- Foreground Service        -->
+    <!-- ========================= -->
+
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+
+    <!-- ========================= -->
     <!-- Camera (MediaPipe Gaze)   -->
     <!-- ========================= -->
 
     <uses-permission
         android:name="android.permission.CAMERA" />
+
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
 
     <application
         android:name=".AACBridgeApplication"
@@ -98,7 +113,8 @@
         <service
             android:name=".daemon.ContextDaemon"
             android:enabled="true"
-            android:exported="false" />
+            android:exported="false"
+            android:foregroundServiceType="location|connectedDevice" />
 
     </application>
 

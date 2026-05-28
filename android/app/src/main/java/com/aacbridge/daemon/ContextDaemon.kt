@@ -1,5 +1,9 @@
 package com.aacbridge.daemon
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.os.Build
+import androidx.core.app.NotificationCompat
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
@@ -42,6 +46,8 @@ class ContextDaemon : Service() {
          * against context freshness for AAC usage.
          */
         private const val SWEEP_INTERVAL_MS = 60_000L
+        private const val NOTIFICATION_ID = 1001
+        private const val CHANNEL_ID = "AACBridgeDaemon"
     }
 
     private val serviceJob = SupervisorJob()
@@ -56,8 +62,30 @@ class ContextDaemon : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d(TAG, "ContextDaemon started")
+        startAsForegroundService()
         startPeriodicSweep()
         return START_STICKY
+    }
+
+    private fun startAsForegroundService() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                "AAC Context Daemon",
+                NotificationManager.IMPORTANCE_LOW
+            )
+            val manager = getSystemService(NotificationManager::class.java)
+            manager?.createNotificationChannel(channel)
+        }
+
+        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle("AAC Context Sweep")
+            .setContentText("Predictive routing is active")
+            .setSmallIcon(android.R.drawable.ic_menu_compass)
+            .setOngoing(true)
+            .build()
+
+        startForeground(NOTIFICATION_ID, notification)
     }
 
     /**
