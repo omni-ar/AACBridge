@@ -36,6 +36,13 @@
     <uses-permission
         android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
+    <!-- ========================= -->
+    <!-- Camera (MediaPipe Gaze)   -->
+    <!-- ========================= -->
+
+    <uses-permission
+        android:name="android.permission.CAMERA" />
+
     <application
         android:name=".AACBridgeApplication"
         android:allowBackup="true"
@@ -83,6 +90,15 @@
             </intent-filter>
 
         </receiver>
+
+        <!-- ===================== -->
+        <!-- Context Daemon        -->
+        <!-- ===================== -->
+
+        <service
+            android:name=".daemon.ContextDaemon"
+            android:enabled="true"
+            android:exported="false" />
 
     </application>
 
