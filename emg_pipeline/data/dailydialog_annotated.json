@@ -1,0 +1,2915 @@
+[
+  {
+    "conversation_id": 0,
+    "turns": [
+      "Hi, Mr. Smith. I'm Doctor Hawkins. Why are you here today?",
+      "I found it would be a good idea to get a check-up.",
+      "Yes, well, you haven't had one for 5 years. You should have one every year.",
+      "I know. I figure as long as there is nothing wrong, why go see the doctor?",
+      "Well, the best way to avoid serious illnesses is to find out about them early. So try to come at least once a year for your own good.",
+      "Ok.",
+      "Let me see here. Your eyes and ears look fine. Take a deep breath, please. Do you smoke, Mr. Smith?",
+      "Yes.",
+      "Smoking is the leading cause of lung cancer and heart disease, you know. You really should quit.",
+      "I've tried hundreds of times, but I just can't seem to kick the habit.",
+      "Well, we have classes and some medications that might help. I'll give you more information before you leave.",
+      "Ok, thanks doctor."
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 12,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 1,
+    "turns": [
+      "Hello Mrs. Parker, how have you been?",
+      "Hello Dr. Peters. Just fine thank you. Ricky and I are here for his vaccines.",
+      "Very well. Let's see, according to his vaccination record, Ricky has received his Polio, Tetanus and Hepatitis B shots. He is 14 months old, so he is due for Hepatitis A, Chickenpox and Measles shots.",
+      "What about Rubella and Mumps?",
+      "Well, I can only give him these for now, and after a couple of weeks I can administer the rest.",
+      "OK, great. Doctor, I think I also may need a Tetanus booster. Last time I got it was maybe fifteen years ago!",
+      "We will check our records and I'll have the nurse administer and the booster as well. Now, please hold Ricky's arm tight, this may sting a little."
+    ],
+    "shift_indices": [
+      4
+    ],
+    "n_turns": 7,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 2,
+    "turns": [
+      "Excuse me, did you see a set of keys?",
+      "What kind of keys?",
+      "Five keys and a small foot ornament.",
+      "What a shame! I didn't see them.",
+      "Well, can you help me look for it? That's my first time here.",
+      "Sure. It's my pleasure. I'd like to help you look for the missing keys.",
+      "It's very kind of you.",
+      "It's not a big deal.Hey, I found them.",
+      "Oh, thank God! I don't know how to thank you, guys.",
+      "You're welcome."
+    ],
+    "shift_indices": [
+      3
+    ],
+    "n_turns": 10,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 3,
+    "turns": [
+      "Why didn't you tell me you had a girlfriend?",
+      "Sorry, I thought you knew.",
+      "But you should tell me you were in love with her.",
+      "Didn't I?",
+      "You know you didn't.",
+      "Well, I am telling you now.",
+      "Yes, but you might have told me before.",
+      "I didn't think you would be interested.",
+      "You can't be serious. How dare you not tell me you are going to marry her?",
+      "Sorry, I didn't think it mattered.",
+      "Oh, you men! You are all the same."
+    ],
+    "shift_indices": [
+      9
+    ],
+    "n_turns": 11,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 4,
+    "turns": [
+      "Watsup, ladies! Y'll looking'fine tonight. May I have this dance?",
+      "He's cute! He looks like Tiger Woods! But, I can't dance. . .",
+      "It's all good. I'll show you all the right moves. My name's Malik.",
+      "Nice to meet you. I'm Wen, and this is Nikki.",
+      "How you feeling', vista? Mind if I take your friend'round the dance floor?",
+      "She doesn't mind if you don't mind getting your feet stepped on.",
+      "Right. Cool! Let's go!"
+    ],
+    "shift_indices": [
+      5
+    ],
+    "n_turns": 7,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 5,
+    "turns": [
+      "Happy birthday, Aims!",
+      "Thank you, Lisa.",
+      "Here is a present for you. I hope you like it.",
+      "Oh, great! I love it! You know I've been expecting this for a long time.",
+      "I'm very glad to hear that.",
+      "Come here ; let me introduce some friends to you."
+    ],
+    "shift_indices": [
+      4
+    ],
+    "n_turns": 6,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 6,
+    "turns": [
+      "Here we come.",
+      "Thank you. What's the fare?",
+      "$ 10.",
+      "How can it be?",
+      "Well, the rate is two dollars for the first two kilometers and twenty cents for each additional two hundred meters.",
+      "I see. Thanks for your drive."
+    ],
+    "shift_indices": [
+      4
+    ],
+    "n_turns": 6,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 7,
+    "turns": [
+      "Can I help you?",
+      "Yes. I sent in my resume at the end of last week. I'm applying for the accounts assistant position.",
+      "May I have your name please?",
+      "My name is Judy Liao. That's spelled L I A O.",
+      "Alright. . . And did you have some specific questions about your application?",
+      "Not really. I was in the neighborhood, and I just wanted to stop in to see if you received my resume.",
+      "Oh, that's no problem. Just give me a moment, and I can check. Judy Liao. Let's see. . . Yes, here it is. Judy Liao. We have received your resume.",
+      "Thank you.",
+      "Is there anything else I can help you with?",
+      "Yes, maybe. The ad in the newspaper said you wanted the resume, a cover letter, and two letters of recommendation. I included those things in the envelope. Is there anything else I should send?",
+      "No, that is all we need. If we have those things included, that is sufficient.",
+      "Do you know when they will start setting up interviews for the job?",
+      "I'm not really sure about that. But I know we are still receiving resumes. Maybe after a week or two they will start calling applicants.",
+      "I see. Well, thank you very much for helping me. You have been very helpful.",
+      "If you have any further questions, you can call any time.",
+      "Thank you.",
+      "Thank you. Goodbye."
+    ],
+    "shift_indices": [
+      15
+    ],
+    "n_turns": 17,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 8,
+    "turns": [
+      "This is a good basic computer package. It's got a good CPU, 256 megabytes of RAM, and a DVD player.",
+      "Does it come with a modem?",
+      "Yes, it has a built-in modem. You just plug a phone line into the back of the computer.",
+      "How about the monitor?",
+      "A 15 - inch monitor is included in the deal. If you want, you can switch it for a 17 - inch monitor, for a little more money.",
+      "That's okay. A 15 - inch is good enough. All right, I'll take it."
+    ],
+    "shift_indices": [
+      3
+    ],
+    "n_turns": 6,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 9,
+    "turns": [
+      "Excuse me, do you know where the visa office is?",
+      "Yes, I do. I'll walk you there.",
+      "Thanks.",
+      "Are you applying to study or work abroad?",
+      "I want to study abroad.",
+      "What do you want to study?",
+      "I hope to study English Literature.",
+      "Have you got your visa yet?",
+      "Not yet. I have an interview with a visa official today.",
+      "I see. Is it your first interview?",
+      "No, I'Ve already been here for 3 interviews."
+    ],
+    "shift_indices": [
+      3
+    ],
+    "n_turns": 11,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 10,
+    "turns": [
+      "Could you do me a favor?",
+      "Sure. What is it?",
+      "Could you run over to the store? We need a few things.",
+      "All right. What do you want me to get?",
+      "Well, could you pick up some sugar?",
+      "Okay. How much?",
+      "A small bag. I guess we also need a few oranges.",
+      "How many?",
+      "Oh, let's see. . . About six.",
+      "Anything else?",
+      "Yes. We're out of milk.",
+      "Okay. How much do you want me to get? A gallon?",
+      "No. I think a half gallon will be enough.",
+      "Is that all?",
+      "I think so. Have you got all that?",
+      "Yes. That's small bag of sugar, four oranges, and a half gallon of milk.",
+      "Do you have enough money?",
+      "I think so.",
+      "Thanks very much. I appreciate it."
+    ],
+    "shift_indices": [
+      17
+    ],
+    "n_turns": 19,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 11,
+    "turns": [
+      "Look! This picture of Mom in her cap and gown.",
+      "Isn't it lovely! That's when she got her Master's Degree from Miami University.",
+      "Yes, we are very proud of her.",
+      "Oh, that's a nice one of all of you together. Do you have the negative? May I have a copy?",
+      "Surely, I'll have one made for you. You want a print?",
+      "No. I'd like a slide, I have a new projector.",
+      "I'd like to see that myself.",
+      "Have a wallet size print made for me, too.",
+      "Certainly."
+    ],
+    "shift_indices": [
+      3
+    ],
+    "n_turns": 9,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 12,
+    "turns": [
+      "Did Bean send these dirty jokes to you, too? Look!",
+      "What a creep! Phony good luck e-mails are one thing, but sexual harassment is crossing the line.",
+      "No wonder he asked for my address first-he just wants to harass me!",
+      "You could try using a spam filter to reject stuff that's obviously pornographic or anything else you don't want."
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 4,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 13,
+    "turns": [
+      "How old is Keith?",
+      "He's 21. how old is James?",
+      "He's a year older than Keith, but he looks younger.",
+      "How's your father?",
+      "He's fine. He retired last week. It's turning going in his life. Now he can relax and enjoy his retirement.",
+      "He can spend more time with his grandchildren.",
+      "Oh, I don't think he wants to. He wants to travel to several different countries around the world.",
+      "So, he wants to have a more active retirement. Good idea!",
+      "How do you want to spend your old age?",
+      "In the same way, probably."
+    ],
+    "shift_indices": [
+      8
+    ],
+    "n_turns": 10,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 14,
+    "turns": [
+      "What kind of music do you like listening to?",
+      "I like music that has a fast beat and is lively, like dance music. You know, I go to a disco almost every week. Sometimes it's too loud though. You prefer classical music, don't you?",
+      "Yes, I do. I find it very relaxing. I often listen to Mozart or Bach in the evening after a hard day at work.",
+      "I must admit that I like several pieces of classical music. It's certainly more sophisticated that modern dance music.",
+      "Classical music is supposed to be good for you brain. Research suggest that it makes your brain more active. Students who listen to classical music while studying perform better.",
+      "Really? Perhaps I should listen to classical music often. I heard that listening to classical music is helpful in reducing stress.",
+      "Yes. That's why I listen to it in the evenings. I usually play it as background music while I'm cooking or doing other housework.",
+      "I'Ve got a few classical music CD's. I should follow your lead and increase my brian power.",
+      "You can find plenty of recording on the internet too. You can listen to samples and then buy them very cheaply if you like them.",
+      "That's a good idea. You should do the same with some music. You might find something you like. Classical music might make you clever, but dance might make you livelier and happier.",
+      "That's true. There's clear evidence that people who listen to lively music are lively people. Music can influence a person's feeling and character."
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 11,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 15,
+    "turns": [
+      "I am confused by what he said.",
+      "Why do you say that?",
+      "I don't know what he wants to do. Does he want help me or just scold me?",
+      "Think a little. I think he means well at the bottom of his heart."
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 4,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 16,
+    "turns": [
+      "Tell me something about your Valentine's Day.",
+      "Ok, on that day, boys usually give roses to the sweet hearts and girls give them chocolate in return.",
+      "So romantic. young people must have lot of fun.",
+      "Yeah, that is what the holiday is for, isn't it?"
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 4,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 17,
+    "turns": [
+      "Are these your triplets? They're beautiful! I'Ve seen other babies who were nothing but skin and bones at their age. You know, they're absolutely identical of you and John! Are you planning on having any more?",
+      "Bite your tongue! I'm already at the end of my rope. Some nights I don't sleep at all. John manages to sleep like a log even when the babies are screaming at the top of their lungs.",
+      "Well, tell me. How was the labor and delivery?",
+      "I wouldn't say that I had the time of my life but at least everything went without a hitch.",
+      "Well, hang in there. In twenty years, you'll fell it was well worth it!"
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 5,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 18,
+    "turns": [
+      "Whoa, look at all those ice cream choices!",
+      "Yes, that is a lot of choices. What is your favorite?",
+      "I love anything with chocolate the best.",
+      "I like chocolate myself.",
+      "Is there any kind of ice cream you don't like?",
+      "I really don't like any ice cream with nuts in it.",
+      "I haven't ever cared for that myself.",
+      "Have you ever had garlic ice cream?",
+      "That sounds absolutely disgusting!",
+      "It was. Let's stick with the regular choices today, though."
+    ],
+    "shift_indices": [
+      8
+    ],
+    "n_turns": 10,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 19,
+    "turns": [
+      "So will you come to work with us?",
+      "Can I use my green pad again to write you admiring notes?",
+      "We'll have to negotiate that. It's a possibility.",
+      "You miss me, don't you?",
+      "Don't push your luck, Dave.",
+      "OK, I'm in. When do I start?",
+      "As soon as you can get here. We'll be waiting for you."
+    ],
+    "shift_indices": [
+      5
+    ],
+    "n_turns": 7,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 20,
+    "turns": [
+      "How do you put this seat back? I know there is a lever somewhere.",
+      "What are you doing?",
+      "I'm getting dressed, what does it look like?",
+      "It looks like you are about to get dressed. Did you forget we are in a car on the road?",
+      "I'm good at this. Nobody will see anything.",
+      "Are you kidding? You're going to cause an accident just from people gawking!",
+      "All right, pull over at that service station and I'll dress in the ladies'room.",
+      "That will be my pleasure."
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 8,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 21,
+    "turns": [
+      "We're supposed to check in at the Air China's counter 30 minutes before take-off, Joe.",
+      "Yes, I know. The boarding time on the ticket says 17:05, and now it's 16:15. I guess we have plenty of time.",
+      "Do we need to show our ID cards when checking in?",
+      "Yes. It's essential.",
+      "What about our luggage?",
+      "We can check it and hand carry the small bags. And we have to open each for inspection.",
+      "Are they going to frisk all the passengers?",
+      "I think so. We certainly don't want a hijack to happen on the plane today."
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 8,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 22,
+    "turns": [
+      "I've heard that you provide very good service, so when I need a mover, I call you guys first.",
+      "Thanks a lot for calling us. Could you tell me more about what you need us to do?",
+      "Oh, you see, we are on the 8th floor, and moving into the 6th floor in another building. It is about 15 kilometers to get there.",
+      "OK, the cost depends on the floor to move to, the distance between two places and the amount of the furniture to move.",
+      "How much will it cost in that case?",
+      "Oh, let me see. It fits the second standard rates. Have a look at the contract, please.",
+      "Your charge is divided into two parts, the Payment in Advance and the rest. I thought that I should pay all of it before moving.",
+      "No, firstly we sign the contract ; you pay 50 % of what it costs, and the rest when we finish moving.",
+      "The damage and compensation item confuses me. Could you give some explanation?",
+      "OK. If any of the articles was damaged during moving, you may make a claim for compensation with our department."
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 10,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 23,
+    "turns": [
+      "Hi, Mike. Haven't seen you for a while. How's Cathy?",
+      "We are not seeing each other any more.",
+      "What happened? Did you break up?",
+      "Yeah. I got sick and tired of her nagging all the time.",
+      "Oh, I am sorry. Maybe you were just emotional at that moment. Do you think you guys can get back together?",
+      "I don't know. There's plenty of fish out there in the sea!",
+      "Oh, you are such a dog!"
+    ],
+    "shift_indices": [
+      5
+    ],
+    "n_turns": 7,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 24,
+    "turns": [
+      "Out of every movie that you've seen, which one is your favorite?",
+      "I'm going to have to say that Superbad is the best movie ever.",
+      "You think so, how come?",
+      "Well, Superbad is super funny.",
+      "You're not lying, I found that movie absolutely hilarious.",
+      "I didn't know that you saw Superbad before.",
+      "I made sure to be in line to see it the first day it came out.",
+      "I couldn't keep from laughing throughout the whole movie.",
+      "I was laughing hysterically the whole time ; my stomach muscles hurt afterwards.",
+      "That's exactly how I felt.",
+      "I got the movie when it came out on DVD, do you want to come over?",
+      "I would love to."
+    ],
+    "shift_indices": [
+      10
+    ],
+    "n_turns": 12,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 25,
+    "turns": [
+      "What's all the security check about, Jimmy? Does it mean the bar may be a dangerous place?",
+      "No, of course not. Just in case. Nothing to worry about. Don't you also do this in China?",
+      "I don't know. Maybe the same. Actually, this is my first time being in a bar.",
+      "Oh, then it's my honor to be here with you. I can see now why you've been so curious about the bar stuff. You like this place?",
+      "Sure. I love this place, especially the decoration. So tasteful!",
+      "Yeah. Other than that, the real feature are the excellent drinks. Can I have your ticket?",
+      "Here it is. But, what for? We're already in.",
+      "Well, with the ticket, you can get a free drink. What would you like? Orange juice?",
+      "Yes, orange juice will be fine for me. But how can you get the drink? It's so crowded there around the counter. You can barely move.",
+      "I'll show you how. The bar tenders know whose turn it is. And also, I can snap my fingers to catch his attention.",
+      "Cool. Thanks."
+    ],
+    "shift_indices": [
+      9
+    ],
+    "n_turns": 11,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 26,
+    "turns": [
+      "Excuse me, do you go to the Central Park?",
+      "Yes, this is the right bus.",
+      "Could you please tell me when I get to the Central Park?",
+      "Don't worry. I'll call out the stops.",
+      "( A few minutes later. ) Should I get off at the next stop?",
+      "No, don't worry. I'll get you off when you get there.",
+      "Is it a long ride?",
+      "No, not that long. Two more stops, and you'll get off, sir.",
+      "OK. I know. Thank you.",
+      "Not at all."
+    ],
+    "shift_indices": [
+      8
+    ],
+    "n_turns": 10,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 27,
+    "turns": [
+      "Mr. White, I would like to give you notice that I will be leaving the company. It will be effective at the beginning of the next month.",
+      "Jessica, I am very sorry to hear that. Why are you leaving?",
+      "I've been offered another job with higher salary. And it also gives me the opportunity of promotion.",
+      "Oh. If you had talked to me first, we would have given you a raise.",
+      "You are really a good employer, Mr. White and I am very lucky to have such a good boss like you. But this new job is more in my field of interest training. It's something I have always wanted.",
+      "Ok, good luck, Jessica. By the way, if you ever need a letter of recommendation, I would be happy to write one for you."
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 6,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 28,
+    "turns": [
+      "Have you had any experience with sales work?",
+      "Yes, I have. In fact, I had worked for a foreign trade company for nearly two years, where I established business ties with several firms.",
+      "What exactly did you do at that company?",
+      "Visit customers, dispatch consignments and things like that.",
+      "Did you like your work?",
+      "Yes, I did.",
+      "But when and why did you leave the company?",
+      "I left it two months ago. I didn't think I could learn much there, and there were not many opportunities for self-development.",
+      "I see. Why did you choose our company?",
+      "I've been informed that there are many opportunities to develop myself in your company. Besides, I grew up in a city in the Northeast. I have lots of acquaintances in the region, which might help to push sales."
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 10,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 29,
+    "turns": [
+      "It's Sunday today.",
+      "Yes, I know.",
+      "I think we should have a house cleaning today. What's your opinion?",
+      "Oh, no. We just did it last week.",
+      "Come on. What do you want to do? Washing clothes or cleaning the house?",
+      "I'd rather wash the clothes.",
+      "Okay. Here is the laundry.",
+      "Oh, My God! So much!",
+      "Don't worry. I'll help you with it later."
+    ],
+    "shift_indices": [
+      7
+    ],
+    "n_turns": 9,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 30,
+    "turns": [
+      "May I take your order?",
+      "We haven't decided yet. Could you give us a little longer?",
+      "Yes, take your time, please.",
+      "Can we get something to drink? We want two bottles of beer.",
+      "Fine.",
+      "Could you tell us your specials today?",
+      "The special today is steak.",
+      "We'll take this steak dinner.",
+      "What would you like to go with your steak?",
+      "Peas and carrots.",
+      "I see. What would you like for dessert?",
+      "Icecream, please."
+    ],
+    "shift_indices": [
+      3
+    ],
+    "n_turns": 12,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 31,
+    "turns": [
+      "Can I help you?",
+      "I want a leather jacket.",
+      "What size, please?",
+      "Size 40.",
+      "What color would you prefer?",
+      "Let me see. Do you think a brown one will do?",
+      "Well, the brown one is beautiful indeed, but I think the black one will suit you better.",
+      "Really? Please get it for me.",
+      "Will there be anything else?",
+      "Is this dress made of pure silk?",
+      "Yes, it is. It's brilliant.",
+      "Is it washable?",
+      "Yes, it is. But you have to be careful.",
+      "How much, please?",
+      "Only 350 yuan.",
+      "All right. Will you wrap it for me?",
+      "OK. Here you are."
+    ],
+    "shift_indices": [
+      7
+    ],
+    "n_turns": 17,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 32,
+    "turns": [
+      "Sir, you've been using the online catalogue for quite a while. Is there anything I can do to help you?",
+      "Well, I've got to write a paper about Hollywood in the 30s and 40s, and I'm really struggling. There are hundreds of books, and I just don't know where to begin.",
+      "Your topic sounds pretty big. Why don't you narrow it down to something like.., uh... the history of the studios during that time?",
+      "You know, I was thinking about doing that, but more than 30 books came up when I typed in 'movie studios'.",
+      "You could cut that down even further by listing the specific years you want. Try adding '1930s' or '1940s' or maybe 'Golden Age'.",
+      "'Golden Age' is a good idea, Let me type that in. Hey, look, just 6 books this time That's a lot better.",
+      "Oh, another thing you might consider. Have you tried looking for any magazines or newspaper articles?",
+      "No, I've only been searching for books.",
+      "Well, you can look up magazine articles in the Reader's Guide to Periodical Literature.",
+      "Okay, I think I'll get started with these books and then I'll go over the magazines.",
+      "If you need any help, I'll be over at the Reference Desk.",
+      "Great, thanks a lot."
+    ],
+    "shift_indices": [
+      10
+    ],
+    "n_turns": 12,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 33,
+    "turns": [
+      "So, how was your vacation? You went to Paris, didn't you?",
+      "Yeah, with my parents. We just got back on Saturday. It was wonderful!",
+      "What sights did you visit?",
+      "Well, we saw all the most famous places, the Eiffel Tower, Notre Dame Cathedral... They were so interesting.",
+      "Did you take any tours?",
+      "Just one - a boat tour on the Seine River.",
+      "Wow! That sounds fantastic.",
+      "Yeah. It was a great way to see the city.",
+      "Did you go to any of the famous art museums?",
+      "Yeah. My parents love art, so they spent hours in the museums. But for me, it was pretty boring. I'm just not very interested in paintings.",
+      "So, what else did you do?",
+      "Well, I guess my favorite thing to do was just to sit in cafes and watch the people. It was really relaxing, and French coffee is terrific.",
+      "It sounds like a great vacation to me. But I have work at hand. Hopefully I'll be there one day."
+    ],
+    "shift_indices": [
+      11
+    ],
+    "n_turns": 13,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 34,
+    "turns": [
+      "I'm tired of watching television. Let's go to cinema to- night.",
+      "All right. Do you want to go downtown? Or is there a good movie in the neighborhood?",
+      "I'd rather not spend a lot of money. What does the pa- per say about neighborhood theaters?",
+      "Here's the list on page... Column 6. Here it is. Where's the Rialto? There's a perfect movie there.",
+      "That's too far away. And it's hard to find a place to park there.",
+      "Well, the Grand Theater has Gone with the wind.",
+      "I saw that years ago. I couldn't wait to see it again. Moreover, it's too long. We wouldn't get home until midnight.",
+      "The Center has a horror film. You wouldn't want to see that?",
+      "No, indeed. I wouldn't be able to sleep tonight.",
+      "That's about ell there is. Unless we change our decision and go downtown.",
+      "No, we just can't pay for it. There must be something else we haven't seen.",
+      "Here, look for yourself, I can't find anything else.",
+      "Look at this!",
+      "What?",
+      "In the television timetable, there's a baseball game on television tonight.",
+      "I wasn't looking for a TV program. I was looking at the movie ads.",
+      "I know, but I just happened to notice it. New York is playing Boston.",
+      "That must be good. I wouldn't mind watching that.",
+      "OK. Let's stay home. We can go to the cinema Friday."
+    ],
+    "shift_indices": [
+      3
+    ],
+    "n_turns": 19,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 35,
+    "turns": [
+      "Say, Lisa, what are you watching?",
+      "A Japanese film. I'm going to spend all next year in Japan, and I'd better get to know more about its culture.",
+      "You mean you are accepted into the program?",
+      "Sure.",
+      "That's wonderful. You must be excited.",
+      "Excited and nervous. You know I must work on some basic conversation skills.",
+      "How much Japanese can you understand?",
+      "Only a little now. But I'll attend a special language class next month.",
+      "I wish I were as clever as you are in foreign languages. I'd love to study abroad.",
+      "Then why don't you? The school has a lot of programs that don't require the mastery of a foreign language. You just have to be the kind of person who is and can get used to a new environment fast.",
+      "I thought all programs required one to know a foreign language. Thank you for letting me know this."
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 11,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 36,
+    "turns": [
+      "Morning, Sue. Did you enjoy your holiday in the country?",
+      "Yes, thanks. We had a great time. And some friends went with us.",
+      "Where did you stay? In a hotel?",
+      "No. We camped in the mountains, near Snowdon. We cooked all our meals over an open fire.",
+      "Sounds wonderful. Was the weather good?",
+      "The sun shone nearly every day and it didn't rain at all.",
+      "Did you like the people there?",
+      "Yes, they were great. We met some farmers and had tea in their houses.",
+      "When did you get back? Last night?",
+      "No. This morning. You'll think we were mad. We got up at 4:30, left at 5 and arrived here at 9. I'm so tired. What about you? Did you have a good weekend?",
+      "Yes, but I didn't do much. I stayed at home. The weather was terrible."
+    ],
+    "shift_indices": [
+      8
+    ],
+    "n_turns": 11,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 37,
+    "turns": [
+      "Why didn't you tell me you had a girlfriend?",
+      "Sorry, I thought you knew.",
+      "But you should have told me you were in love with her.",
+      "Didn't I?",
+      "You know you didn't.",
+      "Well, I'm telling you now.",
+      "Yes, but you might have told me before.",
+      "I didn't think you'd be interested.",
+      "You can't be serious. How dare you not tell me you were going to marry her?",
+      "Sorry, I didn't think it mattered.",
+      "Oh, you men! You're all the same."
+    ],
+    "shift_indices": [
+      9
+    ],
+    "n_turns": 11,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 38,
+    "turns": [
+      "Please make yourselves at home. Let me take your coats. Dinner is almost ready. I hope you brought your appetite",
+      "Your house is lovely, Armand! Very interesting decor. . . very. . . Gothic.",
+      "I think it's amazing! You have such good taste, Armand. I'm thinking of re-decorating my house. maybe you could give me a few pointers?",
+      "It would be my pleasure. Please have a seat. Can I offer you a glass of wine?",
+      "We would love some!",
+      "Here you are. A very special merlot brought directly from my home country. It has a unique ingredient which gives it a pleasant aroma and superior flavor",
+      "Mmm. . . it's delicious!",
+      "It's a bit bitter for my taste. . . almost tastes like. . . like. . .",
+      "Ellen! Ellen! Are you okay?",
+      "Did she pass out?",
+      "Yeah. . .",
+      "I hope that you didn't poison her drink too much! You'll ruin our meal!"
+    ],
+    "shift_indices": [
+      8
+    ],
+    "n_turns": 12,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 39,
+    "turns": [
+      "I just bought a new dress. What do you think of it?",
+      "You look really great in it. So are you going to a job interview or a party?",
+      "No, I was invited to give a talk in my school.",
+      "So how much did you pay for it?",
+      "I pay just $70 for it. I saved $30.",
+      "That's really a bargain.",
+      "You're right. Well, what did you do while I was out shopping?",
+      "I watched TV for a while and then I did some reading. It wasn't a very interesting book so I just read a few pages. Then I took a shower.",
+      "I thought you said you were going to see Mike.",
+      "I'll go and visit him at his home tomorrow. He'll return home tomorrow morning.",
+      "I'm glad he can finally returned home after that accident."
+    ],
+    "shift_indices": [
+      9
+    ],
+    "n_turns": 11,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 40,
+    "turns": [
+      "Hi, is Olivia there, please?",
+      "I'm sorry. She's out for lunch. Do you want to leave a message?",
+      "Yes. This is Harris. Could you tell Olivia that I'll wait for her at the box office of the cinema at 7:10?",
+      "Sure, Harris. You'll wait for her at the box office at 10.",
+      "No, at 7:10.",
+      "Oh, sorry, at 7:10. I'll tell Olyvia.",
+      "Thank you."
+    ],
+    "shift_indices": [
+      4
+    ],
+    "n_turns": 7,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 41,
+    "turns": [
+      "Hello, is this doctor, Smith's office?",
+      "Yes, it is. May I help you?",
+      "Yes, I'd like to speak to doctor Smith, please?",
+      "Doctor Smith went home this afternoon. May I ask who is calling?",
+      "This is Jim White.",
+      "Oh yes, mister White. Doctor Smith asked me to give you his home phone number.",
+      "Just a moment, please. Yes, what's the number?",
+      "His number is 77231059.",
+      "Thank you very much.",
+      "That's all right."
+    ],
+    "shift_indices": [
+      8
+    ],
+    "n_turns": 10,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 42,
+    "turns": [
+      "Why are you so excited, Edward? Is there anything happy?",
+      "Of course. Not only happy, but also meaningful. I took the subway to school this morning. Iin the subway station, I saw one novel lying on a seat there and another near the elevator.",
+      "Really? They must have been put there by someone for sharing.",
+      "Yes, I was curious in red one. What a good way to kill time on the way. I plan to put my book there, too. Just for sharing.",
+      "Great. But please, place it in a proper place and don't bother the traffic.",
+      "OK, I will."
+    ],
+    "shift_indices": [
+      4
+    ],
+    "n_turns": 6,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 43,
+    "turns": [
+      "Next week is your birthday party. How exciting! What do you want for your birthday?",
+      "Well, a car like yours would be fantastic.",
+      "Hmm...Maybe not a car just yet. You're only turning 9, you know? How about a doll?",
+      "Mom, I'm a boy. Boys don't play with stupid dolls, but a machine gun would be OK, too.",
+      "Well, not this time. Maybe we could get you a nice dress and a little purse, son. Maybe...",
+      "Maybe I should change my name to Mary since you seem to want a daughter so badly?"
+    ],
+    "shift_indices": [
+      4
+    ],
+    "n_turns": 6,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 44,
+    "turns": [
+      "Are you still watching the soap opera, Nancy?",
+      "Yeah. I can't take my eyes off that when it is on.",
+      "Is it that appealing?",
+      "Well, the cast of the opera isn't very strong and the story isn't so impressive, but the main actor's acting is really outstanding, who is handsome, too.",
+      "Shall we think you need a break right now? There is a football match on channel eight.",
+      "Oh, stop talking about that stupid match. I really don't understand why certain people are running after one ball.",
+      "If we can choose program, I'd rather watch the documentary, this kind of soap opera is really boring.",
+      "Everyone has his own taste. And have you ever heard of the saying, 'One man's meat is another's poison.'",
+      "But you been in front of TV for almost 5 hours, even at dinner time. I had to say you were the most selfish person I have ever seen.",
+      "Well, well, watch channel."
+    ],
+    "shift_indices": [
+      4
+    ],
+    "n_turns": 10,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 45,
+    "turns": [
+      "Mister Ewing said we should show up at the conference center at 4 o'clock, right?",
+      "Yes, he specially asked us not to be late. Some of the people from our East York branch office are coming and he wants to make a good impression on them. How are you getting there?",
+      "I was thinking of taking my car but I think I'm just going to take the underground because there is construction on the highway. What about you?",
+      "I'll be taking the underground as well. Why don't we go together? I've been to the conference center only once, and I'm not sure if I can find my way around there."
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 4,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 46,
+    "turns": [
+      "What's the accommodation like in London Ahmed?",
+      "Well, it's a bit difficult. There are thousands of overseas students here, you know.",
+      "Would it be better to stay in a hotel, to share a flat, or to stay with a family?",
+      "It would probably be better to stay with a family to begin with, Carla.",
+      "You wouldn't recommend sharing a flat?",
+      "No, I wouldn't move into a flat if I were you. You won't get much studying done in a flat. You'll spend half your time cooking and cleaning.",
+      "How can I find out about families who take in students?",
+      "There's a list at the student union building on campus. The people at the student union should be able to help you find a family to stay with."
+    ],
+    "shift_indices": [
+      6
+    ],
+    "n_turns": 8,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 47,
+    "turns": [
+      "Excuse me where is the airport?",
+      "Um, it's pretty far away. I can show you on the map on my smart phone.",
+      "Oh, sorry, and what I meant is how can I get there?",
+      "Well, that depends. Do you want to get there quickly or cheaply?",
+      "Probably the latter would be better.",
+      "All right. If you go down one block and take a left, you'll see the number 12 subway station. Take the number 12 all the way to Grove Street. And then transferred to the airport express' train.",
+      "How will I know where to change trains?",
+      "There will be announcements on the train. But I'm sure there will also be a lot of other people with big suitcases. You can just follow them."
+    ],
+    "shift_indices": [
+      4
+    ],
+    "n_turns": 8,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 48,
+    "turns": [
+      "Were you a leader when you were in college?",
+      "Yes. I was Propaganda department minister of our university.",
+      "Did you get any honors or awards at your university?",
+      "No. It ' s a pity about it.",
+      "Were you involved in any club activities at your university?",
+      "Yes. I was a member of the basketball Society. I like playing basketball.",
+      "What extracurricular activities did you usually take part in at your college?",
+      "I sometimes played basketball and sometimes played football."
+    ],
+    "shift_indices": [
+      4
+    ],
+    "n_turns": 8,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 49,
+    "turns": [
+      "You have the right to remain silent. Anything you say can and will be used against you in a court of law. You have the right to have an attorney present during questioning. If you cannot afford an attorney, one will be appointed for you. Do you understand?",
+      "Yes.",
+      "What's your name?",
+      "My name is James.",
+      "What's your nationality?",
+      "American.",
+      "What's your relationship with the victim?",
+      "I don't know him.",
+      "Why did you attack the victim?",
+      "Because he beat me first when I tried to stop him from grabbing my bag and running away.",
+      "How many times did you stab the victim?",
+      "I stabbed his belly three times.",
+      "Did you know that your actions might cause serous injuries or death?",
+      "I knew, but I couldn't control myself.",
+      "Was it your intention to kill the victim?",
+      "No. I didn't kill him on purpose, madam. It's him who caused the incident. I need to see my attorney.",
+      "OK. Give me his number and we'll contact him."
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 17,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 50,
+    "turns": [
+      "What kind of job do you intend to do?",
+      "I want to do some management job since I have three-year's work history.",
+      "What are your plans if you were hired?",
+      "I would apply my specialty and experience to my job and gradually move up to the management level in this company."
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 4,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 51,
+    "turns": [
+      "Hello, this is Lucie Jing calling from Lincoln Bank. May I speak to Mr. Was, please?",
+      "Speaking.",
+      "Ah, hello, Mr. Was. I'm just calling about your new credit card. It has arrived with us, so you can either come to collect it, or we can send it on to you.",
+      "Sending it won't be necessary. I'm actually coming in for a meeting with my Personal Banker this afternoon.",
+      "What perfect timing!",
+      "Indeed. Is there anything I need to do before I collect it?",
+      "Not really. But we do recommend you to read through our terms and conditions again before you sign the card, just in case there is something you aren't happy with.",
+      "I'm sure it'll be fine. How about my PIN number?",
+      "That will be sent on to you within 2 working days. Then, you can start using your new card.",
+      "Great. I'll be in later today. Thanks for calling. Bye."
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 10,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 52,
+    "turns": [
+      "Let's start out to discuss the question of payment terms.",
+      "I suppose you know very well that we require irrevocable letters of credit payable against presentation of shipping documents.",
+      "I fully understand your position. An irrevocable letter of credit ensures that the seller gets paid in time. But, on the other hand it would add to the buying costs. We've been, after all, trading partners for 3 years and you know us well. Can't you give us D / A or D / P?",
+      "I'm afraid it has been our practice so far to insist on payment by L / C.",
+      "But on our part, our government is reluctant to approve of L / C payment for our imports. And there is the licensing problem.",
+      "I understand that. Still, I'm not in a position to help you. Maybe we could do something later when we have had more and larger deals together."
+    ],
+    "shift_indices": [
+      4
+    ],
+    "n_turns": 6,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 53,
+    "turns": [
+      "Hello, what can I do for you?",
+      "Um. . . Hello, I would like to open an account.",
+      "OK! What kind of account do you want to open?",
+      "I want to open a current account.",
+      "I will open it for you right now.",
+      "What's the minimum deposit for opening a current account?",
+      "It's 10 yuan. How much money do you want to deposit?",
+      "Well, here's 3, 000 yuan.",
+      "Please write down your name, address and the amount of your deposit here. And please choose a passcode of six numbers and confirm it.",
+      "OK, here you are.",
+      "Thank you. Please confirm your information and sign your name in the blank.",
+      "Done! What else should I do?",
+      "That's all. Here's your bank card, and here's the certificate of deposit. Bring your bank card with you every time you come to deposit or withdraw money.",
+      "OK. Thanks. Goodbye!",
+      "Bye!"
+    ],
+    "shift_indices": [
+      13
+    ],
+    "n_turns": 15,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 54,
+    "turns": [
+      "Why do you want to spend your summer days in a mountain village?",
+      "I think a mountain village is splendid!",
+      "I don't agree with you. It's too small to live.",
+      "It has fresh air, and it is nicer than a big town.",
+      "I disagree, a big town is more lively.",
+      "But I like the small mountain village. The big town is noisy. How charming it is when walking along the hill!",
+      "Well, alright, I agree with you about that, but I still prefer a big town."
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 7,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 55,
+    "turns": [
+      "What are we going to do? I can't get the car out of this ditch. I'm stuck!",
+      "I'm worried, Tom. I haven't seen any other cars for almost an hour.",
+      "I know. This is terrible. What can we do? This snow doesn't stop falling!",
+      "I told you we should have stayed in town today. The weather report said 100 percent chance of snow. Why did you want to come up here?",
+      "I wanted to show you the cabin. We only had another half-hour to go.",
+      "Well, now we're stuck. What can we do?",
+      "I don't know.",
+      "I've heard that when this happens, it's important to save energy.",
+      "What do you mean?",
+      "We're stranded here, Tom. We may be here a long time. We need to conserve the gas in the car. The car's energy is what will keep us warm.",
+      "I have plenty of gas.",
+      "Yes, but the gas and the battery both have to stay working. We can't just let the car run and run. If we do, it will die soon. Then we'll freeze.",
+      "So what can we do?",
+      "Turn the lights off. Then, run the car and the heater only about fifteen minutes every hour. That will conserve the heat as long as possible.",
+      "Alright. That's a good idea.",
+      "I wish we hadn't come up here. Now we'll probably be here for days.",
+      "Days?",
+      "Yes, it happens. That is what happens in big snowstorms. People get stranded for days.",
+      "Oh, my God! It's good we have food.",
+      "Probably we'll survive. But turn the car off for about forty-five minutes. Then we'll turn it on again.",
+      "Okay, I'll follow your advice."
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 21,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 56,
+    "turns": [
+      "Philip, I was really glad to hear about your award. Congratulations!",
+      "Thanks, Denise. Actually, I was really surprised. I mean, there were a lot of qualified people out there.",
+      "Sure. But the work you did was really exceptional! You definitely deserved it!",
+      "Thanks a lot. I expect to see your name nominated pretty soon, too. You've been doing some great work!"
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 4,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 57,
+    "turns": [
+      "Jenny, are you having a good time?",
+      "Yes, of course. This is a really wonderful party with interesting people and great food.",
+      "I'm glad you are enjoying yourself.",
+      "Thank you for the invitation.",
+      "It's my pleasure. Can I get you another glass of champagne?",
+      "Yes, I'd love another glass. You're a wonderful host. Thank you for everything.",
+      "It's my pleasure having you here."
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 7,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 58,
+    "turns": [
+      "Oh, Linda. You must be so excited about going to study in America.",
+      "Oh yes I am. I have always wanted to go to the States. I love meeting new people and making new friends.",
+      "Well, I am sure you will.",
+      "Well, there is one thing.",
+      "What is the matter?",
+      "I am a little worried about my host family. You know, in the agreement, I have to do some cooking for them.",
+      "Yes?",
+      "Well, I am just afraid they won't like my Chinese way of cooking.",
+      "Oh, listen, you'll soon learn, and I am sure they will explain to you how they like to get prepared.",
+      "Oh, let's hope so."
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 10,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 59,
+    "turns": [
+      "Would you talk to me about taking one of Dr. Miller's classes?",
+      "Yes. Have you ever been in one of his classes?",
+      "I'm thinking about taking his class next semester.",
+      "He was a very easy teacher. Are you thinking of taking a class with him?",
+      "I'm not sure because I really need to learn something, but I also worry about grades.",
+      "Grades are important, but don't you think that gaining the knowledge is important, too?",
+      "I really need to learn this stuff.",
+      "He made everything so interesting that the time just flew by. Do you know what I mean?",
+      "Yes, that sounds right for me.",
+      "Did you know that he came here last year after 10 years in the military?",
+      "Yeah, I already knew that. That could be a good thing.",
+      "I think you know that you have to make the best decision for you. Enjoy your year!"
+    ],
+    "shift_indices": [
+      10
+    ],
+    "n_turns": 12,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 60,
+    "turns": [
+      "Welcome back movie lovers to another Premier Movie Review. My name is Richard Clarke and I am joined today by the very erudite David Watson.",
+      "Thank you Dick. Today we are going to talk about the movie Lion King. Tell me Dave, what is your impression of this film?",
+      "Well, I think this film is simply a fable, depicting man's eternal greed for power, and in my opinion, it's a very fine film. Even despite the accusations of plagiarism traditional folk tales from other countries. The musical score was amazing, the animation was very well done, and the story was simply enchanting.",
+      "I think otherwise. Even though the animation was technically strong, and as you say, the score and songs performed by Elton John were great, the film lacks a certain originality ; it lacked heart. And I would dare to say, it was too predictable.",
+      "Predictable! How! Come on Dick, It's a G-rated movie! It's for the kids! It's not a thriller!",
+      "Well, that's just it. It did have some very dramatic and intense scenes. For example when Mufasal dies, or the dark, grim portrayal of Scar. Even so, the film is linear. Mufasal dies, Simba runs away thinking it's his fault. Falls in love and returns to retake what is rightfully his. It's just too cliche.",
+      "How can it be cliche? It's a fable! It's telling a time-honoured story! The movie make a point of how the hunger for power leads to corruption, and teaches children the value of respect, life and love.",
+      "You have always been so soft, Dave!",
+      "Open your heart Dick. Don't shut us out.",
+      "Anyway. . . That's all for today folks! Join us next time as we talk about & quot, How to lose a guy in 10 days & quot, I'm sure you'll love that one Dave!"
+    ],
+    "shift_indices": [
+      7
+    ],
+    "n_turns": 10,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 61,
+    "turns": [
+      "How about going to dance this evening, Jane? You will find that the night life of this city is very interesting!",
+      "Good idea. There is a good nightclub nearby, isn't it?",
+      "Yes, the dance hall is nice with various styles of music.",
+      "( In the club ) Look at those people in the dance floor, they are so crazy.",
+      "That's rock and roll with fast tempo.",
+      "I like the slow dance. I am good at rumba and waltz.",
+      "Take it easy. The time for slow dance is the middle part of the party.",
+      "Let's find a quiet seat and sit down for beverage.",
+      "OK, follow me.",
+      "Listen, it is waltz. I like the elegant step of the old styles.",
+      "May I?",
+      "Sure.",
+      "( When they are dancing ) You dance gracefully!"
+    ],
+    "shift_indices": [
+      10
+    ],
+    "n_turns": 13,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 62,
+    "turns": [
+      "Let's move out of here. This apartment is too small.",
+      "I agree. I'll look in the paper.",
+      "A house would be great. I could plant a garden. And you could use the garage for a workshop.",
+      "Here's an interesting ad",
+      "How much is the rent?",
+      "The ad says $ 325 plus deposit.",
+      "When is the place available?",
+      "It's available now, and it's got a very good location. You won't be far from work."
+    ],
+    "shift_indices": [
+      6
+    ],
+    "n_turns": 8,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 63,
+    "turns": [
+      "Good morning, Maintenance Department.",
+      "Hello. I'm having a problem with my air conditioner.",
+      "Which air conditioner?",
+      "The one in the bedroom.",
+      "What seems to be the problem?",
+      "There's no cold air coming out.",
+      "May I have your room number, please?",
+      "512.",
+      "OK, we'll send someone up to check it.",
+      "I'm going out right now. But that's all right, you can come when I've gone.",
+      "Fine. The housekeeper will open the door and stay in the room with the repairmen."
+    ],
+    "shift_indices": [
+      9
+    ],
+    "n_turns": 11,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 64,
+    "turns": [
+      "Look, Jim. That man just fell down over there.",
+      "We better see if he's o. k.",
+      "Sir. . . sir? Are you all right? Sir?",
+      "He's not answering. You'd better check his pulse and breathing.",
+      "Oh, no. He's not breathing, and there's no pulse. Call 911.",
+      "Hello? Yes. Someone has passed out at Connecticut Ave. and 1st St. He isn't breathing and does not have a pulse. Yes. My friend is performing CPR. OK. Thank you. They're sending an ambulance. Here, let me help."
+    ],
+    "shift_indices": [
+      3
+    ],
+    "n_turns": 6,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 65,
+    "turns": [
+      "Excuse me. What time does the next train to London leave?",
+      "At 10:30.",
+      "Is it a direct train to London?",
+      "Yes, it is.",
+      "OK. Two tickets to London, please.",
+      "Single or return?",
+      "Single, please. How much in total?",
+      "10 pounds.",
+      "Here you are. Which platform should I go to wait for the train?",
+      "It's platform 5.",
+      "OK. Thank you.",
+      "You are welcome."
+    ],
+    "shift_indices": [
+      10
+    ],
+    "n_turns": 12,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 66,
+    "turns": [
+      "Hi. This is the Customer Service. How can I help you?",
+      "Hi. I bought one of your vacuums from spend-wart. It's broken now.",
+      "Is it under warranty?",
+      "I think so. I bought it four months ago.",
+      "Yes, it is still covered by our warranty. Tell me the mode number of your vacuum, please.",
+      "Okay. The model number is 6594 - c.",
+      "What's your address, your name and your phone number?",
+      "906 Ottawa street. My name is David Yang. My phone number is 713-786-0234.",
+      "Okay. There are two Customer Service Offices in your area. The nearest one is Chadwick and Hacks Appliances.",
+      "Could you tell me where the office is located?",
+      "Sure. 878 Fennel South.",
+      "Oh, I know that place. It's only two minutes drive.",
+      "You have to call the office first.",
+      "All right. Thank you very much for your help.",
+      "My pleasure."
+    ],
+    "shift_indices": [
+      13
+    ],
+    "n_turns": 15,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 67,
+    "turns": [
+      "Mrs. Phoebe, let's talk about the delivery arrangement for our goods.",
+      "Sure. What's your date of delivery?",
+      "I informed my company and was told that the first five thousand by the end of this month.",
+      "What about the balance of the order? Can they also arrive at our company quickly?",
+      "We can deliver the balance at the price already quoted in 10 days.",
+      "Can you deliver them earlier?",
+      "I am afraid we can not do that. Would you be willing to sign an annual contract on the basis we discussed?",
+      "Possibly, subject to quality and delivery guarantees.",
+      "Of course. Well, in that case we could offer a 5 % discount for a confirmed monthly order for the next 12 months.",
+      "I was looking forward to something a bit more substantial. As you know, we have long-time cooperation.",
+      "I'm afraid that's as far as we could go. We'd already be stretching ourselves to the limit.",
+      "Well, let's shake on that and draw up the details of the contract."
+    ],
+    "shift_indices": [
+      9
+    ],
+    "n_turns": 12,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 68,
+    "turns": [
+      "Hello, reservation desk. Can I help you?",
+      "Yes. I'd like to book a duplex suite.",
+      "What day would you like to reserve the suite for, sir?",
+      "Next Friday.",
+      "I'm sorry, sir. We can't accept reservations for next Friday due to over booking. May I suggest another hotel, sir?",
+      "Oh, thank you very much.",
+      "Please hold the line. I'll see if there is a duplex suite available on that day. ( a minute later ) Sir? Holiday Inn is available for your need.",
+      "How do I contact them?",
+      "I'll give you their phone number. It's 601 789 5634."
+    ],
+    "shift_indices": [
+      7
+    ],
+    "n_turns": 9,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 69,
+    "turns": [
+      ". . . So what I think we need to do is ( XXXXXXXXXX ) finish on time.",
+      "Sorry, Tom, can you say that last bit again please? We didn't get that.",
+      "Oh, OK, I said ( XXXXXXXXXX ) on time.",
+      "Sorry Tom, We're having problems hearing you here. It's a bit hissy. Can you hear us?",
+      "( XXXXXXXXXX )",
+      "Hello?",
+      "( XXXXXXXXXX ) but I don't think you can hear us. ( XXXXXXXXXX ) Hello? ( XXXXXXXXXX )",
+      "Tom, if you can hear me, I think we've lost you. There's a problem with the line. Let's try again. We'll call you.",
+      "( XXXXXXXXXX ) OK ( XXXXXXXXXX )."
+    ],
+    "shift_indices": [
+      3
+    ],
+    "n_turns": 9,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 70,
+    "turns": [
+      "Hello!",
+      "Hello, Lucy. This is John. Could you do me a favor? I've tried to phone my wife six times and I can't get through. The line is busy all the time. Could you possibly go next door and give her a message?",
+      "Sure! What do you want to tell Mary?",
+      "Could you just say I've met an old friend and I'm staying with him? I'm not in the office now and I'll give her a ring later.",
+      "Sure, I'll go right now.",
+      "Thanks a lot, Lucy."
+    ],
+    "shift_indices": [
+      4
+    ],
+    "n_turns": 6,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 71,
+    "turns": [
+      "Hello, there. I'm Jack.",
+      "Hello there. Well. This is it. As you can see, it's fully furnished. You've got your TV...cable TV and broadband Internet is included in the rent. The kitchenette is over there...all fully fitted...nice new fridge and cooker, kettle, toaster, microwave...all your mod-cons. The bathroom is through there...box shower unit...sink...all new from B&Q. There's a nice view of the park from the window too.",
+      "Hmm...it's smaller than I thought. How much is the rent again?",
+      "250 a week, plus of course, you're responsible for all fees including gas, water and electricity.",
+      "It said 200 in the ad.",
+      "Yeah, but that was for the small room upstairs and that's already gone.",
+      "Well, 250 is a bit too much for me.",
+      "Well this is London. And it is your own place...good location, near the Tube.",
+      "Look...I can stretch to 200 a week...I can't afford 250 plus all the other bills.",
+      "All right. One month's rent in advance, plus a month's deposit. That'll be 400 cash. This is the contract...read through it, initial each page and then sign at the bottom...",
+      "OK."
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 11,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 72,
+    "turns": [
+      "How is your mother feeling these days?",
+      "Much better, thanks. She'll be back home in a few days.",
+      "That's wonderful. When will you be back on your job?",
+      "I think I need a week to take care of her and do some cleaning for her coming home.",
+      "Why don't you hire someone to do it? In this case, you cannot only do your job, but also have more free time.",
+      "Yes, I know it. But I'm really worried about my mother. She is 72 years old.",
+      "You're a kind and thoughtful man. I admire you very much.",
+      "I'm just a very normal son."
+    ],
+    "shift_indices": [
+      6
+    ],
+    "n_turns": 8,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 73,
+    "turns": [
+      "Oh, no! I'm supposed to meet her at seven sharp. What time is it now?",
+      "Six thirty.",
+      "I'd better get ready.",
+      "Where are you going?",
+      "Haven't made up our minds yet. Maybe to a restaurant, or perhaps to the movies first.",
+      "Why don't you go and see Citizen Kane at the Classic Film Festival? It's supposed to be great.",
+      "Oh, maybe we will. Psycho is also playing. I've heard it's really good, too.",
+      "If you like horror films with lots of blood. Personally I don't. Well, I really should be going. Do you want to go swimming tomorrow?",
+      "I'd be glad to, but I might have to go to the studio and do some work. Can I let you know the first thing in the morning?",
+      "Sure. That'll be fine.",
+      "Oh, there's the phone. It must be Tracy.",
+      "Well, I'd better be going then. Have a good time tonight.",
+      "Thanks. I'll talk to you tomorrow."
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 13,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 74,
+    "turns": [
+      "What exactly are you looking for?",
+      "I am looking for a collection of the 19th century European paintings.",
+      "Is it the book on your left, the one with the yellow cover?",
+      "Let me see. Yeah, this is what I want. Thanks a lot."
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 4,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 75,
+    "turns": [
+      "Bob, I'm sure you know about second-hand smoke.",
+      "Of course, I do.",
+      "But have you heard about third-hand smoke?",
+      "Third-hand smoke? I'm afraid not. What is that then?",
+      "Well, it is here in today's paper. Parents may think they are protecting children from second-hand smoke when they smoke outside their home or only when the children are not there. But now researchers are warning about what they call third-hand smoke. When you smoke dangerous matter from cigarettes get into your hair and clothing. As babies are the weakest, when you come to a baby, you pass it to the baby and increase the chances of disease in the baby.",
+      "Is that so? In that case I have to say that I should never get close to a baby.",
+      "That's right. Actually all smoking parents should do the same or better give it up completely."
+    ],
+    "shift_indices": [
+      5
+    ],
+    "n_turns": 7,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 76,
+    "turns": [
+      "Hey, man. What's up?",
+      "Ah, first of all, I put a buck in the vending machine for a seventy-five cent candy bar, and the thing got stuck here in the machine. Then, I pressed the change button [Ah, man], and nothing happened. [Wow!] Nothing came out. The dumb thing still owes me a quarter.",
+      "Well, did you talk to the man at the snack bar to see if he could refund your money?",
+      "Yeah, I tried that, but he said he didn't own the machine, and I'd have to call the phone number on the machine.",
+      "What a bummer.",
+      "Hey, I have an idea. [What?] Why don't we rock the machine back and forth until the candy bar falls?",
+      "Nothing doing. I don't want to be responsible for breaking the thing, and besides, someone might call the cops.",
+      "Ah, don't worry. I've done it before. Oh well. Hey, hey, tough luck. Hey, here, take my candy bar. [You mean?] Yeah, the machine and I hit it off earlier today."
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 8,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 77,
+    "turns": [
+      "I'm Paul Adams, Branch Manager.",
+      "Katie Thomas. Pleased to meet you.",
+      "I take it you're looking for temporary office work.",
+      "That's right.",
+      "How old are you, Katie?",
+      "I'm eighteen.",
+      "That's rather young. What experience have you had?",
+      "Well, I've just left school, actually, and I'm looking for a job between now and when I go to college.",
+      "It doesn't sound as though we can help, Katie. You see, our clients are very demanding, especially when it comes to the new office technology.",
+      "Oh, that's no problem. I took extra classes in office skills at school.",
+      "Oh, perhaps you'd like to outline what you've been doing?",
+      "I started by learning keyboard skills. Then I went on to learn about word processing.",
+      "Good. You seem qualified from the technical point of view."
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 13,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 78,
+    "turns": [
+      "May I have your order now?",
+      "We'd have your regular dinner. What courses are there, please?",
+      "The courses for our regular dinner are fish salad for appetizer, steak for main course and chocolate cake for dessert.",
+      "All right, we'll have it.",
+      "Today's mutton chop is very good. Would you like to have it as the main course?",
+      "That's a good idea. And as for dessert, we'll have apple pie. We'd like to have some coffee afterwards.",
+      "Good, here're your appetizers. Your dinners will be ready in five minutes."
+    ],
+    "shift_indices": [
+      5
+    ],
+    "n_turns": 7,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 79,
+    "turns": [
+      "What's the special today?",
+      "'All-you-can-eat' dinner special.",
+      "I don't like to.",
+      "Do you care for seafood?",
+      "Yes, I'm very fond of seafood.",
+      "Which seafood do you prefer?",
+      "I'd like to have red cooked sea cucumber.",
+      "Is there anything else you would like to have?",
+      "Bring me an assorted cold dish, please.",
+      "Would you care for beverage?",
+      "No, thanks. I'm fine.",
+      "What would you like to drink?",
+      "A bottle of champagne."
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 13,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 80,
+    "turns": [
+      "Hi, taxi. Could you take me to the financial street, please",
+      "Pardon, where to , sir?",
+      "I want to go to the financial stree.",
+      "All right. Hop in, please.",
+      "Excuse me, how long does it take to get there?",
+      "It usually takes about half an hour.",
+      "Oh, does it really a long way to go.",
+      "Yes. Moreover, since the street is heavy with traffic this time of day. I'm not sure we can make it. By the way, are you pressed for the time?",
+      "No, I'm not. you can just drive slowly and carefully.",
+      "OK.",
+      "You are very skillful driver.",
+      "Thank you.",
+      "By the way, is the fair the same for any distance?",
+      "No. It varies according to the distance, you can read from the meter.",
+      "Oh, I see."
+    ],
+    "shift_indices": [
+      13
+    ],
+    "n_turns": 15,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 81,
+    "turns": [
+      "For tomorrow, read pages 12 to 20. Then do exercises one through ten on page 21.",
+      "Do we have to type out our homework?",
+      "No. You only do that when you write reports.",
+      "Is there anything else?",
+      "For those of you who don't have a calculator, get one.",
+      "We are allowed to use a calculator in class?",
+      "Yes. By the way, review today's notes this evening. We may have a small quiz tomorrow."
+    ],
+    "shift_indices": [
+      3
+    ],
+    "n_turns": 7,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 82,
+    "turns": [
+      "Can you tell me about some good deals on produce?",
+      "The mangoes are on sale today.",
+      "What exactly are mangoes?",
+      "They have yellowish red skin. It's a fruit with one big seed.",
+      "Is the seed edible?",
+      "Maybe if you were a parrot. I wouldn't recommend it.",
+      "How much does a mango cost?",
+      "Normally, they're $2 each. Today, they're only $1 each.",
+      "Maybe I won't like the taste.",
+      "It's hard to describe. They're sweet, but also sort of citrusy.",
+      "How do I tell the difference between a ripe one and an unripe one?",
+      "They're similar to an avocado. When the outside feels soft, they're ripe.",
+      "Where do most of them come from?",
+      "These are from Mexico."
+    ],
+    "shift_indices": [
+      12
+    ],
+    "n_turns": 14,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 83,
+    "turns": [
+      "It seems that something is praying heavy on you. What's the matter?",
+      "I got my father's goat last night.",
+      "What did you do to get his goat?",
+      "When I asked him to treat me like he does to my sisters, he jumped down my throat. So I took it out on him by telling him what I thought."
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 4,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 84,
+    "turns": [
+      "How do you do, Mr. Smith ? This is Lili. I'm calling to thank you for the wonderful dinner we had yesterday . I enjoyed it very much.",
+      "You're welcome. I'd like you to join us for dinner again sometime.",
+      "Thank you, Mr. Smith. I'm returning to China today.",
+      "Today?",
+      "Yes. I appreciate all help and in particular, all the time that you've spent on my account during my stay here.",
+      "Don't mention it. I am pleased to help you.",
+      "If there's anything that I can help you in the future, please let me know.",
+      "I'll do that. Thank you. Have a safe trip home."
+    ],
+    "shift_indices": [
+      6
+    ],
+    "n_turns": 8,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 85,
+    "turns": [
+      "Daniel, have you ever heard about the wildlife sanctuary?",
+      "Is that different from this kind of zoo?",
+      "Yes, of course.",
+      "So tell me about it!",
+      "There are a lot of wild animals in that place, and also some special rules while visiting.",
+      "Special rules?",
+      "There, you only have two ways for visiting.",
+      "Details?",
+      "On their bus or in your own cars, and you won't be allowed to get off the bus until you reach the special region.",
+      "Why not?",
+      "Because it is dangerous to get out of the car or bus. You can just imagine how fierce the wild animals can be.",
+      "That makes sense. But that sounds interesting. Is there one in Beijing too?",
+      "Yes.",
+      "I prefer to go there next time.",
+      "Yeah, sure, you won't be disappointed."
+    ],
+    "shift_indices": [
+      13
+    ],
+    "n_turns": 15,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 86,
+    "turns": [
+      "Hello, Bob. This is Nancy speaking. I'm so glad I've got hold of you at last.",
+      "Were you trying to get in touch with me? If I'm not at home, you can usually reach me at my club here.",
+      "That's good to know. Listen, Bob, I've got news for you.",
+      "What is it?",
+      "My sister Amy is coming back from the states.",
+      "That's great. When is she coming back?",
+      "Next weekend.",
+      "Next weekend? OK. Let's get together tonight and plan a party for her.",
+      "All right."
+    ],
+    "shift_indices": [
+      4
+    ],
+    "n_turns": 9,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 87,
+    "turns": [
+      "Sunshine Hotel. Good morning, Barbara speaking.",
+      "Hello. I'd like to make a booking please. I'm on a business trip, so I need a single room.",
+      "OK, your name please.",
+      "John Griffin. That's JOHNGRIFFIN.",
+      "OK, I've got that down. Wait a minute. We already have your name. You've been here before, haven't you? Or it must be someone with the same name.",
+      "I've stayed with you twice before.",
+      "OK. Let's see the card and confirm it. Please tell me if I'm wrong. John Griffin from Sydney, Passport Number 87637489. Right?",
+      "That's right.",
+      "OK. So what time can we expect you tonight, Mr. Griffin?",
+      "The plane lands at 9:15 PM and no one can pick me up. So I should be at your place at 10:00. Will the restaurant still open at that time?",
+      "I'm afraid not. Can I organize some snacks to be left in your room?",
+      "Yes, that would be great. How about a cheese sandwich?",
+      "No problem, sir. I'll see to that."
+    ],
+    "shift_indices": [
+      11
+    ],
+    "n_turns": 13,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 88,
+    "turns": [
+      "Hello, Barbara. Welcome back. You look great.",
+      "Rod, it's lovely to see you again.",
+      "How was your trip?",
+      "Fine, but tiring. Milan was interesting. It's bigger than I expected, noisier and dirtier too.",
+      "And Florence? What did you think of Florence?",
+      "Well, I didn't go there. Have you been there?",
+      "No, I've never been to Italy. I'd really like to go to Rome. Well, the car's in the car park. Is this all your suitcase?",
+      "Yes, but the suitcase is very heavy.",
+      "Barbara, what's in it? Books or stones?",
+      "Just 20 pairs of shoes."
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 10,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 89,
+    "turns": [
+      "Excuse me, my watch stopped running and I am not sure what's wrong with it.",
+      "Well, let me look at it. It seems that it just needs a new battery.",
+      "Oh, really? I got some water on it last week and I was afraid that it might ruin the watch. How much is a new battery?",
+      "It's $5 and we not only change a battery, but also guarantee it for a year and if you have the watch cleaned here, we can guarantee it for an additional 3 months.",
+      "That sounds like a good deal. I'll get my battery here. When will it be ready?",
+      "Usually I can do it right away, but now I'm repairing lots of watches. Can you leave your watch here until 5:00 PM?",
+      "OK. See you then."
+    ],
+    "shift_indices": [
+      5
+    ],
+    "n_turns": 7,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 90,
+    "turns": [
+      "Let's plan, the dinner for the end of the year.",
+      "I've been talking to some of the other kids in the class and quite a few of them want to go to a pizza restaurant.",
+      "Um, I think I've had enough of pizza. I eat it at least twice a week, it be good to have something different.",
+      "Well, there's that Chinese restaurant. The bamboo house.",
+      "It's closing next week for a month. They're going to build a new kitchen or something. I remember going to someplace with a singer and guitarist. And it was great.",
+      "But there will be at least 20 of us, will be so noisy that we won't hear the music.",
+      "You're right. Hey, we haven't thought about the cost. Some people will want to go to a cheap place, and others can afford somewhere more expensive.",
+      "Why don't we fix the amount first and ask a restaurant to provide a meal for that price?",
+      "That's a good idea. And we can make a list of the places we think our best, and get the rest of the class to choose one."
+    ],
+    "shift_indices": [
+      6
+    ],
+    "n_turns": 9,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 91,
+    "turns": [
+      "Hello Martin, long time no see. I heard you went to France to study, how was that?",
+      "I was only there for a year, then I took a year off to travel around Europe.",
+      "Where did you go?",
+      "I went to Switzerland first and then Germany in Austria. I was planning to end my trip in Italy, but it didn't work out.",
+      "Oh well, is it good to be back?",
+      "Of course, but I'm returning to France to finish my degree. It's a four-year program.",
+      "Oh, so you're just back to Beijing to visit your family?",
+      "Yeah, I'm here for another 2 months.",
+      "Any plans?",
+      "In July, my mother is turning 70, so we'll do something special for her. Next month we're going to drive to the coast, then I will be back to France before September first.",
+      "Good for you, do you think you could fit me into your busy schedule?",
+      "Ha, I can always make time for my friends, how about tonight?",
+      "Deal."
+    ],
+    "shift_indices": [
+      11
+    ],
+    "n_turns": 13,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 92,
+    "turns": [
+      "Excuse me, do you have a few minutes? I work for the Star Bookstore, and we are doing a survey about people's reading habits. I want to ask you a couple of questions.",
+      "Yes, alright. What would you like to know?",
+      "Well, what kinds of books do you prefer to read?",
+      "Hmm, I absolutely love adventure stories best. I am also interested in historical novels. And recently, I've read several biographies.",
+      "OK. Where do you buy your books? In stores or on the Internet?",
+      "About 2/3 of my books are bought from online bookstores. Sometimes I go to a bookstore if I see something interesting in the window. I also borrow books from friends or from the library.",
+      "Great. Thank you for your time. Have a nice day.",
+      "No problem. Good day to you."
+    ],
+    "shift_indices": [
+      6
+    ],
+    "n_turns": 8,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 93,
+    "turns": [
+      "What kind of place shall we rent?",
+      "It should be close to the university. Neither of us are good at getting up in the mornings and closer it is, the later we can get up.",
+      "Absolutely. That's the most important thing to take into consideration. I'm not too worried about the size of the flat.",
+      "Neither am I. So a small place is ok, but we'll get a bigger one if it's not expensive. Do you mind if it's in a noisy area?",
+      "I don't mind. i'm not a light sleeper, but quieter is better for when we have to study at home.",
+      "Good point. Ok, let's go to the estate agent and see what they can offer us.",
+      "Yes, if we're lucky we'll find something in the next few days. I think you had a good idea to start flat hunting early.",
+      "How much do you think the rent will be?",
+      "I asked a few people who are already living in places near the university and they said it would cost about one hundred pounds a month."
+    ],
+    "shift_indices": [
+      5
+    ],
+    "n_turns": 9,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 94,
+    "turns": [
+      "Hello! Can I help you?",
+      "Today is my wife's birthday, so I want to buy a bouquet for her.",
+      "What kind of flowers do you want?",
+      "I have no idea.",
+      "How about rose? It's the most suitable one for lovers.",
+      "But rose is too common.",
+      "Well, what about violet? It means the eternal beauty.",
+      "It looks good. Pack me a bouquet of violet, please."
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 8,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 95,
+    "turns": [
+      "I have a problem with my cable.",
+      "What about it?",
+      "My cable has been out for the past week or so.",
+      "The cable is down right now. I am very sorry.",
+      "When will it be working again?",
+      "It should be back on in the next couple of days.",
+      "Do I still have to pay for the cable?",
+      "We're going to give you a credit while the cable is down.",
+      "So, I don't have to pay for it?",
+      "No, not until your cable comes back on.",
+      "Okay, thanks for everything.",
+      "You're welcome, and I apologize for the inconvenience."
+    ],
+    "shift_indices": [
+      10
+    ],
+    "n_turns": 12,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 96,
+    "turns": [
+      "Can I help you?",
+      "I'm looking for an MP - 3 player. Which brand is of the highest quality?",
+      "I recommend Pioneer.",
+      "Which model is the best-seller?",
+      "This model is very popular with ladies.",
+      "May I have a look at it?",
+      "Sure, it's multi-functional. Besides playing music, it can also be used to store documents and make recordings.",
+      "Do you have this model in white?",
+      "No, but we have it in yellow.",
+      "Then I'll take the yellow one.",
+      "Please wait a second. I'll get it for you.",
+      "Okay."
+    ],
+    "shift_indices": [
+      7
+    ],
+    "n_turns": 12,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 97,
+    "turns": [
+      "Susan! Why didn't you tell me that you were taking over the Silk Company account?",
+      "I thought you knew, Todd. It was decided last week. I guess you weren't at the meeting.",
+      "You know I wasn't at the meeting. I was meeting with Mr. Wei about this account. I'Ve been on this for a month and a half.",
+      "I'm sorry. Todd, but Mr. Emory felt that it was going too slowly, and that it needed a fresh start. He should have told you."
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 4,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 98,
+    "turns": [
+      "What's up, buddy? You look so upset.",
+      "I just broke up with a girl. Why didn't she understand that I loved her?",
+      "I'm sorry to hear that. What's your conflict?",
+      "I don't know. She always said I didn't love her, but I did.",
+      "Did you think about talking to her again? Maybe she is waiting for your call.",
+      "I have asked for a talk again, but she refused and said she wanted to be quiet.",
+      "Come on, guy. Maybe she isn't your right person."
+    ],
+    "shift_indices": [
+      3
+    ],
+    "n_turns": 7,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 99,
+    "turns": [
+      "Merry Christmas, Lily.",
+      "The same to you, Joey.",
+      "This is your first Christmas in the US. Here is the gift for you.",
+      "It's very thoughtful of you. Wow, it is so beautiful. Could you tell me how American people celebrate Christmas?",
+      "Ok. People decorate their houses, place a Christmas tree in the room and maybe sing a Christmas carol together."
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 5,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 100,
+    "turns": [
+      "What dances do you like?",
+      "I love to dance the fast music.",
+      "Then you must be interested in disco.",
+      "Yes, it's my favorite.",
+      "Oh, it's a disco. Let's dance.",
+      "You're a good dancer.",
+      "Thank you. Now they are playing a rumba. Would you have a try?",
+      "Sorry. I feel like sitting out the next dance.",
+      "OK. Let's get something to drink.",
+      "Good idea."
+    ],
+    "shift_indices": [
+      8
+    ],
+    "n_turns": 10,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 101,
+    "turns": [
+      "I hate landing in the sand trap! Now I'm probably going to waste strokes getting it out.",
+      "At least you haven't landed in the water yet. I've done that on the last two holes.",
+      "Could you hand me my wedge? I'll try. . .",
+      "Here you go. I'll wait for you to get on the green before I putt.",
+      "No. you go ahead and putt it out. Then I'Il go.",
+      "No way, Mary. I'm going to let you go first. I don't want the pressure of putting first."
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 6,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 102,
+    "turns": [
+      "Have you heard about the new iPhone?",
+      "yes, I heard it's supposed to come out in June. Are you thinking about getting one?",
+      "I'd like to. It's a cell phone, camera, PAD and mp3 player all in one.",
+      "if I had enough money, I'd buy one, but I don't even have enough to buy one of their shuffle spods.",
+      "how big is a shuffle iPod?",
+      "the first generation iPod shuffle is about the size of a park of gum and the second generation iPod shuffle is about half the size of the first.",
+      "how many gigs of music can it hold?",
+      "I think it's either one or two gigs. I can't remember.",
+      "how much do they cost?",
+      "not much at all. I think it's about 100 dollars.",
+      "you're right, that's not bad at all.",
+      "do you have an iPod?",
+      "I got one for my birthday when they first came out, but after the battery died out, I never brought another one.",
+      "why didn't you just buy another battery for it so you could use it?",
+      "that's one of the problems with having an iPod. Though an iPod might have an above average battery life, once the battery is dead, so is your iPod."
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 15,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 103,
+    "turns": [
+      "Have any plans for the weekend, Tom?",
+      "Yeah, I'm going for a hike in the southern Rocky Mountains.",
+      "Oh, do you go hiking often?",
+      "I go as much as I can. I love hiking because you can really get in touch with nature.",
+      "It would be nice to get out of the city. Do you want some company?",
+      "Sure. But, it will be a long hike, 30 miles in three days. Have you been hiking before?",
+      "Yeah, I go a lot too. I saw a bear and a mountain lion on my last hike.",
+      "Wow! You must have been pretty far away from the city.",
+      "Yeah, my friend and I hiked in a very wild part of the national forest.",
+      "Well, bring him along too. We'll have a great time this weekend.",
+      "Thanks, I'll ask him."
+    ],
+    "shift_indices": [
+      9
+    ],
+    "n_turns": 11,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 104,
+    "turns": [
+      "Excuse me. Is anyone sitting here?",
+      "No, nobody.",
+      "You don't mind if I smoke, do you?",
+      "Well, to be frank, yes, I do.",
+      "Oh, I'm sorry. But this isn't a no-smoker, is it? I mean would you mind if I smoke here?",
+      "Actually it is. Perhaps you haven't noticed the sign.",
+      "Sign? What's sign?",
+      "There, on the window.",
+      "Oh, sorry. I didn't notice it. Sorry.",
+      "That's all right."
+    ],
+    "shift_indices": [
+      5
+    ],
+    "n_turns": 10,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 105,
+    "turns": [
+      "You should not have criticize your son in front of his friends.",
+      "Why? He did something wrong.",
+      "I know. But at that time your blame is rubbing salt into his wounds.",
+      "I only wanted to help him.",
+      "But it is not the right time."
+    ],
+    "shift_indices": [
+      3
+    ],
+    "n_turns": 5,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 106,
+    "turns": [
+      "I really want to take a nap. I feel very sleepy today.",
+      "What's the matter? Didn't you get enough sleep last night?",
+      "I fell asleep very late. It was almost two o'clock in the morning when I finally fell asleep.",
+      "Are you worried about something? Why couldn't you sleep?",
+      "You know how it is when you're in a strange country. Everything is new, and you get tired and nervous sometimes. Then you worry about your family, about conditions back home, about your courses, about your money, about everything. I tried to fall asleep but I just had too much on my mind.",
+      "Well, take it easy. Things will look better tomorrow. Maybe you should try exercising or a hot bath to help you relax.",
+      "Anything is worth a try. But right now I really just want to find a quiet place to take a nap."
+    ],
+    "shift_indices": [
+      5
+    ],
+    "n_turns": 7,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 107,
+    "turns": [
+      "What is your favorite coffee?",
+      "Irish coffee is my favorite. But I'm not particular on it.",
+      "All right. Would you make coffee yourself when you are at home?",
+      "Not very often. Making coffee is a bit troublesome. Most of the time, I just buy takeout at Starbucks. And also, I quite like instant coffee.",
+      "I think instant coffee is becoming more and more popular. Though its taste is not perfect, it's really cheap and convenient.",
+      "Exactly. Nescafe is the world's favorite coffee. People love it all over the world.",
+      "I agree. I heard that in the western countries, almost everyone likes coffee. Is that true?",
+      "Yes. No doubt about that. For us, coffee is more a living style rather than a simple drink. I heard Chinese people don't drink that much coffee.",
+      "No, we don't, especially the elder people. But more and more young people fall for coffee nowadays.",
+      "I suppose so. That's probably why there are so many wonderful coffee houses in China now."
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 10,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 108,
+    "turns": [
+      "Hi, is that Mr. Wu?",
+      "Yes. What can I do for you?",
+      "I am calling to query about some of your information.",
+      "We've got a bad line. Can you repeat that please?",
+      "I said I want to ask about some of your information.",
+      "Sorry, the connection is terrible. I'll call you back because I can't hear anything."
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 6,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 109,
+    "turns": [
+      "Hello!",
+      "Oh, hi!",
+      "Please allow me to introduce myself. My name is Tom.",
+      "Pleased to meet you. My name is Alice. Did you just move in next door?",
+      "Yes, I did. Have you lived here long?",
+      "Me? I guess so. I've lived here for about six years now. Have you lived in America very long?",
+      "No, not really. When I left Vietnam, I came to America and I lived with a cousin in Dallas for two years. Where do you work, Alice?",
+      "I teach mathematics at a college. What do you do?",
+      "I am an accountant at a company.",
+      "Well, Tom. It's good to meet you. I have to go now. I am teaching a class this evening, and I need to get to the college.",
+      "It's nice meeting you too, Alice.",
+      "See you around!",
+      "Goodbye, Alice."
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 13,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 110,
+    "turns": [
+      "What would you like for dessert?",
+      "What do you have?",
+      "I have apple pie, ice cream, chocolate cake and fruit cocktail.",
+      "Can I have apple pie with ice cream?",
+      "Of course. I made the apple pie this morning, so it's lovely and fresh.",
+      "I love your home-made apple pie. It's delicious. Can I have another glass of lemonade as well?",
+      "Sure. Can you get it yourself, it's in the refrigerator.",
+      "Ok. Would you like a drink too?",
+      "Yes, I'll have an ice tea. You see it next to the lemonade.",
+      "Are you having any dessert?",
+      "I'll have apple pie too, but without ice cream. I have to watch my weight."
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 11,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 111,
+    "turns": [
+      "May I help you?",
+      "I'd like to cash this check, please.",
+      "Do you have an account with us?",
+      "Yeah. Here's my identification card.",
+      "Do you want large or small bills?",
+      "Actually, I want to buy some traveler's checks.",
+      "What denomination?",
+      "Twenties would be fine.",
+      "Do you want the whole amount in traveler's check?",
+      "Yes, please."
+    ],
+    "shift_indices": [
+      4
+    ],
+    "n_turns": 10,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 112,
+    "turns": [
+      "Good morning, Madam. This is room service, may I help you?",
+      "Good morning. I'd like to reserve some rooms for a tourist party.",
+      "All right. What kind of room would you like?",
+      "You see, we are tourists whose requests are different, so please tell me more about it, will you?",
+      "It's my pleasure. We have single rooms, double rooms, suites and luxury suites, ect. Well, here is an introduction to our hotel.",
+      "That's great. I'd like to book four single rooms, five double rooms and three suites.",
+      "All right, madam. For which dates do you want to book the rooms?",
+      "From tomorrow till January 8th. That's five days in all.",
+      "I see. Now please fill out the form.",
+      "Here you are. Is everything OK?",
+      "Just a minute, madam. You should pay a deposit of 500 yuan beforehand.",
+      "OK. Here you are.",
+      "Thank you. Please keep this receipt.",
+      "Thank you. By the way, is there any preferential rate for the party?",
+      "Yes, there is a 15 percent discount.",
+      "That's wonderful. Thank you.",
+      "You're welcome. I hope all of you will have a good time here."
+    ],
+    "shift_indices": [
+      7
+    ],
+    "n_turns": 17,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 113,
+    "turns": [
+      "Can I reserve a hotel room?",
+      "I assure you, that's not a problem. What is your full name, please?",
+      "My name's John Sandals.",
+      "It's a pleasure to assist you. Please tell me when you'll be needing the room, sir.",
+      "If my plans don't change, I'll need a room April 14 till April 17.",
+      "Sir, our room prices are slightly higher than you may have thought. Will that be okay?",
+      "Tell me how much it will be, and I can tell you if it's okay.",
+      "Only $ 308 per night, before taxes, of course.",
+      "$ 308 a night? That's a fair price.",
+      "Now, as for the room, sir, do you prefer smoking or nonsmoking?",
+      "Nonsmoking, please.",
+      "Nonsmoking. Now, sir, does a single queen-size bed meet your approval?",
+      "I have absolutely no problem with that.",
+      "Queen, nonsmoking. Okay, sir, your room is reserved. Now if you'll just give me your phone number.",
+      "Not a problem. The number is 626-555-1739.",
+      "Thank you for making a reservation with us. We look forward to seeing you in April!"
+    ],
+    "shift_indices": [
+      14
+    ],
+    "n_turns": 16,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 114,
+    "turns": [
+      "Do you have any direct flights to Toronto?",
+      "Sorry, we don't. But I think you can fly on Northwest Airlines to Berlin and then have a connecting flight on Canada Airline to Toronto. And it is the most economical flight, just 1, 900 dollars.",
+      "When does the flight depart?",
+      "At 8 am. By the way, it also makes a refueling stop.",
+      "How long is the layover?",
+      "Less than one hour.",
+      "And how long do I have to stay in Berlin for the connecting flight?",
+      "Not so long, just one hour.",
+      "So the time for the total journey is about. . . ?",
+      "About 13 hours.",
+      "Let me count. Ok, it works out for my schedule. Thanks a lot!",
+      "You are welcome!"
+    ],
+    "shift_indices": [
+      10
+    ],
+    "n_turns": 12,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 115,
+    "turns": [
+      "I'm sorry, I've lost my tags and receipt. What can I do about it?",
+      "I see. What is your baggage? And do you remember the tag's number or color?",
+      "It's a suitcase. Its colour is blue.",
+      "Could you give me a description of your case?",
+      "It's like this, it's square with a leather cover.",
+      "I'll check it for you. I've found it. Is this yours?",
+      "Yes, it is the right one",
+      "Will you show me your key card, please?",
+      "Here it is.",
+      "All right. Now you can take your case away"
+    ],
+    "shift_indices": [
+      3
+    ],
+    "n_turns": 10,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 116,
+    "turns": [
+      "Mr. Phillips? I have a request here from purchasing that needs your approval.",
+      "Let me take a look. This is for a 486 computer with modem. Who's it going to?",
+      "I believe it's going to Ms. Wilson's office.",
+      "Get her on the phone, please. I need to clarify this."
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 4,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 117,
+    "turns": [
+      "I will have sole then.",
+      "All right, how about the other guests.",
+      "The rest of us will have this today's special, please.",
+      "Ok.",
+      "I am sorry but I ordered sole not the same as the others. Will you change it?",
+      "I'm afraid we have no more sole.",
+      "Then I'll have the pork cutlet instead.",
+      "Certainly, just a moment, sir."
+    ],
+    "shift_indices": [
+      6
+    ],
+    "n_turns": 8,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 118,
+    "turns": [
+      "Do you have any experience working with a computer?",
+      "Yes. I have been a data entry operator for three years.",
+      "What kind of software can you use?",
+      "I have working knowledge of Windows and Dos. Actually, I'm quite familiar with both Java and C Programming Languages.",
+      "Do you have any other computer qualifications?",
+      "I have an ACRE certificate, GRADE 2.",
+      "Do you know how to use a PC to process the management information?",
+      "I'm sorry to say I'm not familiar with processing management information, but I'm sure I could learn quite quickly. It can't be too difficult, and I've got a quick mind. I can handle any problem you give me."
+    ],
+    "shift_indices": [
+      5
+    ],
+    "n_turns": 8,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 119,
+    "turns": [
+      "Hello, welcome to Credit Services. How can we help you?",
+      "I'm interested in applying for a credit card with you.",
+      "Are you an existing customer?",
+      "Yes, I've had a Current Account with a debit card with you for years. Now, I'm looking at upgrading to a credit card.",
+      "May I ask why you didn't think of applying for a credit card with us sooner? Most young people jump at the chance.",
+      "When I opened the account with you, I was a student, I graduated a couple of years ago and have a steady salary, so I figured now would be the best time to go ahead.",
+      "That's very sensible of you. We have many fresh graduates applying for credit cards, getting them and then going on a spending spree and being unable to meet the repayments.",
+      "As you can see from the statements for my Current Account, I have never been overdrawn. I'm always very careful about that."
+    ],
+    "shift_indices": [
+      6
+    ],
+    "n_turns": 8,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 120,
+    "turns": [
+      "Good morning, City Taxi.",
+      "Good morning. I'd like to book a taxi to the airport for Saturday morning, please.",
+      "Where from?",
+      "I'm at Garden Hotel in Union Street. There will be three of us sharing. How much will it be?",
+      "About 60 dollars.",
+      "60 dollars? Each of between us?",
+      "Oh, that's all together. What time do you want to leave?",
+      "Seven in the morning.",
+      "Right! We'll pick you up at your hotel at seven then.",
+      "Thank you very much. Goodbye."
+    ],
+    "shift_indices": [
+      6
+    ],
+    "n_turns": 10,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 121,
+    "turns": [
+      "Hi. My name's Carl. Nice to meet you.",
+      "Nice to meet you, too. My name is Francisco.",
+      "What?",
+      "Francisco, but all my friends and family back in Peru call me Pancho.",
+      "Okay, Pancho. So, tell me about your family?",
+      "Well, I have seven brothers and six sisters.",
+      "Wow. That is a big family. So are you the oldest, Pancho?",
+      "No. I'm the second oldest in my family.",
+      "So, what do your parents do?",
+      "My father is a taxi driver in Lima, Peru. It's a hard job, but he works hard to support the family.",
+      "How about your mother?",
+      "She helps run a small family store with some of my older brothers and sisters.",
+      "What kind of store?",
+      "We mainly sell food, like bread, eggs, soft drinks, rice, sugar, and cookies. Things that people buy every day."
+    ],
+    "shift_indices": [
+      12
+    ],
+    "n_turns": 14,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 122,
+    "turns": [
+      "Hi, Jane. I'd like to discuss something with you. Do you have a minute?",
+      "Sure. I've just got out of my eleven o'clock class. I don't have another class until this afternoon.",
+      "Good. Listen, I've just received an e-mail from the computer centre. They are looking for students to help with the work of the school website this summer. They need two assistants. They asked me if I knew anyone that might be interested. I thought you might like to consider the job.",
+      "Sounds interesting. I can type, but I don't have a lot of experience.",
+      "Well, I don't think any special experience or knowledge is necessary. And with your interests in computers and the Internet, I think you would be good for the job. Also they're paying good money. What do you think?",
+      "It sounds like a great chance to get some experience. Thanks for thinking of me."
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 6,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 123,
+    "turns": [
+      "Oh, I am starving.",
+      "Me too. Shall we eat out? There is a new French restaurant down the street.",
+      "Oh, forget about it. I went there with a friend last week. The menu was all in French and I just couldn't read it.",
+      "That's what you are paying for.",
+      "Maybe. But I should say everything was expensive and nothing was to my satisfaction.",
+      "Then how about the Italian restaurant on the next block.",
+      "Well. I ate out almost every day last week. Let's just eat in today.",
+      "But I am not in the mood to cook.",
+      "I will cook then. In fact, I am sick and tired of restaurant. I just want a home-cook meal."
+    ],
+    "shift_indices": [
+      6
+    ],
+    "n_turns": 9,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 124,
+    "turns": [
+      "You've had a very dangerous life, haven't you, Joe?",
+      "Yes. That's right.",
+      "When was your worst accident?",
+      "Last year. It was during the British Grand Prix. I knocked into a wall. The car was completely destroyed and my left leg was broken. Luckily nobody was killed.",
+      "Is that the only time you've been..., er... close to death?",
+      "No, I had a very frightening experience quite recently. I was frightened to death! I thought I was going to be killed at any moment.",
+      "Really? When was that?",
+      "It was on my way to this studio. I had to drive through London during the lunch hour."
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 8,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 125,
+    "turns": [
+      "Hello, Mrs. Turnbull. How are you?",
+      "Fine, thanks. How's your boy, Jack?",
+      "He's a bit tired. You know, he goes to school at eight o'clock every morning. He doesn't get home till after four. then he does his homework after tea. It often takes him a couple of hours to finish",
+      "Poor boy. They work hard at school nowadays, don't they? Does he like it?",
+      "School, you mean? Yes, he does. He likes his teachers, and that always makes adifference.",
+      "Yes, it does. Does he go to school by bus?",
+      "No, he walks. He likes walking. He meets some of his friends at the corner andthey go together.",
+      "What does he do when it rains?",
+      "My husband takes him in the car. He passes the school on the way to the office."
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 9,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 126,
+    "turns": [
+      "Hi, Craig! How are you?",
+      "Not so good. I have a terrible cold.",
+      "Really? That's too bad! You should be at home in bed. It's really important to get a lot of rest.",
+      "Yeah, you're right.",
+      "And have you taken anything for it?",
+      "No, I haven't.",
+      "Well, it's helpful to chop up some garlic and cook it in chicken stock. Then drink a cup every half hour. It really works!",
+      "Ugh!"
+    ],
+    "shift_indices": [
+      6
+    ],
+    "n_turns": 8,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 127,
+    "turns": [
+      "Hi, Lilly, it's so nice to see you again.",
+      "Hum, me too. This winter holiday was especially long. What have you done?",
+      "Nothing special. I had a get-together with some schoolmates at the high school, visited the Internet and read a couple of books which I had been longing for. How about yours?",
+      "You know, I like traveling. I made good use of this long vacation and enjoyed myself."
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 4,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 128,
+    "turns": [
+      "How can you keep in touch with your aunt in America?",
+      "Oh, I make a phone call once a month.",
+      "It's very expensive, right?",
+      "Yeah.",
+      "Why not send E-mail through the Internet ?",
+      "Is it convenient and cheap?",
+      "Sure. You can send E-mail to each other every day through the internet. In addition, you can make a phone call through the internet , too.",
+      "Really? I'm so glad to hear that. But I don't konw how to get access to the Internet. Could you show me?",
+      "No problem. I'll tell you.",
+      "I'll appreciate it very much."
+    ],
+    "shift_indices": [
+      8
+    ],
+    "n_turns": 10,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 129,
+    "turns": [
+      "Is that true?",
+      "I guess so. Now Anna's got four kids and another on the way.",
+      "Wow. She looks good for having had that many kids. She's pregnant and wearing Prada!",
+      "That's Anna for you. She keeps up the image of the stylish Italian woman. Here she comes.",
+      "She's glowing. It must be the pregnancy.",
+      "Yeah, or the expensive Italian facial treatments."
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 6,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 130,
+    "turns": [
+      "Hey, the pool's open now!",
+      "As of today it is. Memorial Day marks the end of the school year and the beginning of summer.",
+      "So it's time for the kids to get outdoors. . .",
+      ". . . and for us to get tans in our new bikinis.",
+      "Not this Taiwanese girl. We don't like to get suntans.",
+      "That's smart these days with all the news on skin cancer. Hey, there's everybody! We made it!"
+    ],
+    "shift_indices": [
+      3
+    ],
+    "n_turns": 6,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 131,
+    "turns": [
+      "Hi, Nancy. How are you doing?",
+      "Hi, Tom. Want a cup of coffee?",
+      "Not right now. I've got to get another car and my old one is blown up.",
+      "Oh, hey, did you look in the classified ads?",
+      "You mean used car?",
+      "No, Ah. . . single sellers.",
+      "Well, yeah, but I'd be getting somebody else's problem.",
+      "Uh huh. How about a used car? They've got good ones now.",
+      "It's the same kind of deal though, you know, you never know what you're going to get.",
+      "Oh, hey, how about a new car? They've got easy loans now. You'd feel so good driving a new car.",
+      "Let's look at them all. Have you got a paper there?"
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 11,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 132,
+    "turns": [
+      "Who was that guy you were talking to at the bar? It looked like he was hitting on you.",
+      "Yeah, we struck up a conversation, and eventually he asked me out. I gave him my number, but I'm not sure if I'll actually go out with him.",
+      "Oh? How come?",
+      "He's nice, but I just don't feel like we have much chemistry, so I don't want to lead him on.",
+      "Well, don't be too quick to judge. My last boyfriend and I didn't hit it off right away, I only started to fall for him after we went out a few times and I got to know him better. We were together for 3 years.",
+      "So why'd you split up? If you don't mind my asking.",
+      "Not at all. We just started to drift apart, different interests, different plans for the future. The breakup was mutual.",
+      "Ah, that's great. My last relationship was a nightmare, I hooked up with a guy at a New Year's party and we were together for six months, but we were constantly fighting and making up. I don't know how I put up with him for so long.",
+      "How'd it end?",
+      "He cheated on me, I caught him making out with his ex. He begged me for another chance, but I know he was just trying to jerk me around, so I said no.",
+      "Ugh! Good for you.",
+      "Thanks. So how about you, are you going out with anyone at the moment?",
+      "Oh, I've gone on a few dates here and there, but nothing serious. To be honest, I'm not really interested in settling down just yet, I'm enjoying the single life too much."
+    ],
+    "shift_indices": [
+      10
+    ],
+    "n_turns": 13,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 133,
+    "turns": [
+      "Um, which of them is the better typist?",
+      "Well, Mary types faster than Jones. But I think Jones types more carefully.",
+      "Is there any difference in their short hand?",
+      "Jones can certainly take down letter more quickly, but Mary's short hand is the best in her class.",
+      "How about languages?",
+      "Both of them speak excellent French. But I think Mary speaks German more fluently than Jones does.",
+      "Um. That doesn't really matter. Because we have more French visitors than German."
+    ],
+    "shift_indices": [
+      4
+    ],
+    "n_turns": 7,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 134,
+    "turns": [
+      "It's a terrible day, isn't it?",
+      "Yes, it is. This is why our flight was delayed for 2 hours. My parents should be worried about me. They are waiting for me at London airport.",
+      "Where did you come from?",
+      "Beijing. I was there for a 2 weeks' conference on space technology.",
+      "How interesting! I was there for tour. You see, I usually have a tour twice or 3 times a year.",
+      "Really? Which places did you visit in China?",
+      "Apart from Beijing, we went to Nanjing, Shanghai, Xi'an, Hangzhou, and Guangzhou.",
+      "Did you enjoy it?",
+      "Very much. It was one of the most exciting tours I've ever made. Was this your first trip to China?",
+      "Oh, no. I go almost every year. Unfortunately, it's always on space related business. I haven't had time to visit tour sites.",
+      "Oh, what a pity."
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 11,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 135,
+    "turns": [
+      "Now, mister Snow. What can you remember about the attack?",
+      "Well, I was working late yesterday evening.",
+      "What time did you leave your office?",
+      "About 9:44.",
+      "Are you sure?",
+      "Oh yes, I looked at my watch.",
+      "What did you do then?",
+      "Well, I locked the door, and I was walking to my car when somebody hit me on the head.",
+      "Did you see the attacker?",
+      "No, he was wearing a stocking over his head?",
+      "Tell me mister snow. How did you break your leg?",
+      "Well, when the doctors were pudding me into the car. They dropped me."
+    ],
+    "shift_indices": [
+      10
+    ],
+    "n_turns": 12,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 136,
+    "turns": [
+      "Excuse me, could you tell me how to get to the cross bakery building?",
+      "The cross bakery building? Sure, you're actually walking in the opposite direction.",
+      "Oh, you're kidding. I thought I was heading east.",
+      "No, east is the other direction. To get to the bakery, you need to turn around and go 3 blocks to broadway, when you get to broadway, you need to take a left, go straight down that street for 2 blocks, and then you'll see the building on your left. It's just between the post office and a supermarket.",
+      "Ok, let me see if I've got that, first turn around, 3 blocks to broadway, and then a left turn and 2 blocks to the building, is that right?",
+      "Yeah, you've got it."
+    ],
+    "shift_indices": [
+      4
+    ],
+    "n_turns": 6,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 137,
+    "turns": [
+      "I wish we had hired a professional person to film it. Instead of asking your friend Lenny to do it.",
+      "This video isn't so bad. The quality isn't the best, but he does a pretty good job.",
+      "It's not bad if you like your unclear video. There are no changes between scenes and the lighting is terrible. At best, it looks like a rough video that has not been completely edited.",
+      "It is a little rough, I admit.",
+      "There are problems with the audio, too. Some sections are no sound when the audio is cut. And when there is the audio, the volume isn't the same.",
+      "That's true. I guess, he'll do better next time."
+    ],
+    "shift_indices": [
+      4
+    ],
+    "n_turns": 6,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 138,
+    "turns": [
+      "I'm pretty busy these days. I was given a new research project by the professor. He asked me to find research information about countries in Asia.",
+      "Isn't it interesting?",
+      "Yes, and there's much information I can get. But I was told to finish it in 3 days.",
+      "What kind of information do you have to get?",
+      "Mainly cultural customs, holidays and something like that.",
+      "I'm pretty good at that kind of thing.",
+      "Really? Then tell me how many languages are spoken in India.",
+      "Uh...I think English and maybe a lot?",
+      "And when was the Great Wall of China built?",
+      "Sorry, I have no idea. Oh, I guess I can help you look it up on the Internet."
+    ],
+    "shift_indices": [
+      8
+    ],
+    "n_turns": 10,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 139,
+    "turns": [
+      "Hello. I want to send the computer to my sister in Shanghai by logistics transport.",
+      "OK. Is it in the box? May I see it?",
+      "Yes. This is the computer and this is the keyboard and the monitor.",
+      "Is there anything else?",
+      "There are a mouse and a camera.",
+      "Is that all?",
+      "Yes. How much is it to send these things to Shanghai by regular delivery?",
+      "It depends on the weight of these things. Generally speaking, we will charge you ten yuan for one kilogram.",
+      "I see. Can you weigh them for me, please?",
+      "Please go over there to weigh them.",
+      "OK. See you later."
+    ],
+    "shift_indices": [
+      7
+    ],
+    "n_turns": 11,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 140,
+    "turns": [
+      "What's wrong with you?",
+      "I have a sore throat and headache.",
+      "Do you feel tired?",
+      "Yes, my whole body feels weak. And I really feel terrible.",
+      "I'm sorry to hear that. I'll have to examine you.",
+      "Ok, go ahead.",
+      "Open your mouth and show me your tongue. Say ah... You have a bad cold. So you must stay in bed for a week."
+    ],
+    "shift_indices": [
+      5
+    ],
+    "n_turns": 7,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 141,
+    "turns": [
+      "Dave, there's something I want to talk to you about.",
+      "Zina, why are you whispering?",
+      "I've been talking to WebTracker. I'm thinking of jumping ship.",
+      "What? Are you serious? You'd defect to our archrival! ?",
+      "Keep your voice down. We'll talk more later. Right now I need to see Vince.",
+      "We definitely have to talk, Zina. And watch your back. Elvin is still mad about his nose.",
+      "OK, but don't tell anyone what I said."
+    ],
+    "shift_indices": [
+      3
+    ],
+    "n_turns": 7,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 142,
+    "turns": [
+      "Take a seat inside and see what you think. So you will take the Porsche then, sir?",
+      "Yes, and I want to buy the insurance too. I think it's necessary.",
+      "You're smart to buy it. At 45 dollars for three days, it is a good deal.",
+      "Can I return the car in San Francisco?",
+      "San Francisco? No, sir. We only have this office here. You will have to return it here.",
+      "Really? I heard in America you can return rental cars in different cities.",
+      "No, sir. That's only with the very big companies. I'm sorry, but this car must be returned to this lot.",
+      "Well, I guess I will have to drive back down then. Hmm. I didn't think of that.",
+      "Do you still want the car, sir?",
+      "Yes. It will be fun. Driving back down the coast. My girlfriend will like it.",
+      "It's a beautiful drive.",
+      "Where are the keys?",
+      "Just a moment, sir. We have to finish filling out the forms."
+    ],
+    "shift_indices": [
+      11
+    ],
+    "n_turns": 13,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 143,
+    "turns": [
+      "Wow! What a beautiful scenic spot! It's so open. And just breathe that fresh air, you can almost taste its freshness.",
+      "You can have a bird view of Guiling City from the top of the mountain.",
+      "Wonderful! I'll often come here for mountain climbing.",
+      "You should. Many Guiliners, especially the old and the young, will climb mountains here in the morning.",
+      "No wonder people say",
+      "Quick! Pass me your binoculars. Look at that bird... I've never seen one of those before. It's indigenous to Guiling, and an endangered species too. This is lucky!",
+      "I didn't know you liked bird-watching.",
+      "I don't really. I just like wildlife, and you don't get to see too much of it in the city. This place is full of it."
+    ],
+    "shift_indices": [
+      4
+    ],
+    "n_turns": 8,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 144,
+    "turns": [
+      "Well, how did you enjoy your seaside trip?",
+      "It was funny.",
+      "Tell me about it, will you?",
+      "Well, we drove through the valley on our way there in the morning. It was a magnificent sight.",
+      "Did you stop at the big waterfall for pictures?",
+      "Sure, we wouldn't miss it for anything. After that, we took a short cut to the park. There was very little traffic, so we got there in less than an hour.",
+      "You were lucky then. What did you do after that?",
+      "We went for a swim in the sea. That was the best part of the day. Just look at my nice tan.",
+      "So you must have had a busy and enjoyable day yesterday.",
+      "Yes, you're right. And I was so tired that I fell asleep on the way back. My arms are still stiff from the swim yesterday."
+    ],
+    "shift_indices": [
+      8
+    ],
+    "n_turns": 10,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 145,
+    "turns": [
+      "John, I'Ve asked you not to smoke in here! I don't want to see you smoking in my office again.",
+      "I'm sorry, Ms. Fairbanks. I won't let it happen again.",
+      "That's what you said the last time! If you want to smoke, you'll have to use your break time and go outside!",
+      "I understand, Ms. Fairbanks."
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 4,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 146,
+    "turns": [
+      "Waitress, can I have the bill, please?",
+      "Yes, sir. How would you like to pay the bill, sir?",
+      "Do you accept credit cards?",
+      "Yes, sir. But we only accept American Express, Master card and Visa. What kind do you have?",
+      "Master card. Here you go.",
+      "Wait a moment, please."
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 6,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 147,
+    "turns": [
+      "Okay, so let's go over everything one more time. I really want you to get this job!",
+      "I know! It's an amazing growth opportunity! They're true industry leaders, and it would be so interesting to be part of an organization that is the undisputed leader in business process platform development.",
+      "So, let's see, you did your research on the company, right?",
+      "Well, I visited their website and read up on what they do. They're an IT service company that offers comprehensive business solutions for large corporations. They provide services such as ARM development, and they also offer customdesigned applications.",
+      "So what would your role in the company?",
+      "Well, the position is for an account manager. That basically means that I would be the link between our and our development team.",
+      "Sounds good, and so, why do you want to work with them?",
+      "Well, as I said they're the industry leaders, they have a really great growth strategy, amazing development opportunities for employees, and it seems like they have strong corporate governance. They're all about helping companies grow and unleashing potential. I guess their core values and mission really resonated with me. Oh, and they offer six weeks'vacation, stock options and bonuses. . . I'm totally going to cash in on that.",
+      "You idiot! Don't say that! Do you want this job, or not?"
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 9,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 148,
+    "turns": [
+      "And so, I just wanted to check in with you and find out where we are with this project. As you know, you'Ve missed a fairly significant deadline last week, and this will negativity impact the team's ability to move forward with the next stages of this project.",
+      "I know, I'm really sorry that I missed the deadline. But really, it wasn't my fault. You see, we had all of these unexpected technical problems at the last minute, and that I couldn't get into the database and extract the kind of information that I needed for the data analysis. You know, if the tech guys would have done their job and kept the ARM stable, then I wouldn't have missed my deadline.",
+      "Oh, come on! An excuse like that is tantamount to lying. You're essentially blaming the tech team for your time management issues, rather than accepting responsibility for the fact that you were procrastinating for the past two weeks.",
+      "No, I'm not trying to pass the buck here ; I know that it was me who is ultimately responsible for getting this done. But the thing is, I could have finished on time if the system hadn't gone down. And you know, with everything I'Ve got going on now, I can't afford to waste time dealing with technical problems. I'Ve got a lot on my plate and there are only twenty-four hours in a day. . .",
+      "I'm not going to accept this excuse. You're using these small technical glitches as a crutch and trying to rationalize the fact that you'Ve missed your deadline. Look, we have standards and I expect you to live up to those standards. No more phoney cases. If you're in over your head, you tell me. No more missed deadlines. Now, I want that data on my desk by nine am!"
+    ],
+    "shift_indices": [
+      2
+    ],
+    "n_turns": 5,
+    "n_shifts": 1
+  },
+  {
+    "conversation_id": 149,
+    "turns": [
+      "Hi, the lab said that you would be getting my test results in today.",
+      "I like you to come in and discuss some further tests that I would like to run.",
+      "I think that this is a bad sign.",
+      "For now, I would like to run a few more tests to look into some of the problems that you mentioned.",
+      "Why wouldn't you tell me over the phone?",
+      "If there is any question about test results, we always do a recheck.",
+      "I need to come in right away.",
+      "I would be happy to see you this afternoon. If you are feeling upset, please bring a friend or relative along.",
+      "You are scaring me!",
+      "Come on in this afternoon and we will talk. It will be fine!"
+    ],
+    "shift_indices": [
+      6
+    ],
+    "n_turns": 10,
+    "n_shifts": 1
+  }
+]

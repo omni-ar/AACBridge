@@ -1,0 +1,3 @@
+mean_ms=1.9802
+std_ms=1.1200
+trials=200
