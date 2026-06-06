@@ -14,17 +14,31 @@ import com.aacbridge.BuildConfig
 /**
  * MediaPipe Face Mesh gaze tracking for AAC interaction.
  *
- * Responsibilities:
- * - Face Mesh landmark detection
- * - 400ms dwell threshold enforcement
- * - fixation target mapping to AAC intents
+ * Computer Vision Mathematics:
+ * Evaluates the displacement vector between the nose-tip (landmark 4) and the eye-center
+ * (the midpoint of the left eye inner corner 33 and right eye inner corner 362).
+ * 
+ * Coordinate System:
+ * MediaPipe normalized coordinates [0, 1].
+ * deltaX < 0 indicates looking left. deltaY < 0 indicates looking up.
+ * 
+ * Threshold Rationale:
+ * Empirically selected THRESHOLD_X = 0.02f and THRESHOLD_Y = 0.01f to maximize facial
+ * displacement sensitivity without causing false positives from micro-movements.
+ *
+ * Dwell State Machine (FSM):
+ * Triggered by `currentTarget × dwellStartTime × hasFired` over a 400ms threshold.
+ * 
+ * Thread Safety:
+ * Serialized through `Executors.newSingleThreadExecutor()` guaranteeing safe
+ * dwell evaluation across asynchronous MediaPipe callbacks.
  *
  * Targets:
- * - confirm
- * - reject
- * - scroll
- * - select
- * - call-help
+ * - confirm (top-left)
+ * - reject (top-right)
+ * - scroll (bottom-left)
+ * - select (bottom-right)
+ * - call-help (center)
  *
  * IMPORTANT:
  * This layer emits ONLY UI-level intent events.
@@ -33,7 +47,11 @@ import com.aacbridge.BuildConfig
  */
 class GazeTracker(
     private val context: Context,
-    private val onGazeIntent: (String) -> Unit
+    private val onGazeIntent: (String) -> Unit,
+    private val onGazeVector: ((FloatArray) -> Unit)? = null,
+    private val onDwellProgress: ((Float) -> Unit)? = null,
+    private val onOcclusionStateChanged: ((Boolean) -> Unit)? = null,
+    private val calibrationManager: CalibrationManager? = null
 ) {
 
     companion object {
@@ -49,6 +67,9 @@ class GazeTracker(
     private var currentTarget: String? = null
     private var dwellStartTime: Long = 0L
     private var hasFired: Boolean = false
+    
+    private var emptyFramesCount = 0
+    private val OCCLUSION_THRESHOLD_FRAMES = 10
 
     private val dwellExecutor = Executors.newSingleThreadExecutor()
 
@@ -118,9 +139,18 @@ class GazeTracker(
     private fun processResult(result: FaceLandmarkerResult) {
         val faces = result.faceLandmarks()
         if (faces.isNullOrEmpty()) {
-            resetDwell()
+            emptyFramesCount++
+            if (emptyFramesCount == OCCLUSION_THRESHOLD_FRAMES) {
+                onOcclusionStateChanged?.invoke(true)
+                resetDwell()
+            }
             return
         }
+
+        if (emptyFramesCount >= OCCLUSION_THRESHOLD_FRAMES) {
+            onOcclusionStateChanged?.invoke(false)
+        }
+        emptyFramesCount = 0
 
         if (BuildConfig.DEBUG) {
             Log.d(TAG, "Face landmarks detected")
@@ -144,7 +174,20 @@ class GazeTracker(
         if (BuildConfig.DEBUG) {
             Log.d(TAG, "Resolved gaze target: $target (deltaX=$deltaX, deltaY=$deltaY)")
         }
+        
+        // Construct 6-dim gaze feature vector
+        val magnitude = Math.sqrt((deltaX * deltaX + deltaY * deltaY).toDouble()).toFloat()
+        val intentIndex = when (target) {
+            "confirm" -> 0f
+            "reject" -> 1f
+            "scroll" -> 2f
+            "select" -> 3f
+            else -> 4f
+        }
+        val gazeFeatures = floatArrayOf(deltaX, deltaY, Math.abs(deltaX), Math.abs(deltaY), magnitude, intentIndex)
+        
         dwellExecutor.execute {
+            onGazeVector?.invoke(gazeFeatures)
             updateDwell(target)
         }
     }
@@ -158,11 +201,14 @@ class GazeTracker(
      *   center=call-help
      */
     private fun mapGazeToTarget(deltaX: Float, deltaY: Float): String {
+        val threshX = calibrationManager?.getThresholdX() ?: THRESHOLD_X
+        val threshY = calibrationManager?.getThresholdY() ?: THRESHOLD_Y
+        
         return when {
-            deltaX < -THRESHOLD_X && deltaY < -THRESHOLD_Y -> "confirm"
-            deltaX > THRESHOLD_X && deltaY < -THRESHOLD_Y  -> "reject"
-            deltaX < -THRESHOLD_X && deltaY > THRESHOLD_Y   -> "scroll"
-            deltaX > THRESHOLD_X && deltaY > THRESHOLD_Y    -> "select"
+            deltaX < -threshX && deltaY < -threshY -> "confirm"
+            deltaX > threshX && deltaY < -threshY  -> "reject"
+            deltaX < -threshX && deltaY > threshY   -> "scroll"
+            deltaX > threshX && deltaY > threshY    -> "select"
             else -> "call-help"
         }
     }
@@ -183,6 +229,9 @@ class GazeTracker(
         val now = System.currentTimeMillis()
 
         if (target == currentTarget) {
+            val progress = ((now - dwellStartTime).toFloat() / DWELL_THRESHOLD_MS).coerceIn(0f, 1f)
+            onDwellProgress?.invoke(progress)
+            
             if (now - dwellStartTime >= DWELL_THRESHOLD_MS) {
                 if (!hasFired) {
                     Log.d(TAG, "Dwell threshold reached: $target")
@@ -194,6 +243,7 @@ class GazeTracker(
             currentTarget = target
             dwellStartTime = now
             hasFired = false
+            onDwellProgress?.invoke(0f)
         }
     }
 
@@ -202,6 +252,7 @@ class GazeTracker(
             currentTarget = null
             dwellStartTime = 0L
             hasFired = false
+            onDwellProgress?.invoke(0f)
         }
     }
 

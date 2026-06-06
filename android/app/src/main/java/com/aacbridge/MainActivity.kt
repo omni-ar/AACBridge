@@ -14,8 +14,10 @@ import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.aacbridge.daemon.ContextDaemon
 import com.aacbridge.gaze.GazeTracker
+import com.aacbridge.gaze.CalibrationManager
+import com.aacbridge.gaze.DwellOverlayView
+import com.aacbridge.fusion.FusionInput
 import com.aacbridge.inference.LlamaBridge
 import kotlinx.coroutines.*
 import java.util.Locale
@@ -140,9 +142,49 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initGazeTracker() {
-        gazeTracker = GazeTracker(this) { intentLabel ->
-            runOnUiThread { handleIntent(intentLabel) }
+        val app = application as AACBridgeApplication
+        val calibrationManager = CalibrationManager(this)
+        
+        val dwellOverlay = DwellOverlayView(this).apply {
+            layoutParams = FrameLayout.LayoutParams(120, 120).apply {
+                gravity = Gravity.CENTER
+            }
         }
+        
+        val rootGroup = findViewById<android.view.ViewGroup>(android.R.id.content)
+        rootGroup.addView(dwellOverlay)
+        
+        gazeTracker = GazeTracker(
+            context = this,
+            onGazeIntent = { intentLabel ->
+                runOnUiThread { handleIntent(intentLabel) }
+            },
+            onGazeVector = { vector ->
+                // Wire fusion model inference
+                // Provide mock EMG embedding since Medha's hardware isn't connected yet
+                val mockEmg = FloatArray(64) { 0f }
+                val input = FusionInput(mockEmg, vector, "unknown")
+                try {
+                    val fusionResult = app.appContainer.fusionInference.runInference(input)
+                    Log.d(TAG, "Fusion prediction: $fusionResult")
+                } catch (e: Exception) {
+                    Log.e(TAG, "Fusion inference failed", e)
+                }
+            },
+            onDwellProgress = { progress ->
+                runOnUiThread { dwellOverlay.updateProgress(progress) }
+            },
+            onOcclusionStateChanged = { occluded ->
+                runOnUiThread {
+                    if (occluded) {
+                        updateStatus("GAZE: Camera Occluded")
+                    } else {
+                        updateStatus("MODEL: Ready")
+                    }
+                }
+            },
+            calibrationManager = calibrationManager
+        )
         startCameraAnalysis()
     }
 
