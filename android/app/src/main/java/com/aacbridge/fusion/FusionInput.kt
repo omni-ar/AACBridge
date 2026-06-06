@@ -4,9 +4,11 @@ package com.aacbridge.fusion
  * Lightweight Android integration placeholder for
  * cross-attention fusion model inputs.
  *
- * Represents combined sensor signals:
- * - EMG embedding from CNN-LSTM classifier
- * - gaze fixation vector from MediaPipe
+ * Represents a single cross-modal observation.
+ *
+ * `emgEmbedding`: Expected shape (64). FusionInference handles `(1,1,64)` squeeze internally.
+ * `gazeVector`: Expected shape 6-dim `[deltaX, deltaY, abs(deltaX), abs(deltaY), magnitude, intentIndex]`.
+ * `gazeTarget`: String label intent emitted by traditional GazeTracker logic.
  *
  * Contract defined by Medha (EMG) and Heer (gaze).
  *

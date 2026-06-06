@@ -15,24 +15,21 @@ import kotlinx.coroutines.*
  * Lightweight Android orchestration layer around
  * the existing ActiveSweep implementation.
  *
+ * Pipeline Orchestration:
+ * ContextDaemon -> ActiveSweep -> StateRouter -> KVCacheManager
+ *
+ * Foreground Service Justification:
+ * API 34+ strict background execution limits require a foreground
+ * service to ensure the daemon can proactively poll location/BLE.
+ *
+ * Battery/Thermal Trade-off:
+ * A 60-second sweep interval (SWEEP_INTERVAL_MS) balances context
+ * freshness against thermal and battery budgets.
+ * 
  * IMPORTANT:
- * This service does NOT duplicate GPS/BLE logic.
- * ActiveSweep already owns context acquisition.
- *
- * ContextDaemon only orchestrates the execution
- * lifecycle of the existing backend pipeline:
- *
- * ContextDaemon
- * -> ActiveSweep
- * -> StateRouter
- * -> KVCacheManager
- *
- * Responsibilities:
- * - lifecycle-safe coroutine orchestration
- * - periodic context sweeps via ActiveSweep
- * - safe cancellation handling
- * - low-memory-safe execution
- * - battery-conscious scheduling
+ * This service does NOT interact with LlamaBridge, inference pipelines,
+ * or KV cache serialization directly.
+ * It strictly schedules ActiveSweep to gather context.
  */
 class ContextDaemon : Service() {
 

@@ -94,6 +94,10 @@ dependencies {
     implementation "androidx.camera:camera-lifecycle:${camerax_version}"
     implementation "androidx.camera:camera-view:${camerax_version}"
 
+    // ONNX Runtime for fusion model inference
+    // Asset trap exempt: fusion .onnx is <5MB (same tier as face_landmarker.task)
+    implementation 'com.microsoft.onnxruntime:onnxruntime-android:1.17.0'
+
     // Unit testing
     testImplementation 'junit:junit:4.13.2'
     testImplementation "org.jetbrains.kotlin:kotlin-test:1.9.0"
