@@ -60,9 +60,9 @@ class GazeEMGDataset(Dataset):
             dx = base_dx + np.random.normal(0, NOISE_STD_X)
             dy = base_dy + np.random.normal(0, NOISE_STD_Y)
             
-            # Gaze vector: [deltaX, deltaY, abs(deltaX), abs(deltaY), magnitude, intentIndex]
+            # Gaze vector: [deltaX, deltaY, abs(deltaX), abs(deltaY), magnitude]
             magnitude = np.sqrt(dx**2 + dy**2)
-            gaze_vec = np.array([dx, dy, abs(dx), abs(dy), magnitude, float(intent_idx)], dtype=np.float32)
+            gaze_vec = np.array([dx, dy, abs(dx), abs(dy), magnitude], dtype=np.float32)
             
             # EMG Embedding: Random L2 normalized 64-dim vector (since we don't have real EMG hardware)
             emg_vec = np.random.randn(64).astype(np.float32)

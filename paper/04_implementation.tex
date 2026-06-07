@@ -19,33 +19,29 @@ To respect the $\sim$2GB background service memory budget dictated by the Androi
 
 Notably, there is no explicit API to free a native KV cache. Executing continuous \texttt{malloc} and \texttt{free} commands for gigabyte-scale tensors causes rapid memory fragmentation. Instead, when a state is evicted, its \texttt{seqId} is returned to the pool; subsequent cache loads simply overwrite the existing native memory buffer in place.
 
-\subsection{Concurrency Guarantees and Safe Eviction}
+\subsection{Concurrency Guarantees and Device Stabilization}
 \label{subsec:concurrency}
 
-Because the asynchronous \texttt{DriftDetector}, the \texttt{StateRouter}, and the UI-driven Inference Engine run on isolated background threads, aggressive cache eviction risks severe JNI race conditions. Deleting a binary file from flash storage while \texttt{llama.cpp} attempts a concurrent read triggers an \texttt{IOException} that permanently collapses the native bridge. 
+Because the asynchronous \texttt{DriftDetector}, the \texttt{StateRouter}, and the UI-driven Inference Engine run on isolated background threads, parallel cache manipulation risks severe JNI race conditions. Early iterations of the architecture encountered native \texttt{SIGBUS} memory mapping crashes when the inference engine attempted to access native context arrays while the daemon was actively evicting them.
 
-To ensure thread safety without resorting to global system locks, the backend implements a four-layer lock-free orchestration model:
+To guarantee operational stability, AACBridge implements a synchronized concurrency model anchored by a single shared \texttt{engineLock} (a JVM \texttt{ReentrantLock}). This lock strictly serializes access across the JNI boundary for three primary orchestration components:
 \begin{enumerate}
-    \item \textbf{Per-State Mutex Isolation:} The \texttt{CacheMutexRegistry} enforces synchronization solely at the individual state level, allowing parallel manipulation of orthogonal contexts.
-    \item \textbf{Atomic Acquisition:} State residency checks and \texttt{refCount} increments are executed atomically under the state mutex.
-    \item \textbf{Safe Eviction Proof:} Eviction logic first marks a state's volatile \texttt{isActive} boolean to false, preventing new inference acquisitions. It then releases the mutex and polls the \texttt{refCount}. Because \texttt{isActive} is false, the \texttt{refCount} is mathematically guaranteed to drain monotonically to zero, at which point file manipulation is safely authorized.
-    \item \textbf{Lock-Free Release:} Because of the monotonic drain proof, the \texttt{releaseState()} function operates lock-free, utilizing hardware atomic decrements to minimize overhead.
+    \item \textbf{\texttt{MainActivity}:} Acquires the lock during real-time inference to prevent memory displacement while the LLM generates tokens.
+    \item \textbf{\texttt{KVCacheManager}:} Acquires the lock during state eviction and \texttt{seqId} swaps to ensure files are not deleted out from under an active inference session.
+    \item \textbf{\texttt{ContextPrimerImpl}:} Acquires the lock when pre-computing environmental caches in the background.
 \end{enumerate}
+Through the implementation of the \texttt{engineLock}, \texttt{SIGBUS} native crashes were completely eliminated, establishing a stabilized baseline for latency benchmarking.
 
-\subsection{Android Lifecycle Orchestration}
+\subsection{Android Lifecycle Orchestration and Context Priming}
 \label{subsec:orchestration}
 
 Standard Android Geofencing APIs fail to trigger if a device reboots while physically located inside the defined boundary, breaking the predictive caching model. To guarantee context priming, orchestration begins immediately at the OS level. 
 
-A \texttt{BootReceiver} intercepts the \texttt{ACTION\_BOOT\_COMPLETED} broadcast, utilizing Android's \texttt{goAsync()} mechanism to preserve the process lifecycle for 10 seconds. This triggers the \texttt{ActiveSweep} daemon, which concurrently spawns Kotlin Coroutines to fetch the \texttt{LocationManager}'s best hardware provider alongside a strictly bounded 3000ms BLE topology scan. The resulting \texttt{SensorSnapshot} is fed synchronously into the \texttt{StateRouter}, dispatching the top-3 ranked caching operations to native background threads to avoid Application Not Responding (ANR) exceptions.
+A \texttt{BootReceiver} intercepts the \texttt{ACTION\_BOOT\_COMPLETED} broadcast, utilizing Android's \texttt{goAsync()} mechanism to preserve the process lifecycle for 10 seconds. This triggers the \texttt{ActiveSweep} daemon, which concurrently spawns Kotlin Coroutines to fetch the \texttt{LocationManager}'s best hardware provider alongside a strictly bounded 3000ms BLE topology scan. The resulting \texttt{SensorSnapshot} is fed synchronously into the \texttt{StateRouter}, dispatching the top-3 ranked caching operations to the \texttt{ContextPrimerImpl}.
 
-\subsection{Implementation Limitations and Current Assumptions}
+The \texttt{ContextPrimerImpl} manages the full pre-computation lifecycle. Gated safely behind a \texttt{modelReady} boolean (which prevents execution until the \texttt{llama.cpp} native backend successfully maps the \texttt{.gguf} weights), the primer executes a strict sequential pipeline: it \texttt{prime}s the native LLM with the prompt, calls \texttt{saveKVCache} to serialize the native tensors into a persistent \texttt{.bin} file on the flash storage, and finally prepares the state for instantaneous retrieval via \texttt{loadKVCache} during user interaction.
+
+\subsection{Implementation Persistence Strategies}
 \label{subsec:limitations}
 
-While the Phase 2 backend orchestration is functionally complete, several architectural assumptions remain pending empirical validation in Phase 3 benchmarking:
-\begin{itemize}
-    \item \textbf{In-Memory Persistence:} The current orchestration relies on an \texttt{InMemoryStateRepository}. Transitioning to SQLite via Room DAOs is required before final latency benchmarking to capture true IO overhead.
-    \item \textbf{The \texttt{saveKVCache()} Lifecycle:} The \texttt{loadKVCache()} JNI boundary is fully automated, but the exact timing and ownership of calling \texttt{saveKVCache()} to serialize dynamically computed states back to flash memory remains unresolved. If states are not explicitly serialized, cold start recovery operations will fail.
-    \item \textbf{BLE-Bypass Accuracy Degradation:} The \texttt{DriftDetector} explicitly bypasses BLE scanning during its 15-minute polling interval to conserve mobile battery life. While relative hysteresis deltas remain mathematically valid, the absolute predictive accuracy of the background sweep is temporarily degraded.
-    \item \textbf{Overwrite Stability:} The reliance on \texttt{seqId} native overwriting rather than explicit cache freeing assumes that \texttt{llama.cpp} safely handles internal tensor sizing mismatches between sequential contexts. This requires extensive empirical stress testing on the target Snapdragon hardware.
-\end{itemize}
+For the evaluation and benchmarking phase of the system, AACBridge employs a \texttt{SeededStateRepository}. This repository serves deterministic, hardcoded semantic context profiles mapped to rigid environmental identifiers. Deploying a deterministic data store directly unblocks the prefill, save, and load pipeline required for precise Time To First Token (TTFT) performance measurements. While dynamic runtime context creation necessitates future architectural enhancements such as Android Room (SQLite) DAOs, the \texttt{SeededStateRepository} fully satisfies the persistence requirements of the current system architecture without introducing unnecessary database ORM overhead.

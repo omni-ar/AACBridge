@@ -175,16 +175,11 @@ class GazeTracker(
             Log.d(TAG, "Resolved gaze target: $target (deltaX=$deltaX, deltaY=$deltaY)")
         }
         
-        // Construct 6-dim gaze feature vector
+        // Construct 5-dim gaze feature vector
+        // Label leakage fix: intentIndex was previously included as 6th element,
+        // which leaked the ground truth into the model input.
         val magnitude = Math.sqrt((deltaX * deltaX + deltaY * deltaY).toDouble()).toFloat()
-        val intentIndex = when (target) {
-            "confirm" -> 0f
-            "reject" -> 1f
-            "scroll" -> 2f
-            "select" -> 3f
-            else -> 4f
-        }
-        val gazeFeatures = floatArrayOf(deltaX, deltaY, Math.abs(deltaX), Math.abs(deltaY), magnitude, intentIndex)
+        val gazeFeatures = floatArrayOf(deltaX, deltaY, Math.abs(deltaX), Math.abs(deltaY), magnitude)
         
         dwellExecutor.execute {
             onGazeVector?.invoke(gazeFeatures)

@@ -5,6 +5,8 @@ package com.aacbridge.cache
  *
  * Tracks:
  * - load calls
+ * - save calls
+ * - inference calls
  * - seqId ownership
  * - failure injection
  *
@@ -26,6 +28,28 @@ class FakeLlamaBridge {
 
     var shouldFailLoad = false
 
+    /**
+     * seqId -> filepath
+     */
+    val savedStates =
+        mutableMapOf<Int, String>()
+
+    var saveCallCount = 0
+        private set
+
+    var shouldFailSave = false
+
+    /**
+     * Ordered list of prompts received.
+     */
+    val inferencePrompts =
+        mutableListOf<String>()
+
+    var inferenceCallCount = 0
+        private set
+
+    var inferenceResponse = "Generated text"
+
     fun loadKVCache(
         filepath: String,
         seqId: Int
@@ -40,5 +64,39 @@ class FakeLlamaBridge {
         loadedStates[seqId] = filepath
 
         return true
+    }
+
+    fun saveKVCache(
+        filepath: String,
+        seqId: Int
+    ): Boolean {
+
+        saveCallCount++
+
+        if (shouldFailSave) {
+            return false
+        }
+
+        savedStates[seqId] = filepath
+
+        /*
+         * Create the actual file so that atomic rename
+         * operations in ContextPrimerImpl work during tests.
+         */
+        val file = java.io.File(filepath)
+        file.parentFile?.mkdirs()
+        file.writeText("fake_kv_cache_data")
+
+        return true
+    }
+
+    fun runInference(
+        prompt: String
+    ): String {
+
+        inferenceCallCount++
+        inferencePrompts.add(prompt)
+
+        return inferenceResponse
     }
 }

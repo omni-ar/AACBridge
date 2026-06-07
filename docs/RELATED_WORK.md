@@ -48,10 +48,10 @@
   - AACBridge context: AACBridge implements a robust 400ms dwell-filter mechanism for face-mesh-derived gaze vectors.
 - [CITE: cross_modal_attention]
   - Summary: Proposes cross-modal attention mechanisms for fusing disparate sensor modalities.
-  - AACBridge context: AACBridge utilizes a cross-attention architecture to fuse high-dimensional EMG with low-dimensional gaze features.
+  - AACBridge context: AACBridge utilizes a Late Fusion architecture to concatenate high-dimensional EMG with low-dimensional gaze features.
 - [CITE: late_fusion_comparison]
   - Summary: Compares early, late, and hybrid fusion strategies for multimodal classification.
-  - AACBridge context: AACBridge ablates cross-attention against a late-fusion fallback to ensure performance justifies architectural complexity.
+  - AACBridge context: AACBridge ablates cross-attention against a late-fusion fallback, ultimately selecting late fusion as cross-attention failed to meet the required performance margin.
 
 ## 5. Semantic Drift Detection in Dialogue Systems
 - [CITE: sentence_transformers]

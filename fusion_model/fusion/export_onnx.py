@@ -24,8 +24,8 @@ def main():
     # Dummy inputs matching expected shapes
     # EMG embedding: shape (1, 1, 64) - explicitly to test the squeeze(1)
     dummy_emg = torch.randn(1, 1, 64)
-    # Gaze vector: shape (1, 6)
-    dummy_gaze = torch.randn(1, 6)
+    # Gaze vector: shape (1, 5)
+    dummy_gaze = torch.randn(1, 5)
     
     onnx_path = "fusion_model/results/gaze_emg_fusion.onnx"
     
@@ -43,7 +43,12 @@ def main():
             'emg_embedding': {0: 'batch_size'},
             'gaze_vector': {0: 'batch_size'},
             'logits': {0: 'batch_size'}
-        }
+        },
+        # Force legacy exporter — produces a single self-contained
+        # .onnx file with inlined weights. The dynamo exporter
+        # creates external .onnx.data files which Android's
+        # assets.open() cannot resolve.
+        dynamo=False
     )
     
     print("Export successful.")

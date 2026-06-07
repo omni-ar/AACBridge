@@ -24,4 +24,14 @@ interface StateRepository {
     ): String?
 
     suspend fun getAllContextStates(): List<ContextState>
+
+    /**
+     * Resolves semantic stateId to the context prompt
+     * text used for KV cache priming (prefill).
+     *
+     * @return prompt text or null if stateId unknown
+     */
+    suspend fun getPromptText(
+        stateId: String
+    ): String?
 }

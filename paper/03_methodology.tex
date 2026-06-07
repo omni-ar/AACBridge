@@ -14,6 +14,14 @@ The architecture relies on a strictly defined, unidirectional orchestration pipe
     \item \textbf{Drift Correction:} Following inference, an asynchronous daemon executes a hysteresis-gated cosine similarity check against the semantic vector of the recent conversation to detect topic drift.
 \end{enumerate}
 
+\subsection{Multimodal Intent Classification and Fusion}
+To generate discrete intent tokens for the LLM without relying on traditional grid interfaces, AACBridge employs a multimodal sensor fusion architecture. The system processes two distinct input modalities:
+\begin{enumerate}
+    \item \textbf{Surface Electromyography (sEMG):} A continuous stream from a facial wearable is segmented into 200ms windows and processed via a CNN-LSTM model to extract a 64-dimensional high-confidence feature embedding.
+    \item \textbf{Gaze Tracking:} A hardware-accelerated MediaPipe facial mesh extracts a localized 5-dimensional gaze vector: $[dx, dy, |dx|, |dy|, \text{magnitude}]$.
+\end{enumerate}
+These inputs are aggregated using a Late Fusion mechanism, deliberately selected over cross-attention due to its superior efficiency on edge hardware and mathematically validated performance dominance.
+
 \subsection{Deterministic Context Scoring}
 We eschew neural network-based predictive modeling in favor of a deterministic scoring equation to guarantee bounds on battery usage and execution time. A semantic context $c_i$ is evaluated as a convex combination of three environmental anchors:
 

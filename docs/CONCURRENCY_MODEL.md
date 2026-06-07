@@ -1,33 +1,29 @@
 # KV Cache Concurrency Model
 
-This document outlines the threading and synchronization mechanisms governing the KV Cache in Phase 2. The concurrency model is designed to prevent `IOException` and JNI hard crashes when the `StateRouter`, `DriftDetector`, and Inference Engine attempt to read, write, and evict the same memory slots concurrently.
+This document outlines the threading and synchronization mechanisms governing the KV Cache integration in Phase 2. The concurrency model is designed to prevent `IOException` and JNI hard crashes (specifically `SIGBUS` memory mapping errors) when the `StateRouter`, `DriftDetector`, and Inference Engine attempt to interact with the underlying `llama.cpp` context pointers concurrently.
 
-## The Problem: The Eviction Race Condition
-If the `StateRouter` decides to load a new state, it must evict an old one. If the eviction process deletes a `.bin` file from flash memory at the exact millisecond the inference engine's `llama.cpp` is executing a `Java_loadKVCache()` call on that same file, the JVM throws an `IOException` which collapses the JNI bridge and hard-crashes the app.
+## The Problem: The Eviction Race Condition & SIGBUS
+If the `StateRouter` decides to load a new state, it must evict an old one. In early versions, if eviction deleted a `.bin` file from flash memory at the exact millisecond the inference engine's `llama.cpp` was executing a `Java_loadKVCache()` call on that same file, the JVM threw an `IOException` or the native library crashed with `SIGBUS`, collapsing the JNI bridge and hard-crashing the app.
 
-## The Solution: Four-Layer Concurrency Strategy
+## The Solution: Single Shared Engine Lock
 
-To guarantee thread safety without sacrificing the sub-500ms TTFT budget, the architecture entirely avoids global locks. Instead, it relies on atomic state variables and fine-grained mutexes.
+During Block 2.1 Device Stabilization, the architecture was refactored to implement a strict, provable concurrency model.
 
-### 1. Per-State Mutex Isolation
-* **Implementation:** `CacheMutexRegistry` manages a `ConcurrentHashMap<String, Mutex>`.
-* **Why:** Locking the entire `KVCacheManager` globally during a multi-second flash read/write would freeze the UI and block orthogonal operations. By using `computeIfAbsent` to atomically generate a mutex per `stateId`, operations on "State_A" never block operations on "State_B".
+### 1. The `engineLock` (ReentrantLock)
+* **Implementation:** A single shared `engineLock` (Kotlin `ReentrantLock` or `Mutex` wrapper) spans across the application layer.
+* **Why:** `llama.cpp` holds massive global state for its active context. Multi-threaded access across the JNI boundary to the same `llama_context` memory blocks is fundamentally unsafe. By introducing `engineLock`, we ensure that only one thread can ever interact with `llama.cpp` memory at any given nanosecond.
 
-### 2. Atomic Acquisition (`isActive` + `refCount`)
-* **Variables:** `CacheState` uses a `@Volatile var isActive: Boolean` and an `AtomicInteger` for `refCount`.
-* **Acquisition (`acquireStateForInference`):** 
-  Both variables are checked and modified while holding the specific state's Mutex. If the state `isActive`, its `refCount` is incremented. This guarantees that eviction logic cannot mark the state as inactive while the inference engine is grabbing a reference to it.
+### 2. Lock Boundaries
+The `engineLock` strictly serializes operations across three primary orchestrators:
+- **`MainActivity`:** When the user triggers an intent and `runInference` is called, the lock is acquired before prompt injection.
+- **`KVCacheManager`:** When evicting an old state or swapping a `seqId`, the lock prevents the UI from attempting inference during a cache swap.
+- **`ContextPrimerImpl`:** Background cache precomputation (`prime` -> `saveKVCache`) must hold the lock so it does not collide with foreground `runInference` calls.
 
 ### 3. Safe Eviction Lifecycle
 Eviction does not immediately delete files. It follows a strict safety protocol:
-1. **Mark Inactive:** Acquire the state's Mutex and set `isActive = false`. This acts as an immediate gate preventing any *new* inference requests from acquiring this state.
-2. **Release Mutex:** The Mutex is released so we do not block other threads pointlessly.
-3. **Drain Wait:** The eviction coroutine polls `refCount.get() > 0`. Because `isActive` is false, the `refCount` is mathematically guaranteed to be **monotonically decreasing**. It will eventually reach `0`.
-4. **Execution:** Once `refCount == 0`, it is absolutely safe to recycle the `seqId` and instruct the `LlamaBridge` to load the new file over the old one.
+1. **Acquire `engineLock`:** To ensure `llama.cpp` is not currently reading or writing.
+2. **Mark Inactive:** Act as an immediate gate preventing any *new* inference requests from acquiring this state.
+3. **Execution:** Once it is safe, recycle the `seqId` and instruct the `LlamaBridge` to load the new file over the old one.
 
-### 4. Lock-Free `releaseState`
-* **Why:** The `releaseState()` function explicitly does *not* acquire the state's Mutex.
-* **Justification:** Releasing a state simply involves calling `refCount.decrementAndGet()`. Because atomic integers handle their own thread-safety, and because we have proven that after `isActive = false` the count only goes down, forcing the release thread to wait for a Mutex is unnecessary overhead. The eviction polling loop will catch the zero-state organically.
-
-## Testing Verification
-This specific concurrency logic—specifically the proof that eviction properly waits for the `refCount` to drain before recycling a `seqId`—is verified using `kotlinx-coroutines-test` in `KVCacheManagerTest.kt`, utilizing `TestCoroutineScheduler` to precisely control virtual time and thread suspension.
+### 4. JNI Boundary Contract Protection
+The concurrency model exists explicitly to protect the JNI layer. The Kotlin code manages the `engineLock` so that the C++ code (`llama_jni.cpp`) never has to handle complex thread-safety mechanics. The JVM orchestrates safe entry into native space.

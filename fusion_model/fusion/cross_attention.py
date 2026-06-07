@@ -4,9 +4,9 @@ import torch.nn as nn
 class GazeProjection(nn.Module):
     def __init__(self):
         super().__init__()
-        # 6-dim gaze input: [deltaX, deltaY, abs(deltaX), abs(deltaY), magnitude, intentIndex]
+        # 5-dim gaze input: [deltaX, deltaY, abs(deltaX), abs(deltaY), magnitude]
         self.proj = nn.Sequential(
-            nn.Linear(6, 32),
+            nn.Linear(5, 32),
             nn.ReLU(),
             nn.Linear(32, 64)
         )

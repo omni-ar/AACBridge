@@ -29,4 +29,8 @@ class InMemoryStateRepository : StateRepository {
     override suspend fun getAllContextStates(): List<ContextState> {
         return states.toList()
     }
+
+    override suspend fun getPromptText(stateId: String): String? {
+        return null
+    }
 }

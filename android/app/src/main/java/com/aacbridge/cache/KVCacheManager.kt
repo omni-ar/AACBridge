@@ -4,8 +4,11 @@ import com.aacbridge.inference.LlamaBridgeAdapter
 import com.aacbridge.router.HardwareConfig
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.withLock
+import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock as lockWithLock
 
 /**
  * Predictive KV cache residency manager.
@@ -35,7 +38,9 @@ import java.util.concurrent.ConcurrentLinkedQueue
 class KVCacheManager(
     private val repository: StateRepository,
     private val mutexRegistry: CacheMutexRegistry,
-    private val jniBridge: LlamaBridgeAdapter
+    private val jniBridge: LlamaBridgeAdapter,
+    private val contextPrimer: ContextPrimerImpl? = null,
+    private val engineLock: ReentrantLock? = null
 ) {
 
     companion object {
@@ -143,16 +148,53 @@ class KVCacheManager(
                         ?: return@withLock
 
                 /*
-                 * Restore KV cache into native slot.
+                 * Determine load strategy:
+                 *
+                 * 1. If .bin file exists on disk:
+                 *    → Restore KV cache via loadKVCache()
+                 *    → Engine lock protects shared native state
+                 *
+                 * 2. If .bin file does NOT exist:
+                 *    → Delegate to ContextPrimer for
+                 *      prefill → save lifecycle
+                 *    → Primer acquires engine lock internally
+                 *
+                 * 3. If no primer available and no file:
+                 *    → Return seqId to pool (existing behavior)
                  */
-                val success =
-                    jniBridge.loadKVCache(
-                        filePath,
-                        seqId
+                val cacheFile = File(filePath)
+
+                val success = if (cacheFile.exists()) {
+
+                    /*
+                     * Fast path: restore from disk.
+                     * Engine lock protects native ctx/session_tokens.
+                     */
+                    if (engineLock != null) {
+                        engineLock.lockWithLock {
+                            jniBridge.loadKVCache(filePath, seqId)
+                        }
+                    } else {
+                        jniBridge.loadKVCache(filePath, seqId)
+                    }
+
+                } else if (contextPrimer != null) {
+
+                    /*
+                     * Slow path: prime context.
+                     * prefill → save → .bin created
+                     * Primer holds engine lock internally.
+                     */
+                    contextPrimer.primeAndSave(
+                        stateId, seqId, filePath
                     )
 
+                } else {
+                    false
+                }
+
                 /*
-                 * Failed restore:
+                 * Failed restore or prime:
                  * return slot back to pool.
                  */
                 if (!success) {

@@ -31,7 +31,7 @@ object LlamaBridge : LlamaBridgeAdapter { // 1. INHERIT THE ADAPTER HERE
      * @param seqId The active sequence ID to save.
      * @return True on success, false on write failure.
      */
-    external fun saveKVCache(filepath: String, seqId: Int): Boolean
+    override external fun saveKVCache(filepath: String, seqId: Int): Boolean
 
     /**
      * Restores a previously saved KV cache state into memory.
@@ -46,7 +46,7 @@ object LlamaBridge : LlamaBridgeAdapter { // 1. INHERIT THE ADAPTER HERE
      * @param prompt The context prompt string.
      * @return The generated text response from the model.
      */
-    external fun runInference(prompt: String): String
+    override external fun runInference(prompt: String): String
 
     /**
      * Frees the llama.cpp context, model buffers, and ggml backend.

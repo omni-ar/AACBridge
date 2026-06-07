@@ -21,3 +21,12 @@ externalNativeBuild/
 Thumbs.db
 
 android/app/src/main/jniLibs/
+
+# Python Virtual Environments
+.venv/
+venv/
+env/
+
+# Logs and Secrets
+*.log
+.env

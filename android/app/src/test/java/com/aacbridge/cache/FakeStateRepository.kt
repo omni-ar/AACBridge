@@ -27,4 +27,10 @@ class FakeStateRepository(
 
         return stateMap.values.toList()
     }
+
+    override suspend fun getPromptText(stateId: String): String? {
+        return if (stateMap.containsKey(stateId))
+            "Test context prompt for $stateId"
+        else null
+    }
 }

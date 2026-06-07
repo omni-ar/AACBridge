@@ -1,14 +1,14 @@
 package com.aacbridge.fusion
 
 /**
- * Lightweight Android integration placeholder for
- * cross-attention fusion model inputs.
+ * Lightweight Android integration for
+ * late-fusion model inputs.
  *
  * Represents a single cross-modal observation.
  *
- * `emgEmbedding`: Expected shape (64). FusionInference handles `(1,1,64)` squeeze internally.
- * `gazeVector`: Expected shape 6-dim `[deltaX, deltaY, abs(deltaX), abs(deltaY), magnitude, intentIndex]`.
- * `gazeTarget`: String label intent emitted by traditional GazeTracker logic.
+ * `emgEmbedding`: Expected shape (64). FusionInference reshapes to `(1,1,64)` for ONNX.
+ * `gazeVector`: Expected shape 5-dim `[deltaX, deltaY, abs(deltaX), abs(deltaY), magnitude]`.
+ * `gazeTarget`: String label intent emitted by traditional GazeTracker logic (fallback).
  *
  * Contract defined by Medha (EMG) and Heer (gaze).
  *

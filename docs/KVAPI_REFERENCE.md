@@ -14,15 +14,15 @@ Instead, `llama.cpp` owns the KV memory through a series of fixed native slots c
 The `HardwareConfig` defines `MAX_ACTIVE_KV_STATES = 3` (enforcing a strict ~2GB memory budget on the edge device). 
 
 1. `KVCacheManager` initializes a `ConcurrentLinkedQueue` pool of available IDs: `[0, 1, 2]`.
-2. When a semantic context (e.g., "home_mom") scores high enough to be resident, the Manager pops an available `seqId` from the pool.
+2. When a semantic context scores high enough to be resident, the Manager pops an available `seqId` from the pool.
 3. The Manager instructs the `LlamaBridgeAdapter` to load the `.bin` file into that specific `seqId` slot natively.
-4. The semantic mapping `{"home_mom" -> seqId 1}` is tracked in the JVM's `activeStates` map.
+4. The semantic mapping `{"context_name" -> seqId 1}` is tracked in the JVM's `activeStates` map.
 
-### The Absence of `freeKVCache()`
+### Eviction via Overwrite
 There is no explicit API to "free" or "clear" a KV cache natively. 
 
 * **Why:** Native memory allocation is expensive. Continually freeing and re-`malloc`ing gigabytes of memory destroys latency.
-* **How Eviction Works:** When "home_mom" is evicted, the JVM simply takes its assigned `seqId` (e.g., `1`) and pushes it back into the available pool. When the next state needs to load, it grabs `seqId 1` and `llama_state_load_seq` simply **overwrites** the existing native memory buffer. 
+* **How Eviction Works:** When a state is evicted, the JVM simply takes its assigned `seqId` (e.g., `1`) and pushes it back into the available pool. When the next state needs to load, it grabs `seqId 1` and `llama_state_load_seq` simply **overwrites** the existing native memory buffer. 
 
 This model guarantees an invariant: `activeStates.size + availableSeqIds.size == MAX_ACTIVE_KV_STATES` at all times.
 
@@ -34,10 +34,13 @@ The `LlamaBridgeAdapter` requires the following interface implementations for KV
   Loads a saved KV cache binary from flash memory into the specified native sequence ID slot. If this fails at the JNI layer, the JVM immediately catches the `false` return and returns the `seqId` to the available pool to prevent slot leakage.
   
 * `fun saveKVCache(filepath: String, seqId: Int): Boolean`
-  Saves the current state of a native sequence slot to flash memory. (Implementation pending Room DB serialization).
+  Saves the current state of a native sequence slot to flash memory as a `.bin` file.
 
-### ⚠️ Open Architectural Question: The `saveKVCache()` Lifecycle
-Currently, the exact orchestration of *when* a KV cache is written to disk remains unresolved. While `loadKVCache()` is fully orchestrated by the daemon and router, `saveKVCache()` is never called in the Phase 2 implementation. 
+## Resident State Lifecycle
 
-**Required Phase 3 Resolution:**
-Who triggers the save? Does it happen asynchronously after inference completes? Does a separate worker pre-compute and serialize states overnight? If the cache is never saved to disk, the cold start recovery mechanism will have nothing to load into RAM.
+The cache serialization lifecycle is fully orchestrated via `ContextPrimerImpl`.
+
+1. **Identification:** The Daemon identifies missing states.
+2. **Priming:** The LLM evaluates the context.
+3. **Serialization:** Immediately after native memory is populated, `saveKVCache` is explicitly invoked to write the state to disk.
+4. **Restoration:** Subsequent boots use `loadKVCache` to retrieve the `.bin` file without running the LLM.

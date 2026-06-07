@@ -14,6 +14,8 @@ import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.aacbridge.daemon.ContextDaemon
+import kotlin.concurrent.withLock
 import com.aacbridge.gaze.GazeTracker
 import com.aacbridge.gaze.CalibrationManager
 import com.aacbridge.gaze.DwellOverlayView
@@ -84,33 +86,79 @@ class MainActivity : AppCompatActivity() {
         }
 
         // =====================================================
-        // PRESERVED: Existing JNI bootstrap / smoke-test flow
+        // JNI bootstrap with correct initialization ordering:
+        //
+        // 1. initializeBackend()  — ggml allocator setup
+        // 2. initializeModel()    — GGUF load + ctx creation
+        // 3. modelReady = true    — gate for daemon/primer
+        // 4. Start ContextDaemon  — ONLY after model is ready
+        // 5. Smoke-test inference — validates full pipeline
+        //
+        // CRITICAL: ContextDaemon must NOT start before model
+        // is initialized. Previous code started it immediately
+        // in onCreate(), causing SIGBUS when the daemon's sweep
+        // called runInference() on a null native context.
         // =====================================================
         thread {
             try {
-                Log.d(TAG, "Initializing model...")
-                updateStatus("MODEL: Initializing...")
+                val app = application as AACBridgeApplication
+                val lock = app.appContainer.engineLock
 
-                val initialized = LlamaBridge.initializeModel(
-                    "/data/local/tmp/models/qwen2.5-0.5b-instruct-q4_k_m.gguf"
-                )
+                // --- Step 1: Backend init ---
+                Log.d(TAG, "[INIT] Step 1: initializeBackend() starting")
+                updateStatus("MODEL: Initializing backend...")
 
-                Log.d(TAG, "Model initialized: $initialized")
+                lock.withLock {
+                    LlamaBridge.initializeBackend()
+                }
+
+                Log.d(TAG, "[INIT] Step 1: initializeBackend() complete")
+
+                // --- Step 2: Model load ---
+                Log.d(TAG, "[INIT] Step 2: initializeModel() starting")
+                updateStatus("MODEL: Loading model...")
+
+                val initialized = lock.withLock {
+                    LlamaBridge.initializeModel(
+                        "/data/local/tmp/models/qwen2.5-0.5b-instruct-q4_k_m.gguf"
+                    )
+                }
+
+                Log.d(TAG, "[INIT] Step 2: initializeModel() = $initialized")
 
                 if (!initialized) {
-                    Log.e(TAG, "Model initialization failed")
+                    Log.e(TAG, "[INIT] Model initialization failed — daemon will NOT start")
                     updateStatus("MODEL: Failed")
                     return@thread
                 }
 
+                // --- Step 3: Model ready gate ---
+                app.appContainer.modelReady.set(true)
+                Log.d(TAG, "[INIT] Step 3: modelReady = true")
                 updateStatus("MODEL: Loaded")
 
-                Log.d(TAG, "Running inference...")
+                // --- Step 4: Start ContextDaemon ---
+                Log.d(TAG, "[INIT] Step 4: Starting ContextDaemon")
+                try {
+                    ContextCompat.startForegroundService(
+                        this,
+                        Intent(this, ContextDaemon::class.java)
+                    )
+                    runOnUiThread { daemonStatusText.text = "DAEMON: Running" }
+                    Log.d(TAG, "[INIT] Step 4: ContextDaemon started")
+                } catch (e: Exception) {
+                    Log.e(TAG, "[INIT] Failed to start ContextDaemon", e)
+                }
 
-                val output = LlamaBridge.runInference("User: Hello\nAssistant:")
+                // --- Step 5: Smoke-test inference ---
+                Log.d(TAG, "[INIT] Step 5: Smoke-test inference starting")
 
-                Log.d(TAG, "Inference output: $output")
-                Log.d(TAG, "Inference completed successfully")
+                val output = lock.withLock {
+                    LlamaBridge.runInference("User: Hello\nAssistant:")
+                }
+
+                Log.d(TAG, "[INIT] Step 5: Inference output: $output")
+                Log.d(TAG, "[INIT] Step 5: Inference completed successfully")
 
                 updateStatus("MODEL: Ready")
 
@@ -118,14 +166,6 @@ class MainActivity : AppCompatActivity() {
                 Log.e(TAG, "Inference pipeline crashed", e)
                 updateStatus("MODEL: Offline (fallback active)")
             }
-        }
-
-        // Start ContextDaemon background service
-        try {
-            ContextCompat.startForegroundService(this, Intent(this, ContextDaemon::class.java))
-            runOnUiThread { daemonStatusText.text = "DAEMON: Running" }
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to start ContextDaemon", e)
         }
 
         // Initialize gaze tracker
@@ -163,10 +203,11 @@ class MainActivity : AppCompatActivity() {
                 // Wire fusion model inference
                 // Provide mock EMG embedding since Medha's hardware isn't connected yet
                 val mockEmg = FloatArray(64) { 0f }
-                val input = FusionInput(mockEmg, vector, "unknown")
+                val input = FusionInput(mockEmg, vector, "unknown", System.currentTimeMillis())
                 try {
-                    val fusionResult = app.appContainer.fusionInference.runInference(input)
-                    Log.d(TAG, "Fusion prediction: $fusionResult")
+                    val fusionResult = app.appContainer.fusionInference.fuse(input)
+                    // Throttled: fusion runs at ~30Hz but log at ≤1Hz
+                    // to prevent logcat buffer saturation
                 } catch (e: Exception) {
                     Log.e(TAG, "Fusion inference failed", e)
                 }

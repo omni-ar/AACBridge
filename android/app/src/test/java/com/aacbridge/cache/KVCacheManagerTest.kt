@@ -9,12 +9,26 @@ import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
+import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.advanceUntilIdle
+import java.io.File
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class KVCacheManagerTest {
+
+    @get:Rule
+    val tempDir = TemporaryFolder()
+
+    private lateinit var cacheDir: File
+
+    @Before
+    fun setUp() {
+        cacheDir = tempDir.newFolder("kv_cache")
+    }
 
     /**
      * Creates deterministic test state.
@@ -33,10 +47,38 @@ class KVCacheManagerTest {
         )
     }
 
+    /**
+     * Creates a repository returning temp paths + creates
+     * actual .bin files so File.exists() returns true.
+     */
+    private fun createRepoWithFiles(
+        states: List<ContextState>
+    ): StateRepository {
+        // Create actual .bin files for each state
+        for (state in states) {
+            File(cacheDir, "${state.stateId}.bin")
+                .writeText("fake")
+        }
+        val stateMap = states.associateBy { it.stateId }
+        return object : StateRepository {
+            override suspend fun getFilePath(stateId: String): String? {
+                return if (stateMap.containsKey(stateId))
+                    File(cacheDir, "$stateId.bin").absolutePath
+                else null
+            }
+            override suspend fun getAllContextStates() = states
+            override suspend fun getPromptText(stateId: String): String? {
+                return if (stateMap.containsKey(stateId))
+                    "Test context for $stateId"
+                else null
+            }
+        }
+    }
+
     @Test
     fun `eviction waits for refCount drain before recycling seqId`() =
     runTest {
-        val repository = FakeStateRepository(
+        val repository = createRepoWithFiles(
             listOf(createState("A"), createState("B"), createState("C"), createState("D"))
         )
         val bridge = FakeLlamaBridge()
@@ -46,6 +88,10 @@ class KVCacheManagerTest {
             jniBridge = object : LlamaBridgeAdapter {
                 override fun loadKVCache(filepath: String, seqId: Int) =
                     bridge.loadKVCache(filepath, seqId)
+                override fun saveKVCache(filepath: String, seqId: Int) =
+                    bridge.saveKVCache(filepath, seqId)
+                override fun runInference(prompt: String) =
+                    bridge.runInference(prompt)
             }
         )
 
@@ -65,7 +111,10 @@ class KVCacheManagerTest {
 
         assertFalse(manager.isStateResident("A"))
         assertTrue(manager.isStateResident("D"))
-        assertEquals("/tmp/D.bin", bridge.loadedStates[originalSeqId])
+        assertEquals(
+            File(cacheDir, "D.bin").absolutePath,
+            bridge.loadedStates[originalSeqId]
+        )
         assertEquals(3, manager.getActiveStateCount() + manager.getAvailableSeqIdCount())
     }
 
@@ -74,7 +123,7 @@ fun `failed JNI load returns seqId to pool`() =
     runTest {
 
         val repository =
-            FakeStateRepository(
+            createRepoWithFiles(
                 listOf(
                     createState("A")
                 )
@@ -103,6 +152,10 @@ fun `failed JNI load returns seqId to pool`() =
                             seqId
                         )
                     }
+                    override fun saveKVCache(filepath: String, seqId: Int) =
+                        bridge.saveKVCache(filepath, seqId)
+                    override fun runInference(prompt: String) =
+                        bridge.runInference(prompt)
                 }
             )
 
@@ -136,7 +189,7 @@ fun `resident state is not redundantly reloaded`() =
     runTest {
 
         val repository =
-            FakeStateRepository(
+            createRepoWithFiles(
                 listOf(
                     createState("A")
                 )
@@ -163,6 +216,10 @@ fun `resident state is not redundantly reloaded`() =
                             seqId
                         )
                     }
+                    override fun saveKVCache(filepath: String, seqId: Int) =
+                        bridge.saveKVCache(filepath, seqId)
+                    override fun runInference(prompt: String) =
+                        bridge.runInference(prompt)
                 }
             )
 
@@ -196,7 +253,7 @@ fun `state loads successfully into available seqId`() =
     runTest {
 
         val repository =
-            FakeStateRepository(
+            createRepoWithFiles(
                 listOf(
                     createState("A")
                 )
@@ -223,6 +280,10 @@ fun `state loads successfully into available seqId`() =
                             seqId
                         )
                     }
+                    override fun saveKVCache(filepath: String, seqId: Int) =
+                        bridge.saveKVCache(filepath, seqId)
+                    override fun runInference(prompt: String) =
+                        bridge.runInference(prompt)
                 }
             )
 

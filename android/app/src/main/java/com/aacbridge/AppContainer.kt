@@ -4,7 +4,8 @@ import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.location.LocationManager
 import com.aacbridge.cache.CacheMutexRegistry
-import com.aacbridge.cache.InMemoryStateRepository
+import com.aacbridge.cache.ContextPrimerImpl
+import com.aacbridge.cache.SeededStateRepository
 import com.aacbridge.cache.KVCacheManager
 import com.aacbridge.daemon.ActiveSweep
 import com.aacbridge.inference.LlamaBridge
@@ -13,6 +14,8 @@ import com.aacbridge.router.GPSScorer
 import com.aacbridge.router.StateRouter
 import com.aacbridge.router.TimeScorer
 import com.aacbridge.fusion.FusionInference
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.locks.ReentrantLock
 
 /**
  * Lightweight manual dependency injection container.
@@ -47,11 +50,12 @@ class AppContainer(
     /**
      * Repository layer.
      *
-     * Temporary in-memory implementation until
-     * Room persistence layer is finalized.
+     * Benchmarking-phase seeded implementation.
+     * Will be replaced by Room-backed repository when
+     * dynamic context management is required.
      */
     val repository =
-        InMemoryStateRepository()
+        SeededStateRepository(application)
 
     /**
      * Router scorers.
@@ -82,13 +86,63 @@ class AppContainer(
         CacheMutexRegistry()
 
     /**
+     * Engine-level mutex protecting ALL LlamaBridge
+     * JNI operations.
+     *
+     * MANDATORY:
+     * The C++ layer uses global static variables:
+     * - ctx (llama_context pointer)
+     * - session_tokens (shared token vector)
+     *
+     * Concurrent JNI calls corrupt these globals.
+     * This single lock serializes all native access:
+     * - ContextPrimer: runInference + saveKVCache
+     * - KVCacheManager: loadKVCache
+     * - MainActivity: runInference
+     */
+    val engineLock = ReentrantLock()
+
+    /**
+     * Model readiness gate.
+     *
+     * Set to true ONLY after:
+     * 1. initializeBackend() completes
+     * 2. initializeModel() returns true
+     *
+     * Guards:
+     * - ContextPrimer (prevents priming on null ctx)
+     * - ContextDaemon start (prevents sweeps before model loads)
+     */
+    val modelReady = AtomicBoolean(false)
+
+    /**
+     * Context priming lifecycle.
+     *
+     * Owns: prefill → save
+     * Does NOT own: seqId allocation/return
+     */
+    private val contextPrimer =
+        ContextPrimerImpl(
+            repository = repository,
+            bridge = LlamaBridge,
+            engineLock = engineLock,
+            modelReady = modelReady
+        )
+
+    /**
      * Native KV cache orchestration layer.
+     *
+     * Now includes ContextPrimer for automatic
+     * priming when .bin files are missing,
+     * and engine lock for safe JNI access.
      */
     val kvCacheManager =
         KVCacheManager(
             repository = repository,
             mutexRegistry = mutexRegistry,
-            jniBridge = LlamaBridge
+            jniBridge = LlamaBridge,
+            contextPrimer = contextPrimer,
+            engineLock = engineLock
         )
 
     /**

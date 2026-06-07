@@ -30,3 +30,12 @@ To isolate the latency improvements generated exclusively by the predictive cach
 \label{subsec:mockgen}
 
 The total system pipeline relies on a Surface EMG (sEMG) wearable to generate intent classifications via a CNN-LSTM model. However, to explicitly decouple the LLM backend latency metrics from the variances of the upstream bio-signal processing layer, the Phase 3 benchmarking employs a JVM \texttt{MockIntentGenerator}. This class generates deterministic, rule-based \texttt{IntentPayload} objects, allowing for precise, isolated millisecond-level profiling of the JNI boundary and the \texttt{llama.cpp} generation loop.
+
+\subsection{Fusion Architecture Ablation Protocol}
+\label{subsec:fusion_ablation_setup}
+
+To rigorously determine the optimal aggregation strategy for the multimodal sensor inputs, we instituted an architectural ablation study comparing early cross-attention against a traditional late fusion fallback. Because physical AAC patient data was unavailable during Phase 2 development, the ablation relied on a synthetic dataset generation procedure combining the NinaPro DB5 sEMG arrays with the GazeCapture dataset.
+
+During initial evaluations, a critical label leakage bug was discovered: the dataset generation procedure accidentally included the ground-truth \texttt{intentIndex} within the 6-dimensional gaze vector, resulting in artificially perfect classification. The data pipeline was subsequently corrected to extract a localized 5-dimensional gaze representation: $[dx, dy, |dx|, |dy|, \text{magnitude}]$.
+
+The corrected dataset was partitioned into a strict 80/10/10 Train/Validation/Test split. To justify the increased computational complexity of attention mechanisms on constrained edge hardware, a pre-specified decision criterion was established: the cross-attention architecture was required to exceed the late fusion architecture by a margin of $>3\%$ F1 score. The selected winning model was then submitted to a strict export and validation workflow, utilizing \texttt{onnxruntime} to verify end-to-end mathematical consistency on the Android device.
