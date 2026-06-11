@@ -163,3 +163,23 @@ Three configurations on Snapdragon 8-series device:
 - System: KV Cache Primed - intent injection only
 
 **Pending benchmarking:** Actual TTFT reductions, memory footprints, and drift detector CPU% will be measured in Phase 3.
+
+
+## Archived Equations
+
+* Scoring function: S(ci) fully derived with edge cases
+* EMA update formula: wi <- (1-alpha)·wi + alpha·rt
+
+## Archived Thresholds
+
+* alpha in [0.1, 0.3]
+* weights bounded naturally to [-2, 1] by EMA + reward range
+* k=3 cosine similarity turn window
+
+## Archived Design Decisions
+
+* Fallback to concatenation late fusion if F1 gap <3%
+* CMAB not full RL (no gradient updates, no rollouts)
+* Style-conditioned generation: S = {concise, polite, urgent}
+* Single LLM call preserved, bandit selects prompt modifier only
+* Epsilon-greedy selection

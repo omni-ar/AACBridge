@@ -63,3 +63,31 @@ The software pipeline is mathematically verified and complete. Physical integrat
 - **confirm Class Failure:** F1=0.000 for confirm class in best checkpoint. Cross-subject failure for subject 10 specifically.
 - **Simulation Data:** NinaPro DB5 is hand/wrist, not facial sEMG. Architecture validated, not deployment accuracy.
 - **Hardware Disconnect:** Android deployment requires physical pairing to the wearable. A mock `FloatArray(64)` currently acts as a placeholder in `MainActivity.kt`.
+
+## Historical Experimental Findings
+
+* Per-class F1 (best checkpoint):
+  - confirm: 0.0000
+  - reject: 0.5172
+  - scroll: 0.5161
+  - select: 0.6061
+  - call-help: 0.6190
+* k-Ablation Results (θ=0.15, DialogSum, 150 conversations):
+  - k=1: Precision 0.3667, Recall 0.3667, F1 0.3667
+  - k=2: Precision 0.3406, Recall 0.3133, F1 0.3264
+  - k=3: Precision 0.1368, Recall 0.1067, F1 0.1199
+  - k=4: Precision 0.0714, Recall 0.0400, F1 0.0513
+  - k=5: Precision 0.0385, Recall 0.0133, F1 0.0198
+* LOSO evaluation protocol: Val accuracy of 50% reflects LOSO difficulty with 808 training windows. Subject-specific fine-tuning expected to improve deployment performance.
+
+## Historical Known Issues
+
+* **Random TFLite weights** → RESOLVED
+* **confirm Class Failure** → RESOLVED (Model failed to correctly classify any confirm instances for subject 10 specifically)
+* **Missing weight transfer** → RESOLVED
+* **ONNX export issues** (Opset 18 instead of 14) → RESOLVED
+
+## Superseded Limitations
+
+* Python Environment Split: TFLite export required Python 3.11, while primary env was 3.14.
+* Simulation Data: NinaPro DB5 is hand/wrist, not facial sEMG. Architecture validated, not deployment accuracy.

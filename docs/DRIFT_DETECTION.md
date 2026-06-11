@@ -8,7 +8,7 @@ This document formalizes the hysteresis reasoning behind the semantic drift dete
 * **ONNX Runtime Android Integration:** `all-MiniLM-L6-v2` runs on-device.
 * **Daemon Orchestration:** Runs as a `CoroutineWorker` scheduled via Android `WorkManager` with a 15-minute periodic interval, utilizing `ExistingPeriodicWorkPolicy.KEEP` to ensure a single singleton worker survives app restarts and Doze mode.
 * **BLE-Bypass Hysteresis:** The daemon pulls a lightweight `SensorSnapshot` using only Time and GPS, setting `detectedBleDevices = emptyMap()` to save battery. The hysteresis relies on a **relative score delta**, scoring both candidate and resident states against the same BLE-blind snapshot.
-* **k=3 Turn Window:** Based on the empirical k-ablation study completed by Medha, the detector aggregates the last 3 user intent turns as the recent embedding window.
+* **k=3 Turn Window:** The k-ablation study on DailyDialog did not identify k=3 as the highest-performing configuration. However, because DailyDialog differs substantially from AAC communication patterns, k=3 was retained as an engineering heuristic for sparse AAC interactions rather than selected solely on the basis of ablation metrics.
 
 ### Deferred (Pending Benchmarking)
 * **Empirical tuning of `HYSTERESIS_MARGIN = 0.10`:** The swap is only executed if `(bestCandidateScore - weakestResidentScore) > 0.10`. This threshold is currently analytical and must be tuned with real usage data in Phase 3.

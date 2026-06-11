@@ -25,7 +25,7 @@ Phase 2 implementation focused heavily on JVM-side orchestration, deterministic 
 
 All previously unresolved Phase 2 dependencies have been successfully integrated:
 * **Medha:** TFLite CNN-LSTM intent model export is mathematically verified (`assert_allclose` PASS) and generated. (Hardware validation pending).
-* **Medha:** Empirical k-ablation F1 results for the Drift Detector window size are finalized. The architecture empirically utilizes $k=3$.
+* **Medha:** Empirical k-ablation F1 results for the Drift Detector window size are finalized. The k-ablation study on DailyDialog did not identify k=3 as the highest-performing configuration. However, because DailyDialog differs substantially from AAC communication patterns, k=3 was retained as an engineering heuristic for sparse AAC interactions rather than selected solely on the basis of ablation metrics.
 * **Heer:** Final decision regarding cross-attention fusion vs. simple concatenation fallback finalized: Late Fusion selected (Accuracy=0.9967, F1=0.9963). The resulting ONNX model is exported and integrated on-device.
 
 ## 3. Pending Phase 3 Follow-ups

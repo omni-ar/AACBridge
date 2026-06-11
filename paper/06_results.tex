@@ -47,6 +47,6 @@ To guarantee that the mathematical fidelity of the selected Late Fusion architec
 % [PLACEHOLDER: Insert Drift Detection accuracy table and K-Ablation graph]
 
 % Discussion points for Phase 3:
-% - Report Medha's $k$-ablation F1 score results on the DailyDialog dataset, explicitly justifying the selection of the $k=3$ window for localized semantic centroids.
+% - Report Medha's $-ablation F1 score results on the DailyDialog dataset. The k-ablation study on DailyDialog did not identify k=3 as the highest-performing configuration. However, because DailyDialog differs substantially from AAC communication patterns, k=3 was retained as an engineering heuristic for sparse AAC interactions rather than selected solely on the basis of ablation metrics.
 % - Analyze the stability of the KV Cache swap behavior utilizing the `HYSTERESIS_MARGIN = 0.10` delta. Discuss edge cases where the cache thrashed or successfully resisted noisy sensor spikes.
 % - Evaluate the actual latency impact of the Tier 1 SQLite generic fallback during simulated "cold miss" scenarios where the drift detector invalidated a state immediately prior to user intent generation.

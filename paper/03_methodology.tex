@@ -40,7 +40,7 @@ The critical innovation of the router is its resilience to hardware failure. Tim
 \subsection{Asynchronous Semantic Drift Detection}
 Environmental sensors predict physical location but cannot verify conversation topics. The semantic drift detector periodically bridges this gap. Following a localized sequence of user generations, the system computes an INT8-quantized embedding (utilizing an ONNX-Runtime deployment of \texttt{all-MiniLM-L6-v2}) of the most recent $k=3$ conversational turns. 
 
-The $k=3$ window was empirically chosen via ablation to represent a localized semantic centroid; smaller windows introduce high variance from sparse AAC utterances, while larger windows suffer from signal dilution. The resulting semantic vector is compared via cosine similarity against the baseline cache context. If the similarity falls below a defined threshold, the cache is invalidated.
+The k-ablation study on DailyDialog did not identify k=3 as the highest-performing configuration. However, because DailyDialog differs substantially from AAC communication patterns, k=3 was retained as an engineering heuristic for sparse AAC interactions rather than selected solely on the basis of ablation metrics. The resulting semantic vector is compared via cosine similarity against the baseline cache context. If the similarity falls below a defined threshold, the cache is invalidated.
 
 To prevent cache thrashing in noisy sensor environments, state replacements are gated by a hysteresis margin. The background daemon demands a relative score delta of $0.10$ between the candidate state and the weakest resident state before authorizing the expensive IO operations required to swap the native memory buffer.
 

@@ -39,4 +39,4 @@
 ## 4. Drift Detector k-Ablation
 
 **Validation:** The detector computes cosine similarity between an anchor embedding and the mean of the last `k=3` turn embeddings to detect context shift.
-**Results:** `k=3` achieves F1=0.1199 on DialogSum. `k=3` is deliberately selected over `k=1` because AAC turns are sparse single words with high semantic variance, whereas DialogSum turns are multi-sentence. Precision is favored over recall to avoid costly (~2s TTFT) KV cache re-prefills.
+**Results:** The k-ablation study on DailyDialog did not identify k=3 as the highest-performing configuration. However, because DailyDialog differs substantially from AAC communication patterns, k=3 was retained as an engineering heuristic for sparse AAC interactions rather than selected solely on the basis of ablation metrics.
