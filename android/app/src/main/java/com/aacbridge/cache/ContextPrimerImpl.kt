@@ -108,30 +108,36 @@ class ContextPrimerImpl(
         val saveSuccess = engineLock.withLock {
 
             /*
-             * Step 3: Run prefill.
+             * Step 3: Prefill only (no generation).
              *
-             * This populates the native KV cache with
-             * attention tensors computed from the prompt.
-             * The generated text is discarded — we only
-             * need the KV state in memory.
+             * prefillOnly() populates the native KV cache
+             * with attention tensors computed from the
+             * prompt, WITHOUT entering the generation loop.
+             *
+             * This ensures the saved .bin file contains
+             * ONLY the context tokens — no stale
+             * generated output that would pollute the
+             * KV cache when later restored.
              */
-            bridge.runInference(prompt)
+            val prefillSuccess = bridge.prefillOnly(prompt)
+
+            if (!prefillSuccess) {
+                return@withLock false
+            }
 
             /*
              * Step 4: Serialize KV cache to .tmp file.
              *
              * CRITICAL: Always save seq_id 0.
              *
-             * runInference() uses llama_batch_get_one() which
-             * decodes all tokens into seq_id 0 (the default).
-             * The `seqId` parameter from KVCacheManager is the
-             * target LOAD slot, not the native decode slot.
-             *
-             * Saving a non-zero seqId produces a header-only file
-             * (~450 bytes) because no KV data exists for that seq.
+             * prefillOnly() uses llama_batch_get_one()
+             * which decodes all tokens into seq_id 0.
+             * The `seqId` parameter from KVCacheManager
+             * is the target LOAD slot, not the native
+             * decode slot.
              *
              * The .bin file is seq-id-agnostic on disk —
-             * loadKVCache() can restore it into any target slot.
+             * loadKVCache() can restore it into any slot.
              */
             bridge.saveKVCache(
                 tmpFile.absolutePath,

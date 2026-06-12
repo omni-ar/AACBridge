@@ -39,7 +39,12 @@ object LlamaBridge : LlamaBridgeAdapter { // 1. INHERIT THE ADAPTER HERE
      * @param seqId The sequence ID to assign to the restored cache.
      * @return True on success, false if the file is invalid or missing.
      */
-    override external fun loadKVCache(filepath: String, seqId: Int): Boolean // 2. ADD THE OVERRIDE KEYWORD HERE
+    override external fun loadKVCache(filepath: String, seqId: Int): Boolean
+
+    /**
+     * Clears the KV cache and resets session_tokens.
+     */
+    override external fun clearKVCache()
 
     /**
      * Executes the greedy-sampling generation loop on the input prompt.
@@ -47,6 +52,18 @@ object LlamaBridge : LlamaBridgeAdapter { // 1. INHERIT THE ADAPTER HERE
      * @return The generated text response from the model.
      */
     override external fun runInference(prompt: String): String
+
+    /**
+     * Tokenizes and decodes the prompt without generation.
+     * Produces a clean KV cache state for saveKVCache().
+     */
+    override external fun prefillOnly(prompt: String): Boolean
+
+    /**
+     * Continues inference from a loaded KV cache.
+     * Uses explicit positions to avoid collision with loaded entries.
+     */
+    override external fun resumeInference(prompt: String): String
 
     /**
      * Frees the llama.cpp context, model buffers, and ggml backend.

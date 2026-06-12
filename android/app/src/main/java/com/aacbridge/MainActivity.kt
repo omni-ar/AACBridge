@@ -162,6 +162,19 @@ class MainActivity : AppCompatActivity() {
 
                 updateStatus("MODEL: Ready")
 
+                // --- Step 6: Launch benchmark suite ---
+                Log.d(TAG, "[INIT] Step 6: Launching LatencyProfiler")
+                val profiler = com.aacbridge.inference.LatencyProfiler(
+                    bridge = LlamaBridge,
+                    engineLock = lock,
+                    repository = app.appContainer.repository,
+                    modelReady = app.appContainer.modelReady
+                )
+                kotlinx.coroutines.runBlocking {
+                    profiler.runBenchmarkSuite()
+                }
+                Log.d(TAG, "[INIT] Step 6: Benchmark suite finished")
+
             } catch (e: Exception) {
                 Log.e(TAG, "Inference pipeline crashed", e)
                 updateStatus("MODEL: Offline (fallback active)")

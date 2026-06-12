@@ -32,6 +32,13 @@ interface LlamaBridgeAdapter {
     ): Boolean
 
     /**
+     * Clears the KV cache and resets session_tokens.
+     * Must be called between independent inference
+     * trials to prevent context exhaustion.
+     */
+    fun clearKVCache()
+
+    /**
      * Serializes KV cache tensors from a specific
      * llama.cpp sequence slot to disk.
      *
@@ -56,6 +63,42 @@ interface LlamaBridgeAdapter {
      * @return Generated text response.
      */
     fun runInference(
+        prompt: String
+    ): String
+
+    /**
+     * Tokenizes and decodes the prompt WITHOUT
+     * entering the generation loop.
+     *
+     * After this call, the KV cache contains attention
+     * tensors for the prompt tokens ONLY — no stale
+     * generation tokens. Designed for use before
+     * saveKVCache() to produce clean cache files.
+     *
+     * @param prompt The context prompt to prefill.
+     * @return true if prefill succeeded.
+     */
+    fun prefillOnly(
+        prompt: String
+    ): Boolean
+
+    /**
+     * Continues inference from a previously loaded
+     * KV cache state.
+     *
+     * Precondition: loadKVCache() must have been
+     * called successfully. session_tokens must contain
+     * the token history restored by loadKVCache().
+     *
+     * Unlike runInference(), this function:
+     * - Does NOT clear session_tokens
+     * - Tokenizes intent WITHOUT BOS
+     * - Uses explicit positions starting at n_past
+     *
+     * @param prompt The intent prompt to append.
+     * @return Generated text response.
+     */
+    fun resumeInference(
         prompt: String
     ): String
 }
