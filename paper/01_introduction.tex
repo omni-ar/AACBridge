@@ -1,0 +1,26 @@
+\section{Introduction}
+\label{sec:introduction}
+
+Augmentative and alternative communication (AAC) devices are essential for individuals with severe motor impairments who have lost the ability to produce natural speech. For people with conditions such as amyotrophic lateral sclerosis (ALS), these devices often represent the primary means of expressing basic needs, participating in conversation, and maintaining social agency. The responsiveness of an AAC system directly affects the user's ability to communicate in real time: delays of even a few seconds can disrupt conversational turn-taking and erode the communicative experience~\cite{beukelman2020}.
+
+Recent advances in model quantization and optimized inference runtimes have made it feasible to run small language models on mobile hardware, opening the possibility of generative AAC responses that go beyond pre-defined phrase boards. A context-aware language model can generate responses tailored to the user's current environment---for example, producing medical terminology when in a hospital ward, or casual greetings when a caregiver arrives. However, this contextual awareness comes at a cost: the system prompt encoding the environmental context must be processed by the model before any response can be generated. For a prompt of $N$ tokens, this prefill phase adds $O(N)$ latency at inference time, creating a direct tension between response quality and user-perceived responsiveness.
+
+In server-side deployments, KV cache reuse techniques such as prefix sharing and paged attention amortize prefill costs across concurrent requests from multiple users. These techniques are not directly applicable to edge AAC devices, which serve a single user on a single device with no shared request stream. In many such deployments, the contextual prompt is reprocessed during each inference request.
+
+This paper presents \textbf{Context-Aware Predictive KV-Cache Priming (CAP-KVC)}, a system that resolves this tension by decoupling the context prefill from the inference request path. CAP-KVC uses environmental sensor signals---GPS location, Bluetooth Low Energy (BLE) proximity beacons, and time of day---to predict which semantic context the user is most likely to need. It then executes the prefill during idle periods, serializes the resulting KV cache tensors to persistent storage, and restores them at inference time. The user-facing inference path processes only the short intent tokens, reducing the inference-time prefill to a cache restoration operation that completes in under 3~ms.
+
+The system is implemented as a complete Android application with a C++/JNI inference backend based on \texttt{llama.cpp}, a Kotlin orchestration layer managing cache residency and sensor-driven routing, and a multimodal intent classification pipeline combining surface EMG and gaze tracking inputs through a late fusion architecture.
+
+The contributions of this paper are as follows:
+
+\begin{enumerate}
+    \item \textbf{CAP-KVC Architecture:} A predictive KV cache priming system that amortizes context prefill costs by leveraging environmental sensors for background cache state selection and persistence. We observe a 1.32$\times$ to 4.59$\times$ reduction in end-to-end inference latency compared to standard RAG-inline inference on a mobile device, with cache restoration completing in 2.63~ms on average.
+
+    \item \textbf{Edge-Native Implementation:} A complete, deployable Android implementation comprising a scalar-only JNI boundary (8~native functions), a reentrant-lock concurrency model for safe native state access, an LRU cache residency manager bounded to 3~simultaneous KV states, and a deterministic context routing engine using a convex sensor scoring function.
+
+    \item \textbf{Sensor-Driven Context Routing:} A closed-form scoring function that dynamically combines temporal, spatial, and BLE proximity signals with reliability-adaptive weighting, including hysteresis-gated drift detection to prevent cache thrashing under noisy sensor conditions.
+
+    \item \textbf{Multimodal AAC Pipeline:} A fusion architecture combining CNN-LSTM sEMG embeddings with MediaPipe gaze tracking through late fusion, deployed on-device via ONNX Runtime, with a controlled ablation study comparing late fusion against cross-attention.
+\end{enumerate}
+
+The remainder of this paper is organized as follows. Section~\ref{sec:related} surveys related work in KV cache optimization, edge LLM deployment, and assistive technology. Section~\ref{sec:methodology} describes the CAP-KVC methodology. Section~\ref{sec:implementation} details the Android implementation. Section~\ref{sec:experiments} presents the experimental setup. Section~\ref{sec:results} reports and discusses the results. Section~\ref{sec:conclusion} concludes with a summary of findings and limitations.

@@ -1,41 +1,84 @@
-\section{Experiments}
+\section{Experimental Setup}
 \label{sec:experiments}
 
-The experimental evaluation of the AACBridge architecture isolates the latency impact of the Context-Aware Predictive KV-Cache Priming (CAP-KVC) mechanism against standard edge-inference baselines. To ensure strict reproducibility and accurate TTFT (Time To First Token) profiling, all benchmarks are explicitly constrained to target hardware and localized execution environments.
+\subsection{Hardware Platform}
+\label{sec:hardware}
 
-\subsection{Experimental Setup and Hardware Environment}
-\label{subsec:hardware}
+All on-device benchmarks were conducted on a OnePlus~11R (Snapdragon~8+~Gen~1, 8~GB LPDDR5X, UFS~3.1 storage) running Android~14. The device was configured in airplane mode with display brightness fixed at 50\% to minimize thermal and scheduling variability. No other foreground applications were active during benchmarking.
 
-All system benchmarks are executed on a OnePlus 11R 5G smartphone, equipped with a Snapdragon 8 Gen 1 (taro platform) System-on-Chip (SoC) and 8GB of RAM. The Android OS targets API level 36. 
+\subsection{Language Model Configuration}
+\label{sec:model_config}
 
-To guarantee that tensor mathematics leverage the maximum capability of the Snapdragon hardware's NEON SIMD instructions, the application is strictly compiled for the \texttt{arm64-v8a} ABI. Fallback evaluation paths utilizing 32-bit ARM architectures or x86 emulators are intentionally excluded, as their artificial latency profiles misrepresent real-world edge execution.
+The language model used throughout evaluation is Qwen2.5-0.5B-Instruct~\cite{qwen25}, quantized to Q4\_K\_M (4-bit mixed precision) via \texttt{llama.cpp}'s GGUF serialization format. This model was selected as the smallest instruction-tuned model in the Qwen2.5 family capable of producing coherent, context-aware responses on mobile hardware. Greedy sampling was used for all inference trials (temperature~$= 0$, top-$k = 1$) with a maximum generation length of 64 tokens, ensuring deterministic output sequences that minimize generation-phase variance across trials.
 
-\subsection{Model Configuration and Memory Footprint}
-\label{subsec:modelsetup}
+\subsection{Benchmark Conditions}
+\label{sec:conditions}
 
-The core language modeling is driven by the \texttt{llama.cpp} native backend. The baseline evaluation model is configured as Qwen2.5-0.5B-Instruct, compressed using 4-bit block-wise quantization (\texttt{Q4\_K\_M}), resulting in an approximate filesystem footprint of 469MB. The \texttt{.gguf} model artifacts are pushed externally to the Android user data partition (\texttt{/data/local/tmp/models/}) and directly memory-mapped by the C++ engine to bypass JVM heap allocation constraints.
-
-\subsection{Baseline and System Configurations}
-\label{subsec:baselines}
-
-To isolate the latency improvements generated exclusively by the predictive cache orchestration layer, we evaluate three distinct inference pipeline configurations:
+The latency evaluation compares three pipeline configurations:
 
 \begin{enumerate}
-    \item \textbf{Zero-Context Inference (Baseline 1):} The LLM executes a generation sequence using only the user's intent tokens, completely devoid of background context. This establishes the absolute hardware floor for TTFT.
-    \item \textbf{Standard RAG Inference (Baseline 2):} Represents the current state-of-the-art for contextually aware edge AAC. The environmental context is retrieved, concatenated with the user's intent, and passed into the LLM at inference time, triggering a full $O(N)$ token prefill phase.
-    \item \textbf{CAP-KVC (Proposed System):} The KV Cache Manager predictively pre-computes the environmental context into a native \texttt{seqId} slot in the background. At inference time, only the user intent tokens are injected into the resident cache.
+    \item \textbf{ZERO\_CONTEXT}: The language model receives only the user intent tokens (``\texttt{User: I need water\textbackslash nAssistant:}'') with no environmental context. This establishes the hardware floor for inference latency on the target SoC.
+
+    \item \textbf{RAG\_INLINE}: The full context prompt is concatenated with the user intent and submitted as a single string to \texttt{runInference()}, triggering a complete $O(N)$ token prefill at inference time. This represents the standard retrieval-augmented generation approach. Evaluated at four prompt-length tiers: $N \in \{50, 100, 200, 500\}$ approximate tokens.
+
+    \item \textbf{CAP\_KVC}: A pre-computed KV cache is restored from persistent storage via \texttt{loadKVCache()}, followed by \texttt{resumeInference()} with intent-only tokens. The latency reported includes both the cache restoration time and the subsequent generation time.
 \end{enumerate}
 
-\subsection{Benchmark Orchestration via Mock Intent Generation}
-\label{subsec:mockgen}
+The CAP\_KVC condition was evaluated using cache files primed from the base context prompts ($\sim$50 tokens). The N-scaling comparison therefore compares RAG\_INLINE at increasing context lengths against CAP\_KVC at a fixed cache size. This is by design: the CAP\_KVC inference-time cost does not depend on the original context length under the evaluated configuration because the prefill was amortized during background priming. The cache restoration cost is dominated by file I/O (proportional to file size), not by attention computation.
 
-The total system pipeline relies on a Surface EMG (sEMG) wearable to generate intent classifications via a CNN-LSTM model. However, to explicitly decouple the LLM backend latency metrics from the variances of the upstream bio-signal processing layer, the Phase 3 benchmarking employs a JVM \texttt{MockIntentGenerator}. This class generates deterministic, rule-based \texttt{IntentPayload} objects, allowing for precise, isolated millisecond-level profiling of the JNI boundary and the \texttt{llama.cpp} generation loop.
+\subsection{Measurement Methodology}
+\label{sec:measurement}
 
-\subsection{Fusion Architecture Ablation Protocol}
-\label{subsec:fusion_ablation_setup}
+Each benchmark condition executes 32 sequential trials: 2~warmup trials (discarded) followed by 30~measured trials. The warmup phase absorbs JIT compilation of Kotlin/ART code paths and initial thermal settling. All measurements are wall-clock latency captured via \texttt{System.nanoTime()} at the Kotlin layer, wrapping the complete JNI call sequence.
 
-To rigorously determine the optimal aggregation strategy for the multimodal sensor inputs, we instituted an architectural ablation study comparing early cross-attention against a traditional late fusion fallback. Because physical AAC patient data was unavailable during Phase 2 development, the ablation relied on a synthetic dataset generation procedure combining the NinaPro DB5 sEMG arrays with the GazeCapture dataset.
+\textbf{Important methodological note:} The JNI boundary encapsulates tokenization, prefill, and generation within single native function calls (\texttt{runInference} and \texttt{resumeInference}). True time-to-first-token (TTFT) instrumentation---which requires intercepting the decoder loop between the first and second generated tokens---is not possible without modifying the native inference engine. Accordingly, all latency values reported in this paper represent \textbf{end-to-end inference latency}, encompassing tokenization, prefill, and the complete generation phase (up to 64 tokens). We use the term ``inference latency'' throughout to avoid confusion with TTFT as defined in the LLM serving literature.
 
-During initial evaluations, a critical label leakage bug was discovered: the dataset generation procedure accidentally included the ground-truth \texttt{intentIndex} within the 6-dimensional gaze vector, resulting in artificially perfect classification. The data pipeline was subsequently corrected to extract a localized 5-dimensional gaze representation: $[dx, dy, |dx|, |dy|, \text{magnitude}]$.
+For the CAP\_KVC condition, the benchmark instruments two sub-components separately: \texttt{cache\_load\_ms} (the \texttt{loadKVCache} call) and \texttt{inference\_ms} (the \texttt{resumeInference} call), both measured under a single engine lock acquisition to prevent interleaving. The total CAP\_KVC latency is the sum of both components.
 
-The corrected dataset was partitioned into a strict 80/10/10 Train/Validation/Test split. To justify the increased computational complexity of attention mechanisms on constrained edge hardware, a pre-specified decision criterion was established: the cross-attention architecture was required to exceed the late fusion architecture by a margin of $>3\%$ F1 score. The selected winning model was then submitted to a strict export and validation workflow, utilizing \texttt{onnxruntime} to verify end-to-end mathematical consistency on the Android device.
+Results are emitted as structured CSV lines via Android's \texttt{Log.i()} facility and extracted post-run via \texttt{adb logcat}. The extraction pipeline is deterministic and produces 180 measured data points (6~conditions $\times$ 30~trials).
+
+\subsection{Pre-Benchmark Validation}
+\label{sec:validation}
+
+Before executing the benchmark suite, a semantic validation pass confirms that the three pipeline configurations produce qualitatively distinct outputs. A diagnostic prompt (``\texttt{What should I have for breakfast and is my morning medication due?}'') is submitted under each condition, and the generated text is logged for manual inspection. This validates that:
+
+\begin{itemize}
+    \item ZERO\_CONTEXT produces a generic response lacking environmental specificity.
+    \item RAG\_INLINE produces a response reflecting the \texttt{home\_morning} context (breakfast, medication).
+    \item CAP\_KVC produces a similarly context-aware response, confirming that KV cache restoration successfully preserved the contextual attention patterns.
+\end{itemize}
+
+The benchmark suite is aborted if the KV cache load fails during validation, preventing the collection of meaningless data.
+
+\subsection{Memory Profiling}
+\label{sec:memory_profiling}
+
+Native heap memory usage is measured using Android's \texttt{dumpsys meminfo} command at two states: (1)~after model initialization with zero KV cache states loaded, and (2)~after loading three KV cache states into native sequence slots. The delta represents the marginal memory cost of the predictive caching system.
+
+\subsection{Fusion Model Evaluation}
+\label{sec:fusion_eval}
+
+The multimodal fusion model is evaluated through a controlled ablation study comparing two architectures:
+
+\begin{itemize}
+    \item \textbf{Cross-Attention}: A single-head cross-attention module ($d = 64$) where the EMG embedding serves as the query and the projected gaze vector serves as key and value.
+    \item \textbf{Late Fusion}: Concatenation of the 64-dimensional EMG embedding and the 64-dimensional projected gaze vector, followed by a two-layer MLP classifier.
+\end{itemize}
+
+Both architectures are trained on a synthetic dataset of 2000 paired EMG-gaze samples (60\% train, 20\% validation, 20\% test) drawn from a synthetic data generator that pairs random EMG embeddings with corresponding gaze vectors. The pre-specified decision criterion requires that the cross-attention model exceed the late fusion model's macro F1 score by more than 3~percentage points (absolute) to justify deployment of the more complex architecture.
+
+\textbf{Limitation:} The fusion training data is synthetically generated and does not represent real paired EMG-gaze recordings from AAC users. The reported accuracy and F1 scores characterize the model's capacity to learn the fusion mapping under controlled conditions, not its expected clinical accuracy. This is explicitly acknowledged as a limitation of the current evaluation.
+
+\subsection{EMG Classifier Evaluation}
+\label{sec:emg_eval}
+
+The CNN-LSTM EMG classifier is trained on a subset of the NinaPro~DB5 dataset~\cite{ninapro} using a leave-one-subject-out (LOSO) protocol: subjects~1--9 for training and subject~10 for validation. Training uses the Adam optimizer with learning rate $10^{-3}$, cosine annealing schedule, class-weighted cross-entropy loss, and gradient clipping at norm~1.0. The model is trained for up to 50~epochs with early stopping based on validation accuracy.
+
+The EMG classifier operates as an embedding extractor for the downstream fusion model. Its standalone classification accuracy on the held-out subject is reported separately from the fusion accuracy to avoid conflation.
+
+\subsection{Drift Detection Ablation}
+\label{sec:drift_eval}
+
+The sensitivity of conversation-level drift detection to the sliding window size $k$ is evaluated offline on the DailyDialog dataset~\cite{dailydialog}. Each conversation is annotated with ground-truth topic shift indices. For each $k \in \{1, 2, 3, 4, 5\}$, the system computes the centroid embedding of the most recent $k$ turns using Sentence-BERT (\texttt{all-MiniLM-L6-v2}~\cite{minilm}), and predicts a topic shift when the cosine similarity between the anchor embedding and the centroid falls below a threshold $\theta = 0.15$. Precision, recall, and F1 are computed for each $k$. The MiniLM model is used solely for this offline ablation analysis and is not part of the deployed Android runtime; the on-device drift detector operates on router score deltas rather than semantic embeddings.
+
+\textbf{Limitation:} DailyDialog is a general-purpose dialogue corpus that differs substantially from AAC communication patterns in terms of turn length, vocabulary, and topic variability. The k-ablation results characterize the detector's behavior on available annotated data rather than providing direct evidence of clinical effectiveness.

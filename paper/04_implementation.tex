@@ -1,47 +1,86 @@
 \section{Implementation}
 \label{sec:implementation}
 
-The AACBridge system was implemented utilizing a hybrid orchestration stack to balance high-level sensor polling with low-level tensor mathematics. The orchestration layer was authored in Kotlin leveraging Android Coroutines, while the core inference engine was built on the C++ \texttt{llama.cpp} backend. The system targets Android API Level 36, strictly compiled against the \texttt{arm64-v8a} Application Binary Interface (ABI) to guarantee access to Snapdragon NEON SIMD hardware acceleration.
+This section describes the engineering realization of the CAP-KVC system on an Android mobile device, including the JNI boundary design, native memory management, concurrency model, and sensor integration.
 
-\subsection{JNI Boundary Contract and Memory Ownership}
-\label{subsec:architecture}
+\subsection{Platform and Runtime}
+\label{sec:platform}
 
-A critical architectural constraint in real-time edge processing is minimizing the overhead of the Java Native Interface (JNI). Attempting to serialize and transfer a 100MB+ multidimensional tensor buffer from the JVM into native C++ memory triggers massive \texttt{byte[]} array allocations, invoking severe Garbage Collection (GC) pauses that immediately violate the sub-500ms TTFT budget.
+AACBridge is implemented as a native Android application targeting \texttt{arm64-v8a} devices running Android~12 or later. The inference backend is built on \texttt{llama.cpp}~\cite{llamacpp}, a C/C++ implementation of transformer inference optimized for consumer hardware. The model used in evaluation is Qwen2.5-0.5B-Instruct~\cite{qwen25} quantized to Q4\_K\_M (4-bit) via \texttt{llama.cpp}'s GGUF format. Pre-compiled native libraries are bundled directly into the APK to avoid on-device compilation.
 
-To resolve this, AACBridge enforces a strict scalar-only JNI contract. The Kotlin \texttt{LlamaBridge} object passes only lightweight \texttt{jstring} paths and primitive integers. The \texttt{llama.cpp} runtime maintains absolute ownership of the tensor arena within the native heap. Large language model weights (e.g., Qwen2.5-0.5B-Instruct in \texttt{.gguf} format) are mapped directly from the device's secondary flash storage into native memory using \texttt{mmap}, explicitly bypassing the Android \texttt{AssetManager} which enforces file size limitations that crash during application startup.
+The Kotlin application layer communicates with the C++ inference backend through the Java Native Interface (JNI). All dependency injection is performed manually through a lightweight container class, avoiding framework overhead from Hilt, Dagger, or Koin to minimize startup latency.
 
-\subsection{The KV Cache sequence ID (\texttt{seqId}) Lifecycle}
-\label{subsec:seqid}
+\subsection{JNI Boundary Contract}
+\label{sec:jni}
 
-The JVM orchestration layer strictly differentiates between semantic context (the \texttt{ContextState}) and native memory location. The native engine owns the KV memory through a series of fixed slots called sequence IDs (\texttt{seqId}). 
+The JNI layer exposes eight native functions to the Kotlin runtime, implemented in a single C++ source file (\texttt{llama\_jni.cpp}, 732 lines). A strict design constraint governs this boundary: \textbf{all arguments and return values are JNI scalar types} (\texttt{jstring}, \texttt{jint}, \texttt{jboolean}). No Java objects, arrays, or callbacks cross the JNI boundary. This eliminates the need for JNI global references, prevents garbage-collector root pinning, and simplifies the native lifecycle.
 
-To respect the $\sim$2GB background service memory budget dictated by the Android OS, the \texttt{KVCacheManager} restricts the native ring buffer to \texttt{MAX\_ACTIVE\_KV\_STATES = 3}. The JVM initializes a concurrent pool of available IDs ($[0, 1, 2]$). When the \texttt{StateRouter} nominates a context for pre-loading, the manager maps that \texttt{ContextState} to an available \texttt{seqId} slot and issues the \texttt{Java\_loadKVCache()} JNI hook. 
+The eight exposed functions are organized into three functional groups:
 
-Notably, there is no explicit API to free a native KV cache. Executing continuous \texttt{malloc} and \texttt{free} commands for gigabyte-scale tensors causes rapid memory fragmentation. Instead, when a state is evicted, its \texttt{seqId} is returned to the pool; subsequent cache loads simply overwrite the existing native memory buffer in place.
-
-\subsection{Concurrency Guarantees and Device Stabilization}
-\label{subsec:concurrency}
-
-Because the asynchronous \texttt{DriftDetector}, the \texttt{StateRouter}, and the UI-driven Inference Engine run on isolated background threads, parallel cache manipulation risks severe JNI race conditions. Early iterations of the architecture encountered native \texttt{SIGBUS} memory mapping crashes when the inference engine attempted to access native context arrays while the daemon was actively evicting them.
-
-To guarantee operational stability, AACBridge implements a synchronized concurrency model anchored by a single shared \texttt{engineLock} (a JVM \texttt{ReentrantLock}). This lock strictly serializes access across the JNI boundary for three primary orchestration components:
 \begin{enumerate}
-    \item \textbf{\texttt{MainActivity}:} Acquires the lock during real-time inference to prevent memory displacement while the LLM generates tokens.
-    \item \textbf{\texttt{KVCacheManager}:} Acquires the lock during state eviction and \texttt{seqId} swaps to ensure files are not deleted out from under an active inference session.
-    \item \textbf{\texttt{ContextPrimerImpl}:} Acquires the lock when pre-computing environmental caches in the background.
+    \item \textbf{Lifecycle:} \texttt{initializeBackend()}, \texttt{initializeModel(path)}, and \texttt{release()}, which manage the native \texttt{ggml} context allocation and model weight loading.
+
+    \item \textbf{KV Cache Operations:} \texttt{saveKVCache(path, seqId)}, \texttt{loadKVCache(path, seqId)}, and \texttt{clearKVCache()}, which serialize, restore, and invalidate KV cache tensors associated with specific sequence slots.
+
+    \item \textbf{Inference:} \texttt{runInference(prompt)} for full prompt processing, \texttt{prefillOnly(prompt)} for context priming without generation, and \texttt{resumeInference(prompt)} for appending intent tokens to a previously loaded KV cache state.
 \end{enumerate}
-Through the implementation of the \texttt{engineLock}, \texttt{SIGBUS} native crashes were completely eliminated, establishing a stabilized baseline for latency benchmarking.
 
-\subsection{Android Lifecycle Orchestration and Context Priming}
-\label{subsec:orchestration}
+The distinction between \texttt{runInference} and \texttt{resumeInference} is critical to the CAP-KVC design. \texttt{runInference} clears the existing session token history and processes tokens from position zero. \texttt{resumeInference} preserves the loaded token history and appends new tokens at position $n_{\text{past}}$, where $n_{\text{past}}$ is the number of tokens already present in the restored KV cache. This prevents position-ID collisions that would corrupt the attention computation.
 
-Standard Android Geofencing APIs fail to trigger if a device reboots while physically located inside the defined boundary, breaking the predictive caching model. To guarantee context priming, orchestration begins immediately at the OS level. 
+\subsection{Concurrency Model}
+\label{sec:concurrency}
 
-A \texttt{BootReceiver} intercepts the \texttt{ACTION\_BOOT\_COMPLETED} broadcast, utilizing Android's \texttt{goAsync()} mechanism to preserve the process lifecycle for 10 seconds. This triggers the \texttt{ActiveSweep} daemon, which concurrently spawns Kotlin Coroutines to fetch the \texttt{LocationManager}'s best hardware provider alongside a strictly bounded 3000ms BLE topology scan. The resulting \texttt{SensorSnapshot} is fed synchronously into the \texttt{StateRouter}, dispatching the top-3 ranked caching operations to the \texttt{ContextPrimerImpl}.
+The C++ inference backend maintains two pieces of shared global state: a \texttt{llama\_context} pointer and a \texttt{session\_tokens} vector that tracks the token history for KV cache consistency. Both are accessed by multiple Kotlin-side callers: the background context priming coroutine, the KV cache manager's load operations, and the foreground inference path triggered by user interaction.
 
-The \texttt{ContextPrimerImpl} manages the full pre-computation lifecycle. Gated safely behind a \texttt{modelReady} boolean (which prevents execution until the \texttt{llama.cpp} native backend successfully maps the \texttt{.gguf} weights), the primer executes a strict sequential pipeline: it \texttt{prime}s the native LLM with the prompt, calls \texttt{saveKVCache} to serialize the native tensors into a persistent \texttt{.bin} file on the flash storage, and finally prepares the state for instantaneous retrieval via \texttt{loadKVCache} during user interaction.
+To prevent data races, a single \texttt{ReentrantLock} (the ``engine lock'') is shared across all components that invoke JNI functions. This lock is held for the duration of any native call sequence that depends on consistent session state. Critically, the lock is held across \emph{both} \texttt{loadKVCache} and \texttt{resumeInference} within a single acquisition, because releasing between calls would allow another thread to mutate \texttt{session\_tokens}.
 
-\subsection{Implementation Persistence Strategies}
-\label{subsec:limitations}
+Within the KV cache manager, a separate per-state mutex system (using Kotlin coroutine \texttt{Mutex} instances) protects cache residency metadata. These per-state mutexes are orthogonal to the engine lock: they prevent concurrent load and eviction of the same semantic state without blocking unrelated cache operations.
 
-For the evaluation and benchmarking phase of the system, AACBridge employs a \texttt{SeededStateRepository}. This repository serves deterministic, hardcoded semantic context profiles mapped to rigid environmental identifiers. Deploying a deterministic data store directly unblocks the prefill, save, and load pipeline required for precise Time To First Token (TTFT) performance measurements. While dynamic runtime context creation necessitates future architectural enhancements such as Android Room (SQLite) DAOs, the \texttt{SeededStateRepository} fully satisfies the persistence requirements of the current system architecture without introducing unnecessary database ORM overhead.
+\subsection{KV Cache Priming Lifecycle}
+\label{sec:priming}
+
+The context priming implementation executes a three-phase lifecycle per semantic state:
+
+\begin{enumerate}
+    \item \textbf{Prefill:} The system acquires the engine lock and invokes \texttt{prefillOnly(prompt)}, which tokenizes the context prompt and runs the forward pass to populate the native KV cache with attention tensors. Unlike \texttt{runInference}, this function does not enter the token generation loop, producing clean cache state without stale generated tokens.
+
+    \item \textbf{Serialize:} While still holding the engine lock, the system invokes \texttt{saveKVCache(tmpPath, 0)} to serialize the KV tensors to a temporary file. Using sequence slot~0 is mandatory because \texttt{prefillOnly} always decodes into slot~0 via \texttt{llama\_batch\_get\_one}.
+
+    \item \textbf{Atomic Commit:} After releasing the engine lock, the temporary file is atomically renamed to the final \texttt{.bin} path. On Android's ext4 filesystem, \texttt{rename()} is atomic, guaranteeing that the \texttt{.bin} file is either fully written or does not exist.
+\end{enumerate}
+
+A model-readiness gate (\texttt{AtomicBoolean}) prevents priming attempts before the native context has been initialized, which would otherwise produce empty cache files containing only serialization headers.
+
+\subsection{KV Cache Residency and Eviction}
+\label{sec:eviction}
+
+The KV cache manager maintains a bounded pool of $k = 3$ native sequence slots, represented as a concurrent queue of available slot indices. When a cache load is requested and all slots are occupied, the manager identifies the least-recently-accessed state and initiates eviction.
+
+Eviction follows a safe shutdown sequence: the victim state is first marked inactive (blocking new inference acquisitions), then the manager polls until its reference count reaches zero (using a 10ms delay to avoid CPU busy-spinning), and finally returns the native slot to the available pool. The current JNI layer does not expose an explicit \texttt{freeKVCache} function; instead, reusing a sequence slot via \texttt{loadKVCache} implicitly overwrites the previous KV contents after the slot's prior entries are cleared via \texttt{llama\_memory\_seq\_rm}.
+
+\subsection{Sensor Integration}
+\label{sec:sensors}
+
+Background sensor acquisition is implemented through two cooperating components:
+
+\begin{itemize}
+    \item \textbf{ActiveSweep}: A coroutine-based sensor collector that concurrently acquires GPS coordinates (via \texttt{LocationManager.getLastKnownLocation}) and BLE topology (via a 3000ms \texttt{BluetoothLeScanner} window). Both acquisitions run in parallel using Kotlin \texttt{async} and are combined into a \texttt{SensorSnapshot} for the state router.
+
+    \item \textbf{DriftDetector}: A \texttt{CoroutineWorker} registered with Android's \texttt{WorkManager} API for periodic execution every 15 minutes. To conserve battery during background polling, the drift detector uses a BLE-blind snapshot (empty device map), relying primarily on GPS and time signals. This is methodologically valid for hysteresis evaluation because both candidate and resident states are scored against the same BLE-blind snapshot, preserving relative score ordering.
+\end{itemize}
+
+A \texttt{BroadcastReceiver} registered for \texttt{BOOT\_COMPLETED} and \texttt{MY\_PACKAGE\_REPLACED} intents ensures that the predictive cache is populated immediately after device boot or application update, using the \texttt{goAsync()} pattern to extend the receiver's execution window.
+
+\subsection{Fusion Model Deployment}
+\label{sec:fusion_deploy}
+
+The winning late fusion model is exported to ONNX format and bundled in the application's \texttt{assets/} directory (\texttt{gaze\_emg\_fusion.onnx}, 45~KB). On-device inference is performed through ONNX Runtime's Android Java API. The session is lazily initialized at application scope to prevent repeated model loading during activity recreation events (e.g., screen rotation).
+
+Input tensors are constructed from the EMG embedding (shape $1 \times 1 \times 64$, \texttt{float32}) and gaze feature vector (shape $1 \times 5$, \texttt{float32}). The output logits are processed through an argmax operation followed by numerically stable softmax to extract both the predicted intent label and its associated confidence score. If the ONNX session fails to load or inference throws an exception, the system falls back to passing the raw gaze target through as the intent label with zero confidence.
+
+\subsection{Gaze Tracking}
+\label{sec:gaze_impl}
+
+Gaze tracking uses the MediaPipe Face Landmarker task~\cite{mediapipe} loaded from a bundled \texttt{.task} model file (3.7~MB). The landmarker runs in live-stream mode on CameraX \texttt{ImageAnalysis} frames. The gaze displacement vector (Equation~\ref{eq:gaze_vector}) is computed from nose-tip and eye-center landmarks and mapped to one of five screen quadrants plus a center region, each corresponding to an AAC intent class.
+
+Intent firing follows a dwell-based finite state machine: a target must be fixated for at least 400ms before the intent is emitted, preventing accidental activations from saccadic eye movements. The dwell state machine executes on a single-threaded executor to guarantee sequential processing of asynchronous MediaPipe callbacks.

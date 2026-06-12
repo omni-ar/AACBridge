@@ -1,19 +1,37 @@
 \section{Related Work}
-\label{sec:related_work}
-
-This section reviews the fundamental literature underpinning the AACBridge architecture, spanning memory management for Large Language Models (LLMs), edge deployment constraints, augmentative communication interfaces, multimodal sensor fusion, and dialogue state tracking.
-
-\subsection{KV Cache Optimization for LLMs}
-The computational bottleneck of auto-regressive generation is well documented, leading to significant research in Key-Value (KV) cache management. Systems like vLLM introduced PagedAttention \cite{pagedattention_vllm} to manage memory blocks dynamically, drastically improving throughput for server-side batched requests. Further optimizations like FlexGen \cite{flexgen} explored offloading attention tensors to slower storage to maximize batch sizes. While these works focus on macroscopic throughput via request batching, AACBridge addresses the distinct problem of isolated, single-batch latency on edge devices. We draw inspiration from sparse attention mechanisms, such as Scissorhands \cite{scissorhands}, which drop uninformative tokens; however, AACBridge operates at a higher abstraction, culling entire semantic contexts rather than individual tokens. Concepts like RadixAttention \cite{sglang_radixattention} reuse cache for shared prefixes, a technique AACBridge adapts for preemptive, sensor-driven context priming rather than prompt-based reuse.
-
-\subsection{On-Device Language Model Deployment}
-Deploying multi-billion parameter models on edge hardware is constrained by strict RAM and thermal limits. Solutions like MLC-LLM \cite{mlc_llm} compile models directly to native applications using TVM, while PowerInfer \cite{powerinfer} exploits activation sparsity to achieve fast inference on consumer CPU/GPU hardware. AACBridge leverages the \texttt{llama.cpp} \cite{llama_cpp} engine for its bare-metal ARM64 optimization and custom JNI memory control, allowing precise manipulation of the native ring buffer. This engine is paired with highly compact, capable models such as those explored in the TinyLlama project \cite{tinyllama}, ensuring the system fits within the limited edge memory budget.
+\label{sec:related}
 
 \subsection{Augmentative and Alternative Communication}
-Traditional Augmentative and Alternative Communication (AAC) systems heavily rely on grid-based interfaces \cite{grid_aac_review}. These require deep hierarchical menu navigation, imposing severe latency on conversational participation. While predictive text systems \cite{predictive_aac_text} have improved typing speeds via n-gram and neural approaches, they remain bound to word-by-word generation. Brain-Computer Interfaces (BCI) \cite{bci_aac_survey} offer direct intent translation but remain largely invasive or clinically restrictive. AACBridge bridges this gap by utilizing non-invasive wearable sensors to bypass menu navigation entirely, enabling zero-shot, full-turn generation based on environmental context.
+\label{sec:related_aac}
 
-\subsection{Multimodal Sensor Fusion for Intent Classification}
-Robust intent classification requires high-confidence inputs. Surface Electromyography (sEMG) has proven highly effective for discrete gesture recognition, as demonstrated by benchmarks like the NinaPro database \cite{ninapro_emg}. Simultaneously, gaze-based Human-Computer Interaction (HCI) \cite{gaze_hci_survey} provides reliable spatial targeting via dwell-time selection. AACBridge fuses these modalities. We evaluated cross-modal attention mechanisms \cite{cross_modal_attention} to intelligently weight high-dimensional EMG features against low-dimensional gaze vectors, ablating this approach against traditional late-fusion architectures \cite{late_fusion_comparison}. Ultimately, we adopt late fusion to ensure computational efficiency without sacrificing accuracy, as cross-attention failed to justify its architectural complexity.
+AAC devices serve individuals with severe motor impairments, including those caused by amyotrophic lateral sclerosis (ALS), cerebral palsy, and acquired brain injuries. Traditional AAC systems rely on grid-based symbol selection interfaces that require deliberate motor actions such as switch scanning or eye-gaze pointing~\cite{beukelman2020}. While effective, these interfaces constrain communication to pre-defined vocabularies and impose high cognitive load during message construction.
 
-\subsection{Semantic Drift Detection in Dialogue Systems}
-While environmental sensors predict physical context, dialogue often drifts semantically. Traditional Dialogue State Tracking (DST) \cite{dialogue_state_tracking} attempts to model this drift but is often too computationally heavy for continuous background execution on edge devices. Instead, AACBridge utilizes highly distilled sentence embeddings \cite{sentence_transformers}, specifically the MiniLM architecture \cite{minilm}, to compute localized conversational centroids. By evaluating cosine similarity against the primed cache context, the system can detect topic shifts efficiently, gated by a hysteresis margin to prevent cache thrashing.
+Recent work has explored integrating language models into AAC workflows to provide generative communication support. Approaches include word and phrase prediction~\cite{vertanen2015}, context-sensitive sentence completion, and full open-vocabulary generation. However, deploying language models on edge devices introduces a fundamental tension between response quality (which improves with model size and context length) and latency (which degrades with both).
+
+\subsection{Edge Deployment of Large Language Models}
+\label{sec:related_edge}
+
+The deployment of transformer-based language models on mobile and embedded hardware has been enabled by advances in model quantization and optimized inference runtimes. Post-training quantization to 4-bit precision~\cite{dettmers2022,frantar2022} reduces both memory footprint and arithmetic intensity, enabling sub-billion parameter models to run on smartphone SoCs. Inference frameworks such as \texttt{llama.cpp}~\cite{llamacpp} and MLC-LLM~\cite{mlcllm} provide ARM NEON--optimized kernels and memory-mapped model loading for efficient mobile execution.
+
+Despite these advances, the prefill phase of autoregressive inference remains a latency bottleneck. For a prompt of $N$ tokens, the prefill requires $O(N)$ forward passes through the model before the first output token can be generated. In AAC contexts, where system prompts encoding environmental and medical information may span hundreds of tokens, this prefill cost can dominate the user-perceived response time.
+
+\subsection{KV Cache Optimization}
+\label{sec:related_kvcache}
+
+The key-value (KV) cache stores the attention key and value tensors computed during the prefill phase, allowing subsequent tokens to attend to the full context without recomputation. Several lines of research have sought to reduce the memory and computational costs of KV cache management.
+
+\textbf{Cache compression} methods reduce KV cache memory through selective eviction of less-important entries. Scissorhands~\cite{scissorhands} identifies and removes KV pairs corresponding to tokens with low cumulative attention scores. H$_2$O~\cite{h2o} extends this with a ``heavy hitter'' policy that retains high-attention tokens. StreamingLLM~\cite{streamingllm} maintains only a fixed-size attention window plus initial ``attention sink'' tokens to enable infinite-length generation. These methods operate at the token level within a single sequence and are complementary to the state-level caching proposed in this work.
+
+\textbf{Prompt caching} systems amortize prefill costs by reusing cached computations across requests sharing common prompt prefixes. SGLang's RadixAttention~\cite{sglang} organizes cached prefixes in a radix tree for server-side multi-tenant reuse. vLLM~\cite{vllm} uses paged attention to share KV blocks across concurrent requests with common prefixes. These systems target cloud inference serving with multiple concurrent users and do not address the single-user, single-device edge deployment scenario.
+
+\textbf{State management} approaches extend KV caching beyond single sessions. InfiniGen~\cite{infinigen} speculatively prefetches KV cache entries for predicted future tokens. CacheGen~\cite{cachegen} compresses and stores KV caches for reuse across sessions. The present work is most closely aligned with this family of approaches, differing in its focus on predictive state selection driven by environmental sensor signals rather than textual context alone.
+
+\subsection{Multimodal Sensor Fusion for Assistive Technology}
+\label{sec:related_fusion}
+
+Combining EMG and gaze signals for human-computer interaction has been explored in several assistive technology contexts. EMG-based gesture classification using convolutional and recurrent architectures has been evaluated on public datasets including NinaPro~\cite{ninapro} and the Myo Armband dataset. Gaze-based interaction using facial landmark models such as MediaPipe~\cite{mediapipe} provides a complementary channel that does not require residual motor function. Late fusion and cross-attention architectures have been compared for combining heterogeneous sensor modalities in gesture recognition~\cite{ngiam2011}, with late fusion often preferred for its simplicity and robustness when modality reliability varies.
+
+\subsection{Positioning of This Work}
+\label{sec:positioning}
+
+The present work differs from prior KV cache optimization research in two respects. First, it targets a single-user, single-device edge deployment where background computation during idle periods can be exploited for prefill amortization---an operational model that is unavailable in cloud serving scenarios. Second, it introduces environmental sensor signals (GPS, BLE, time) as the basis for predictive cache state selection, replacing the purely textual prefix-matching strategies used in cloud KV cache systems.

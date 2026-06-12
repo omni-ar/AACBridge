@@ -1,48 +1,115 @@
 \section{Methodology}
 \label{sec:methodology}
 
-The core objective of AACBridge is to eliminate the latency bottleneck associated with dynamic prompt injection in large language models executing on mobile edge hardware. Instead of performing an $O(N)$ token prefill phase during inference, we introduce Context-Aware Predictive KV-Cache Priming (CAP-KVC). This approach amortizes the computational cost of context ingestion by executing it preemptively as a background process.
+This section describes the design of the Context-Aware Predictive KV-Cache Priming (CAP-KVC) system and its integration within the AACBridge communication pipeline. The primary goal is to amortize the computational cost of contextual prompt ingestion on resource-constrained mobile hardware by executing it as a background process, prior to user interaction.
+
+\subsection{Problem Formulation}
+\label{sec:problem}
+
+Consider a user $u$ operating an AAC device in a physical environment characterized by temporal, spatial, and proximity signals. Let $C = \{c_1, c_2, \ldots, c_M\}$ denote a finite set of pre-configured semantic contexts, each associated with a textual system prompt $p_i$ of length $N_i$ tokens. In conventional retrieval-augmented generation (RAG) pipelines, the system prompt $p_i$ is concatenated with the user's intent tokens and submitted to the language model at inference time, incurring an $O(N_i)$ prefill cost that directly adds to user-perceived latency.
+
+CAP-KVC reformulates this as a scheduling problem: given a prediction of the user's most likely context $\hat{c}$ based on environmental signals, execute the prefill of $p_{\hat{c}}$ during idle periods and persist the resulting key-value (KV) cache tensors to persistent storage. At inference time, the system restores the pre-computed KV cache and appends only the user's intent tokens, reducing the inference-time cost from context-length-dependent prompt processing to a lightweight cache restoration operation whose cost is independent of the original prompt length $N_i$.
 
 \subsection{System Execution Lifecycle}
-The architecture relies on a strictly defined, unidirectional orchestration pipeline to ensure predictive accuracy without stalling the user-facing UI thread:
+\label{sec:lifecycle}
+
+The system operates through a five-stage pipeline, where the first three stages execute asynchronously during background idle periods and the final two stages execute at user-interaction time:
 
 \begin{enumerate}
-    \item \textbf{Sensor Acquisition:} The system concurrently polls available hardware sensors (GPS, BLE, and system clock) to generate an immutable \texttt{SensorSnapshot}.
-    \item \textbf{Deterministic Routing:} The snapshot is passed to the \texttt{StateRouter}, which evaluates all registered environmental contexts using a convex scoring function.
-    \item \textbf{Cache Orchestration:} The top-$k$ ranked contexts are pushed to the \texttt{KVCacheManager}, which manages their residency within a native ring buffer to satisfy the device's strict RAM budget.
-    \item \textbf{Resident Inference:} Upon user interaction (intent generation via the CNN-LSTM pipeline), the system directly injects intent tokens into the pre-loaded KV cache, achieving sub-500ms Time To First Token (TTFT).
-    \item \textbf{Drift Correction:} Following inference, an asynchronous daemon executes a hysteresis-gated cosine similarity check against the semantic vector of the recent conversation to detect topic drift.
+    \item \textbf{Sensor Acquisition.} The system concurrently polls available hardware sensors---GPS, Bluetooth Low Energy (BLE), and the system clock---to construct an immutable \texttt{SensorSnapshot} representing the user's current environmental state.
+
+    \item \textbf{Deterministic Context Routing.} The snapshot is evaluated by a \texttt{StateRouter} against all registered semantic contexts using a convex scoring function (Section~\ref{sec:scoring}). The top-$k$ highest-scoring contexts are selected for cache residency, where $k$ is bounded by a device-specific RAM constraint (Section~\ref{sec:residency}).
+
+    \item \textbf{Background Cache Priming.} For each selected context not already resident in memory, the system executes a background prefill of its system prompt through the language model, serializes the resulting KV cache tensors to persistent storage, and registers the context as resident.
+
+    \item \textbf{Resident Inference.} Upon user interaction, the pre-computed KV cache for the predicted context is restored from storage into native memory. The user's intent tokens are then appended and decoded, bypassing the context prefill entirely.
+
+    \item \textbf{Drift Correction.} An asynchronous background daemon periodically re-evaluates environmental scores to detect changes in the user's physical context and triggers cache replacement when a new context scores sufficiently higher than the weakest resident context (Section~\ref{sec:drift}).
 \end{enumerate}
 
-\subsection{Multimodal Intent Classification and Fusion}
-To generate discrete intent tokens for the LLM without relying on traditional grid interfaces, AACBridge employs a multimodal sensor fusion architecture. The system processes two distinct input modalities:
-\begin{enumerate}
-    \item \textbf{Surface Electromyography (sEMG):} A continuous stream from a facial wearable is segmented into 200ms windows and processed via a CNN-LSTM model to extract a 64-dimensional high-confidence feature embedding.
-    \item \textbf{Gaze Tracking:} A hardware-accelerated MediaPipe facial mesh extracts a localized 5-dimensional gaze vector: $[dx, dy, |dx|, |dy|, \text{magnitude}]$.
-\end{enumerate}
-These inputs are aggregated using a Late Fusion mechanism, deliberately selected over cross-attention due to its superior efficiency on edge hardware and mathematically validated performance dominance.
+\subsection{Multimodal Intent Classification}
+\label{sec:fusion}
 
-\subsection{Deterministic Context Scoring}
-We eschew neural network-based predictive modeling in favor of a deterministic scoring equation to guarantee bounds on battery usage and execution time. A semantic context $c_i$ is evaluated as a convex combination of three environmental anchors:
+User intent is derived from two complementary input modalities, fused to produce a single classification decision that is then formatted as a textual prompt for the language model.
+
+\subsubsection{Surface Electromyography (sEMG)}
+A facial sEMG wearable provides 16-channel signals sampled continuously. Raw signals are segmented into fixed-length windows and processed by a CNN-LSTM classifier that extracts a 64-dimensional embedding vector. The CNN block applies three sequential Conv1d--BatchNorm--ReLU--MaxPool layers for temporal feature extraction, followed by a two-layer LSTM for temporal context modeling. The final hidden state is projected to a 64-dimensional space and L2-normalized to produce the EMG embedding.
+
+\subsubsection{Gaze Tracking}
+A front-facing camera feeds a MediaPipe Face Mesh model~\cite{mediapipe} that extracts 468 facial landmarks at frame rate. From these, the system computes a 5-dimensional gaze feature vector from the displacement between the nose tip (landmark 4) and the eye center (midpoint of landmarks 33 and 362):
 
 \begin{equation}
-S(c_i) = \alpha \cdot S_{time} + \beta \cdot S_{gps} + \gamma \cdot S_{ble}
+\mathbf{g} = [d_x,\; d_y,\; |d_x|,\; |d_y|,\; \sqrt{d_x^2 + d_y^2}]
+\label{eq:gaze_vector}
 \end{equation}
 
-Where the sum of the dynamic reliability weights ($\alpha + \beta + \gamma$) strictly equals $1$.
+\noindent where $d_x$ and $d_y$ are the horizontal and vertical displacements in normalized image coordinates. This vector captures both directional and magnitude information while remaining invariant to face scale. A dwell-based finite state machine maps sustained gaze fixation (exceeding 400ms on a target region) to one of five discrete AAC intent classes: \emph{confirm}, \emph{reject}, \emph{scroll}, \emph{select}, and \emph{call-help}.
 
-\subsubsection{Temporal and Spatial Anchors}
-The temporal score $S_{time}$ utilizes a circular distance function to handle midnight wraparounds seamlessly, applying a Gaussian decay ($\sigma = 2.0$ hours) to accommodate expected clinical deviations (e.g., a caregiver delay). The spatial score $S_{gps}$ leverages a Haversine great-circle calculation subjected to an exponential decay ($\lambda = 0.1$, translating to a 100m contextual boundary). 
+\subsubsection{Late Fusion Architecture}
+The EMG embedding $\mathbf{e} \in \mathbb{R}^{64}$ and the gaze vector $\mathbf{g} \in \mathbb{R}^{5}$ are fused through a late fusion architecture. The gaze vector is first projected to a 64-dimensional space via a two-layer MLP, then concatenated with the EMG embedding to produce a 128-dimensional joint representation. A final two-layer classifier maps this to 5-class intent logits:
+
+\begin{equation}
+\hat{y} = \text{MLP}_{64 \rightarrow 5}\big(\text{ReLU}\big(\text{MLP}_{128 \rightarrow 64}([\mathbf{e};\; \text{proj}(\mathbf{g})])\big)\big)
+\label{eq:late_fusion}
+\end{equation}
+
+Late fusion was selected over a cross-attention alternative based on a pre-specified decision criterion: cross-attention must exceed late fusion F1 by more than 3\% (absolute) to justify its additional computational and parameter overhead. The ablation results (Section~\ref{sec:results_fusion}) did not meet this threshold.
+
+\subsection{Deterministic Context Scoring}
+\label{sec:scoring}
+
+We employ a deterministic, closed-form scoring function rather than a learned predictor to ensure bounded CPU and battery consumption during background polling. A semantic context $c_i$ is scored against the current sensor snapshot as a convex combination of three environmental similarity scores:
+
+\begin{equation}
+S(c_i) = \alpha \cdot S_{\text{time}} + \beta \cdot S_{\text{gps}} + \gamma \cdot S_{\text{ble}}
+\label{eq:scoring}
+\end{equation}
+
+\noindent where $\alpha + \beta + \gamma = 1$ and each weight reflects the estimated reliability of its corresponding sensor.
+
+\subsubsection{Temporal Scoring}
+The temporal similarity $S_{\text{time}}$ applies a Gaussian kernel to the circular distance between the current time and the context's expected activation time:
+
+\begin{equation}
+S_{\text{time}} = \exp\!\left(-\frac{d_{\text{circ}}(t, t_i)^2}{2\sigma^2}\right)
+\label{eq:time_score}
+\end{equation}
+
+\noindent where $d_{\text{circ}}$ handles the 24-hour wraparound and $\sigma = 2.0$ hours accommodates typical schedule variability.
+
+\subsubsection{Spatial Scoring}
+The spatial similarity $S_{\text{gps}}$ applies an exponential decay to the Haversine great-circle distance between the current GPS coordinates and the context's anchor location:
+
+\begin{equation}
+S_{\text{gps}} = \exp(-\lambda \cdot d_{\text{haversine}})
+\label{eq:gps_score}
+\end{equation}
+
+\noindent with $\lambda = 0.1$~m$^{-1}$, establishing a contextual boundary of approximately 100~meters.
+
+\subsubsection{BLE Proximity Scoring}
+The BLE similarity $S_{\text{ble}}$ evaluates the overlap between currently detected Bluetooth devices and a context's registered device topology, with RSSI values mapped through a sigmoid function.
 
 \subsubsection{Dynamic Reliability Normalization}
-The critical innovation of the router is its resilience to hardware failure. Time acts as the baseline reliability anchor ($\alpha \geq 0.4$). The GPS weight ($\beta$) decays exponentially based on reported accuracy radii. The BLE weight ($\gamma$) relies on a sigmoid activation curve mapping RSSI values. Crucially, if $M=0$ (no BLE signals detected), $\gamma$ immediately zeroes out. The system dynamically redistributes the missing weight mass to $\alpha$ and $\beta$, preserving the convex property and preventing divide-by-zero crashes. To conserve CPU cycles during cache eviction, asymptotic states scoring below an empirical threshold of $0.01$ are culled from the routing pool.
+The weights $\alpha$, $\beta$, and $\gamma$ are computed dynamically from raw sensor reliability estimates. Time maintains a fixed baseline weight ($w_t = 0.4$), guaranteeing that the normalization denominator $w_t + w_g + w_b$ is always positive. If GPS is unavailable ($w_g = 0$) or no BLE devices are detected ($w_b = 0$), the corresponding weight contribution is redistributed proportionally, preserving the convex property. Contexts scoring below a dead-state threshold of 0.01 are excluded from routing consideration.
 
-\subsection{Asynchronous Semantic Drift Detection}
-Environmental sensors predict physical location but cannot verify conversation topics. The semantic drift detector periodically bridges this gap. Following a localized sequence of user generations, the system computes an INT8-quantized embedding (utilizing an ONNX-Runtime deployment of \texttt{all-MiniLM-L6-v2}) of the most recent $k=3$ conversational turns. 
+\subsection{KV Cache Residency Management}
+\label{sec:residency}
 
-The k-ablation study on DailyDialog did not identify k=3 as the highest-performing configuration. However, because DailyDialog differs substantially from AAC communication patterns, k=3 was retained as an engineering heuristic for sparse AAC interactions rather than selected solely on the basis of ablation metrics. The resulting semantic vector is compared via cosine similarity against the baseline cache context. If the similarity falls below a defined threshold, the cache is invalidated.
+The system maintains at most $k$ KV cache states simultaneously resident in native memory, where $k$ is configured based on the target device's available RAM budget ($k = 3$ in the current deployment). KV cache states are mapped to native sequence slots managed by the underlying inference engine.
 
-To prevent cache thrashing in noisy sensor environments, state replacements are gated by a hysteresis margin. The background daemon demands a relative score delta of $0.10$ between the candidate state and the weakest resident state before authorizing the expensive IO operations required to swap the native memory buffer.
+When a new context requires loading and all slots are occupied, the least-recently-used (LRU) state is evicted. Eviction is protected by a reference-counting mechanism: a state undergoing active inference holds a reference that blocks eviction until inference completes. The eviction loop waits for the reference count to drain to zero before releasing the native slot.
 
-\subsection{Two-Tier Inference Fallback}
-If a user triggers an intent before the background daemon has successfully pre-loaded the required context (a ``cold miss''), the system employs a two-tier fallback pipeline. Tier 1 executes an immediate generic response via localized Android SQLite lookup and Text-To-Speech (TTS), completing in $<50$ms to preserve immediate conversational agency. Tier 2 initiates an asynchronous, standard RAG prefill on the backend. Subsequent user intents are seamlessly upgraded to contextual inference once Tier 2 completes.
+\subsection{Asynchronous Drift Detection}
+\label{sec:drift}
+
+Environmental sensors predict physical location but cannot detect whether the conversation topic has diverged from the cached context. A periodic background daemon (executing every 15 minutes via the Android WorkManager API) re-evaluates context scores using a lightweight sensor snapshot and compares them against currently resident states.
+
+To prevent cache thrashing under noisy sensor conditions, state replacements are gated by a hysteresis margin: a candidate context must exceed the weakest resident state's score by at least $\Delta = 0.10$ before a cache swap is authorized. This prevents oscillatory eviction-reload cycles that would impose unnecessary I/O and prefill costs.
+
+A separate offline ablation study evaluated the sensitivity of conversation-level drift detection to the sliding window size $k$ used for centroid computation, with $k \in \{1, 2, 3, 4, 5\}$ evaluated on annotated DailyDialog conversations (Section~\ref{sec:results_drift}).
+
+\subsection{Inference Fallback}
+\label{sec:fallback}
+
+If a user triggers an intent before the background daemon has successfully pre-loaded any relevant context (a ``cold miss''), the system employs a two-tier fallback pipeline. Tier~1 executes an immediate in-memory lookup of pre-configured generic responses and presents the result via text-to-speech output, maintaining immediate conversational responsiveness. Tier~2 initiates an asynchronous standard RAG prefill on the inference backend, allowing subsequent user intents to be upgraded to contextual inference once the prefill completes.

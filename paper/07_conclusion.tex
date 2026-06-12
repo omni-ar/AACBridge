@@ -1,0 +1,28 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+This paper presented CAP-KVC, a predictive KV cache priming system that amortizes the context prefill cost of large language model inference on mobile AAC devices. By using environmental sensor signals to predict context needs and executing the prefill during idle periods, CAP-KVC reduces end-to-end inference latency by 1.32$\times$ at comparable context length and up to 4.59$\times$ as context length grows to approximately 500~tokens, with a mean cache restoration cost of 2.63~ms. The system is implemented as a complete Android application with a scalar-only JNI boundary, a reentrant-lock concurrency model, and a bounded KV cache residency manager operating within a 121.6~MB native heap budget for three simultaneous cache states.
+
+The multimodal intent classification pipeline combines sEMG embeddings from a CNN-LSTM classifier with MediaPipe gaze tracking through a late fusion architecture selected via a pre-specified ablation criterion. The standalone EMG classifier achieves 42.4\% accuracy under cross-subject evaluation, motivating the fusion approach that achieves 99.7\% accuracy on synthetic evaluation data.
+
+\subsection{Limitations}
+
+Several limitations constrain the generalizability of these results and should be addressed in future evaluations:
+
+\begin{enumerate}
+    \item \textbf{Single-device evaluation.} All benchmarks were conducted on a single device (OnePlus~11R, Snapdragon~8+~Gen~1). Latency characteristics, thermal behavior, and memory budgets may differ on other mobile SoCs.
+
+    \item \textbf{Single model.} Only Qwen2.5-0.5B-Instruct (Q4\_K\_M) was evaluated. The relationship between CAP-KVC speedup and model size has not been characterized.
+
+    \item \textbf{Synthetic fusion data.} The fusion model was trained and evaluated on synthetically generated EMG-gaze pairs. The reported 99.7\% accuracy reflects the model's capacity under controlled conditions and should not be interpreted as clinical accuracy.
+
+    \item \textbf{Latency metric.} The reported metric is end-to-end inference latency, not true time-to-first-token (TTFT). The JNI boundary does not expose sub-token timing, preventing isolation of the prefill cost from the generation cost. The varying output lengths across conditions introduce generation-phase confounding into the speedup ratios.
+
+    \item \textbf{Hardcoded context states.} The benchmarking uses five pre-configured semantic contexts rather than dynamically learned user profiles. A production deployment would require a configurable persistence layer and a user study to evaluate context relevance.
+
+    \item \textbf{Drift detection.} The offline k-ablation yields a maximum F1 of 0.367 on DailyDialog, and the evaluation corpus differs substantially from AAC communication patterns. The selected parameters ($k = 3$, $\theta = 0.15$) are engineering heuristics rather than empirically optimized values.
+
+    \item \textbf{No clinical evaluation.} The system has not been evaluated with AAC users in clinical or naturalistic settings. User satisfaction, communicative effectiveness, and caregiver acceptance remain to be assessed.
+\end{enumerate}
+
+Despite these limitations, the results suggest that predictive KV cache priming is a viable strategy for reducing context-dependent inference latency on resource-constrained mobile hardware, and that the cache restoration cost ($\sim$3~ms) is negligible relative to the generation phase, supporting the amortization approach.
