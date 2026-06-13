@@ -139,7 +139,7 @@ Loaded (3 states)   & 140,420 & 612,940 \\
 \end{tabular}
 \end{table}
 
-The three-state KV cache residency adds approximately 121.6~MB of native heap. The total PSS (proportional set size) decreases slightly between states due to measurement variability in shared memory attribution. The native heap growth is consistent with three copies of the model's KV cache tensors ($\sim$40~MB per state for a 0.5B-parameter model at Q4\_K\_M quantization). Fig.~\ref{fig:memory_budget} visualizes the two operating points.
+The three-state KV cache residency adds approximately 118.7~MB of native heap (121,564~KiB $\div$ 1024). The total PSS (proportional set size) decreases slightly between states due to measurement variability in shared memory attribution. The native heap growth is consistent with three copies of the model's KV cache tensors ($\sim$40~MB per state for a 0.5B-parameter model at Q4\_K\_M quantization). Fig.~\ref{fig:memory_budget} visualizes the two operating points.
 
 \begin{figure}[htbp]
 \centering
@@ -191,7 +191,7 @@ The experimental results support the following conclusions:
 
     \item The standalone EMG classifier achieves 42.4\% accuracy under cross-subject evaluation, motivating multimodal fusion as a necessary complement rather than a standalone solution.
 
-    \item The three-state KV cache residency requires approximately 121.6~MB of additional native heap, a feasible budget on modern mobile devices with 8~GB RAM.
+    \item The three-state KV cache residency requires approximately 118.7~MB of additional native heap, a feasible budget on modern mobile devices with 8~GB RAM.
 
     \item Drift detection on DailyDialog yields a maximum F1 of 0.367 ($k = 1$), suggesting that the chosen threshold ($\theta = 0.15$) and evaluation corpus may require further calibration for clinical AAC deployment.
 \end{enumerate}
