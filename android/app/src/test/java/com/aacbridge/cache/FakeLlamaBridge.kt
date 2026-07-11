@@ -1,5 +1,7 @@
 package com.aacbridge.cache
 
+import com.aacbridge.inference.LlamaBridgeAdapter
+
 /**
  * Deterministic JVM-safe fake native bridge.
  *
@@ -7,6 +9,7 @@ package com.aacbridge.cache
  * - load calls
  * - save calls
  * - inference calls
+ * - prefill calls
  * - seqId ownership
  * - failure injection
  *
@@ -15,7 +18,7 @@ package com.aacbridge.cache
  * - llama.cpp
  * - native memory
  */
-class FakeLlamaBridge {
+class FakeLlamaBridge : LlamaBridgeAdapter {
 
     /**
      * seqId -> filepath
@@ -40,7 +43,7 @@ class FakeLlamaBridge {
     var shouldFailSave = false
 
     /**
-     * Ordered list of prompts received.
+     * Ordered list of prompts received by runInference.
      */
     val inferencePrompts =
         mutableListOf<String>()
@@ -50,7 +53,18 @@ class FakeLlamaBridge {
 
     var inferenceResponse = "Generated text"
 
-    fun loadKVCache(
+    /**
+     * Ordered list of prompts received by prefillOnly.
+     */
+    val prefillPrompts =
+        mutableListOf<String>()
+
+    var prefillCallCount = 0
+        private set
+
+    var shouldFailPrefill = false
+
+    override fun loadKVCache(
         filepath: String,
         seqId: Int
     ): Boolean {
@@ -66,7 +80,11 @@ class FakeLlamaBridge {
         return true
     }
 
-    fun saveKVCache(
+    override fun clearKVCache() {
+        // No-op for tests
+    }
+
+    override fun saveKVCache(
         filepath: String,
         seqId: Int
     ): Boolean {
@@ -90,12 +108,29 @@ class FakeLlamaBridge {
         return true
     }
 
-    fun runInference(
+    override fun runInference(
         prompt: String
     ): String {
 
         inferenceCallCount++
         inferencePrompts.add(prompt)
+
+        return inferenceResponse
+    }
+
+    override fun prefillOnly(
+        prompt: String
+    ): Boolean {
+
+        prefillCallCount++
+        prefillPrompts.add(prompt)
+
+        return !shouldFailPrefill
+    }
+
+    override fun resumeInference(
+        prompt: String
+    ): String {
 
         return inferenceResponse
     }

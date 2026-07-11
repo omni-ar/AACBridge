@@ -3,6 +3,7 @@
 \usepackage{amsmath,amssymb}
 \usepackage{graphicx}
 \usepackage{booktabs}
+\usepackage{multirow}
 \usepackage{hyperref}
 \usepackage[utf8]{inputenc}
 
@@ -10,7 +11,7 @@
 
 \begin{document}
 
-\title{Predictive Amortized KV-Caching for Low-Latency Edge LLMs in Augmentative and Alternative Communication}
+\title{Predictive KV Cache Amortization for Edge Language Model Inference on Mobile Devices}
 
 \author{
 \centering
@@ -38,11 +39,11 @@ Heer Shah\\
 % ABSTRACT
 % ===========================================================================
 \begin{abstract}
-Augmentative and alternative communication (AAC) devices that leverage large language models can generate context-aware responses tailored to a user's environment, but the computational cost of processing contextual prompts at inference time introduces latency that is incompatible with real-time communication. We present Context-Aware Predictive KV-Cache Priming (CAP-KVC), a system that amortizes this cost by using environmental sensor signals---GPS, Bluetooth Low Energy proximity, and time of day---to predict the user's likely context and pre-compute the corresponding key-value cache tensors during idle periods. At inference time, the pre-computed cache is restored from persistent storage in 2.63~ms on average, and only the user's intent tokens are processed by the language model. Evaluated on a OnePlus~11R with Qwen2.5-0.5B-Instruct (Q4\_K\_M), CAP-KVC reduces end-to-end inference latency by 1.32$\times$ at comparable context length and by 4.59$\times$ as context grows to approximately 500~tokens, relative to standard retrieval-augmented generation. The system is implemented as a complete Android application with a C++/JNI inference backend, a bounded KV cache residency manager supporting three simultaneous states within a 118.7~MB native heap budget, and a multimodal intent classification pipeline combining surface electromyography and gaze tracking through late fusion. We report all measurements, acknowledge limitations including single-device evaluation and synthetic fusion training data, and release the complete implementation for reproducibility.
+Context-aware language model inference on mobile devices requires processing environmental prompts before generating responses, and the cost of this prefill phase scales linearly with prompt length. We present Context-Aware Predictive KV-Cache Priming (CAP-KVC), a system that amortizes prefill costs by using environmental sensor signals---GPS, Bluetooth Low Energy proximity, and time of day---to predict the user's likely context and pre-compute the corresponding key-value cache tensors during idle periods. At inference time, the pre-computed cache is restored from persistent storage in 2.74~ms on average, bypassing the context prefill entirely. Evaluated on a OnePlus~11R with Qwen2.5-0.5B-Instruct (Q4\_K\_M), CAP-KVC reduces end-to-end inference latency by 4.24$\times$ relative to inline context processing at approximately 500~tokens. Native-side prefill decomposition via \texttt{std::chrono} instrumentation isolates the prefill phase from the generation phase, revealing a \textbf{40.78$\times$ prefill-specific speedup}: CAP-KVC processes only 9 intent tokens (343~ms prefill) versus 439 tokens for RAG\_INLINE (14001~ms prefill) at the 500-token context tier. The system is implemented as a complete Android application with a C++/JNI inference backend based on \texttt{llama.cpp}, a bounded KV cache residency manager supporting three simultaneous cache states within a 118.7~MB native heap budget, and sensor-driven context routing with hysteresis-gated drift detection. A proof-of-concept multimodal intent layer combining surface electromyography and gaze tracking through late fusion is included as a motivating application interface; its evaluation uses synthetic training data and does not constitute clinical validation. All measurements, statistical tests, and limitations---including single-device evaluation---are reported.
 \end{abstract}
 
 \begin{IEEEkeywords}
-Augmentative and alternative communication, key-value cache, large language model, edge inference, predictive caching, electromyography, gaze tracking, sensor fusion.
+Key-value cache, edge inference, predictive caching, large language model, mobile systems, sensor fusion, Android, augmentative and alternative communication.
 \end{IEEEkeywords}
 
 % ===========================================================================
@@ -51,26 +52,26 @@ Augmentative and alternative communication, key-value cache, large language mode
 \section{Introduction}
 \label{sec:introduction}
 
-Augmentative and alternative communication (AAC) devices are essential for individuals with severe motor impairments who have lost the ability to produce natural speech. For people with conditions such as amyotrophic lateral sclerosis (ALS), these devices often represent the primary means of expressing basic needs, participating in conversation, and maintaining social agency. The responsiveness of an AAC system directly affects the user's ability to communicate in real time: delays of even a few seconds can disrupt conversational turn-taking and erode the communicative experience~\cite{beukelman2020}.
+Post-training quantization and optimized inference runtimes have made it feasible to run sub-billion-parameter language models on mobile system-on-chip (SoC) hardware~\cite{dettmers2022,frantar2022,llamacpp}. A key application of on-device language models is context-aware response generation, where an environmental system prompt---encoding the user's location, schedule, nearby devices, or medical profile---is prepended to the user's input before inference. This contextual framing improves response relevance but introduces a prefill cost: for a system prompt of $N$ tokens, the model must process the full prompt through the transformer~\cite{vaswani2017} before generating any output. The prefill phase scales as $O(N)$ and, for prompts of several hundred tokens, can dominate the user-perceived latency on resource-constrained hardware.
 
-Recent advances in model quantization and optimized inference runtimes have made it feasible to run small language models on mobile hardware, opening the possibility of generative AAC responses that go beyond pre-defined phrase boards. A context-aware language model can generate responses tailored to the user's current environment---for example, producing medical terminology when in a hospital ward, or casual greetings when a caregiver arrives. However, this contextual awareness comes at a cost: the system prompt encoding the environmental context must be processed by the model before any response can be generated. For a prompt of $N$ tokens, this prefill phase adds $O(N)$ latency at inference time, creating a direct tension between response quality and user-perceived responsiveness.
+Assistive communication provides a concrete motivating scenario. Augmentative and alternative communication (AAC) devices for individuals with conditions such as amyotrophic lateral sclerosis (ALS) require sub-second responsiveness to support conversational turn-taking~\cite{beukelman2020}. A context-aware language model can generate environment-specific responses---medical terminology in a hospital ward, casual greetings when a caregiver arrives---but the prefill cost of the contextual prompt directly competes with the latency budget.
 
-In server-side deployments, KV cache reuse techniques such as prefix sharing and paged attention amortize prefill costs across concurrent requests from multiple users. These techniques are not directly applicable to edge AAC devices, which serve a single user on a single device with no shared request stream. In many such deployments, the contextual prompt is reprocessed during each inference request.
+In server-side deployments, KV cache reuse techniques such as prefix sharing~\cite{sglang}, paged attention~\cite{vllm}, and prompt caching~\cite{cachegen} amortize prefill costs across concurrent requests from multiple users. These techniques exploit the shared request stream of multi-tenant serving and are not directly applicable to single-user edge devices, where each inference request typically reprocesses the entire contextual prompt.
 
-This paper presents \textbf{Context-Aware Predictive KV-Cache Priming (CAP-KVC)}, a system that resolves this tension by decoupling the context prefill from the inference request path. CAP-KVC uses environmental sensor signals---GPS location, Bluetooth Low Energy (BLE) proximity beacons, and time of day---to predict which semantic context the user is most likely to need. It then executes the prefill during idle periods, serializes the resulting KV cache tensors to persistent storage, and restores them at inference time. The user-facing inference path processes only the short intent tokens, reducing the inference-time prefill to a cache restoration operation that completes in under 3~ms.
+This paper presents \textbf{Context-Aware Predictive KV-Cache Priming (CAP-KVC)}, a system that decouples the context prefill from the inference request path on mobile hardware. CAP-KVC uses environmental sensor signals---GPS location, Bluetooth Low Energy (BLE) proximity beacons, and time of day---to predict which semantic context the user is most likely to need. During idle periods, the system executes the prefill for the predicted context, serializes the resulting key-value (KV) cache tensors to persistent storage, and registers the context as resident. At inference time, the pre-computed cache is restored from storage and the model processes only the user's short input tokens, reducing the inference-time cost from a prompt-length-dependent prefill to a cache restoration operation that completes in under 3~ms.
 
-The system is implemented as a complete Android application with a C++/JNI inference backend based on \texttt{llama.cpp}, a Kotlin orchestration layer managing cache residency and sensor-driven routing, and a multimodal intent classification pipeline combining surface EMG and gaze tracking inputs through a late fusion architecture.
+The system is implemented as a complete Android application with a C++/JNI inference backend based on \texttt{llama.cpp}~\cite{llamacpp}, a Kotlin orchestration layer managing cache residency and sensor-driven routing, and a proof-of-concept multimodal intent classification layer combining surface EMG and gaze tracking inputs through late fusion.
 
 The contributions of this paper are as follows:
 
 \begin{enumerate}
-    \item \textbf{CAP-KVC Architecture:} A predictive KV cache priming system that amortizes context prefill costs by leveraging environmental sensors for background cache state selection and persistence. We observe a 1.32$\times$ to 4.59$\times$ reduction in end-to-end inference latency compared to standard RAG-inline inference on a mobile device, with cache restoration completing in 2.63~ms on average.
+    \item \textbf{Predictive KV Cache Priming Architecture:} A system that amortizes context prefill costs on mobile hardware by using environmental sensor signals for background cache state selection and persistence. On a OnePlus~11R with Qwen2.5-0.5B-Instruct (Q4\_K\_M), native-side prefill decomposition confirms a 40.78$\times$ prefill-specific speedup at $N \approx 500$ tokens (343~ms vs.\ 14001~ms), and a 4.24$\times$ end-to-end speedup (4574~ms vs.\ 19408~ms). Cache restoration completes in 2.74~ms on average.
 
-    \item \textbf{Edge-Native Implementation:} A complete, deployable Android implementation comprising a scalar-only JNI boundary (8~native functions), a reentrant-lock concurrency model for safe native state access, an LRU cache residency manager bounded to 3~simultaneous KV states, and a deterministic context routing engine using a convex sensor scoring function.
+    \item \textbf{Edge-Native Android Implementation:} A deployable implementation comprising a scalar-only JNI boundary (8~application-facing native functions, plus a lifecycle cleanup function), a reentrant-lock concurrency model for safe native state access, an LRU cache residency manager bounded to 3~simultaneous KV states within a 118.7~MB native heap budget, and a deterministic context routing engine using a convex sensor scoring function.
 
-    \item \textbf{Sensor-Driven Context Routing:} A closed-form scoring function that dynamically combines temporal, spatial, and BLE proximity signals with reliability-adaptive weighting, including hysteresis-gated drift detection to prevent cache thrashing under noisy sensor conditions.
+    \item \textbf{Sensor-Driven Context Routing:} A closed-form scoring function that dynamically combines temporal, spatial, and BLE proximity signals with reliability-adaptive weighting (time baseline weight $w_t = 0.4$; GPS and BLE weights computed from hardware signal quality), including hysteresis-gated drift detection to prevent cache thrashing under noisy sensor conditions.
 
-    \item \textbf{Multimodal AAC Pipeline:} A fusion architecture combining CNN-LSTM sEMG embeddings with MediaPipe gaze tracking through late fusion, deployed on-device via ONNX Runtime, with a controlled ablation study comparing late fusion against cross-attention.
+    \item \textbf{Proof-of-Concept Multimodal Intent Layer:} A late fusion architecture combining CNN-LSTM sEMG embeddings with MediaPipe gaze tracking, deployed on-device via ONNX Runtime. This component validates architectural compatibility between heterogeneous embedding spaces ($\mathbb{R}^{64}$ and $\mathbb{R}^{5}$) on synthetic evaluation data and is presented as a proof-of-concept for future clinical validation, not as a validated intent-recognition system.
 \end{enumerate}
 
 \subsection{Research Questions}
@@ -79,9 +80,9 @@ The contributions of this paper are as follows:
 This work addresses the following research questions:
 
 \begin{itemize}
-    \item \textbf{RQ1} (Latency Amortization): To what extent does CAP-KVC reduce end-to-end inference latency relative to conventional RAG-inline inference on mobile hardware?
-    \item \textbf{RQ2} (Memory Viability): What memory overhead is required to maintain bounded multi-state KV cache residency on an edge device?
-    \item \textbf{RQ3} (Multimodal Intent Classification): Does late fusion provide superior multimodal intent-classification performance compared to cross-attention under the evaluated conditions?
+    \item \textbf{RQ1} (Prefill Amortization): To what extent does predictive KV cache priming reduce end-to-end inference latency relative to inline context processing on mobile hardware, and what is the runtime cost of cache restoration from persistent storage?
+    \item \textbf{RQ2} (Memory Overhead): What native heap overhead is required to maintain bounded multi-state KV cache residency on a representative mobile device, and is this budget feasible alongside normal application operation?
+    \item \textbf{RQ3} (Fusion Architecture Selection): Can a late fusion architecture successfully combine heterogeneous sensor embeddings for intent classification under controlled synthetic evaluation, and does it meet a pre-specified decision criterion relative to cross-attention?
 \end{itemize}
 
 The remainder of this paper is organized as follows. Section~\ref{sec:related} surveys related work in KV cache optimization, edge LLM deployment, and assistive technology. Section~\ref{sec:methodology} describes the CAP-KVC methodology. Section~\ref{sec:implementation} details the Android implementation. Section~\ref{sec:experiments} presents the experimental setup. Section~\ref{sec:results} reports and discusses the results. Section~\ref{sec:conclusion} concludes with a summary of findings and limitations.
@@ -92,40 +93,38 @@ The remainder of this paper is organized as follows. Section~\ref{sec:related} s
 \section{Related Work}
 \label{sec:related}
 
-\subsection{Augmentative and Alternative Communication}
-\label{sec:related_aac}
-
-AAC devices serve individuals with severe motor impairments, including those caused by amyotrophic lateral sclerosis (ALS), cerebral palsy, and acquired brain injuries. Traditional AAC systems rely on grid-based symbol selection interfaces that require deliberate motor actions such as switch scanning or eye-gaze pointing~\cite{beukelman2020}. While effective, these interfaces constrain communication to pre-defined vocabularies and impose high cognitive load during message construction.
-
-Recent work has explored integrating language models into AAC workflows to provide generative communication support. Approaches include word and phrase prediction~\cite{vertanen2015}, context-sensitive sentence completion, and full open-vocabulary generation. However, deploying language models on edge devices introduces a fundamental tension between response quality (which improves with model size and context length) and latency (which degrades with both).
-
-\subsection{Edge Deployment of Large Language Models}
-\label{sec:related_edge}
-
-The deployment of transformer-based language models on mobile and embedded hardware has been enabled by advances in model quantization and optimized inference runtimes. Post-training quantization to 4-bit precision~\cite{dettmers2022,frantar2022} reduces both memory footprint and arithmetic intensity, enabling sub-billion parameter models to run on smartphone SoCs. Inference frameworks such as \texttt{llama.cpp}~\cite{llamacpp} and MLC-LLM~\cite{mlcllm} provide ARM NEON--optimized kernels and memory-mapped model loading for efficient mobile execution.
-
-Despite these advances, the prefill phase of autoregressive inference remains a latency bottleneck. For a prompt of $N$ tokens, the prefill requires $O(N)$ forward passes through the model before the first output token can be generated. In AAC contexts, where system prompts encoding environmental and medical information may span hundreds of tokens, this prefill cost can dominate the user-perceived response time.
-
 \subsection{KV Cache Optimization}
 \label{sec:related_kvcache}
 
 The key-value (KV) cache stores the attention key and value tensors computed during the prefill phase, allowing subsequent tokens to attend to the full context without recomputation. Several lines of research have sought to reduce the memory and computational costs of KV cache management.
 
-\textbf{Cache compression} methods reduce KV cache memory through selective eviction of less-important entries. Scissorhands~\cite{scissorhands} identifies and removes KV pairs corresponding to tokens with low cumulative attention scores. H$_2$O~\cite{h2o} extends this with a ``heavy hitter'' policy that retains high-attention tokens. StreamingLLM~\cite{streamingllm} maintains only a fixed-size attention window plus initial ``attention sink'' tokens to enable infinite-length generation. These methods operate at the token level within a single sequence and are complementary to the state-level caching proposed in this work.
+\textbf{Cache compression.} Scissorhands~\cite{scissorhands} identifies and removes KV pairs corresponding to tokens with low cumulative attention scores. H$_2$O~\cite{h2o} retains high-attention ``heavy hitter'' tokens while evicting the rest. SnapKV~\cite{snapkv} exploits per-head attention consistency to select cluster-level important positions. StreamingLLM~\cite{streamingllm} maintains a fixed-size attention window plus initial ``attention sink'' tokens for unbounded sequence lengths. KVQuant~\cite{kvquant} applies non-uniform quantization to KV cache tensors, enabling million-token context lengths on a single GPU. These methods operate at the token level within a single sequence and are complementary to the state-level caching proposed here.
 
-\textbf{Prompt caching} systems amortize prefill costs by reusing cached computations across requests sharing common prompt prefixes. SGLang's RadixAttention~\cite{sglang} organizes cached prefixes in a radix tree for server-side multi-tenant reuse. vLLM~\cite{vllm} uses paged attention to share KV blocks across concurrent requests with common prefixes. These systems target cloud inference serving with multiple concurrent users and do not address the single-user, single-device edge deployment scenario.
+\textbf{Prompt caching and prefix reuse.} SGLang's RadixAttention~\cite{sglang} organizes cached prefixes in a radix tree for server-side multi-tenant reuse. vLLM's PagedAttention~\cite{vllm} shares KV blocks across concurrent requests with common prefixes. Prompt Cache~\cite{promptcache} precomputes and stores attention states for reusable prompt modules, achieving up to 8$\times$ TTFT reduction on GPU. CacheBlend~\cite{cacheblend} extends prefix reuse to non-prefix-aligned chunks by selectively recomputing a small fraction of affected token positions. These systems target cloud inference serving with shared request streams and do not address single-user edge devices.
 
-\textbf{State management} approaches extend KV caching beyond single sessions. InfiniGen~\cite{infinigen} speculatively prefetches KV cache entries for predicted future tokens. CacheGen~\cite{cachegen} compresses and stores KV caches for reuse across sessions. The present work is most closely aligned with this family of approaches, differing in its focus on predictive state selection driven by environmental sensor signals rather than textual context alone.
+\textbf{Cross-session state management.} InfiniGen~\cite{infinigen} speculatively prefetches KV cache entries for predicted future tokens. CacheGen~\cite{cachegen} compresses and streams KV caches for reuse across sessions. The present work is most closely aligned with this family, differing in its use of environmental sensor signals---rather than textual context or speculative token prediction---for cache state selection on a single edge device.
 
-\subsection{Multimodal Sensor Fusion for Assistive Technology}
+\subsection{Edge Deployment of Language Models}
+\label{sec:related_edge}
+
+Post-training quantization to 4-bit precision~\cite{dettmers2022,frantar2022} reduces both memory footprint and arithmetic intensity, enabling sub-billion-parameter models to run on smartphone SoCs. AWQ~\cite{awq} further improves 4-bit weight-only quantization by protecting salient weights based on activation-aware scaling. MobileLLM~\cite{mobilellm} demonstrates that sub-billion-parameter architectures with depth-prioritized design can achieve competitive quality for on-device tasks. Inference frameworks such as \texttt{llama.cpp}~\cite{llamacpp} and MLC-LLM~\cite{mlcllm} provide ARM NEON--optimized kernels and memory-mapped model loading for mobile execution. PowerInfer-2~\cite{powerinfer2} extends on-device inference to models up to 47B parameters through neuron-cluster-level heterogeneous scheduling across NPU and CPU, though it targets a different scale regime than the sub-billion-parameter models considered here. Alizadeh et~al.~\cite{llminaflash} address the memory bandwidth bottleneck for on-device inference by using flash memory and windowed KV cache access, demonstrating that models exceeding DRAM capacity can still achieve interactive latency. FlexGen~\cite{flexgen} explores offloading-based inference across GPU, CPU, and disk for throughput-oriented settings.
+
+Despite runtime improvements, the prefill phase of autoregressive inference remains a latency bottleneck on mobile hardware. For a system prompt of $N$ tokens, the prefill requires processing all $N$ tokens through the transformer before the first output token can be generated. When contextual prompts span several hundred tokens---as in environment-aware applications---this cost can dominate user-perceived latency.
+
+\subsection{Augmentative and Alternative Communication}
+\label{sec:related_aac}
+
+AAC devices serve individuals with severe motor impairments, including those caused by amyotrophic lateral sclerosis (ALS), cerebral palsy, and acquired brain injuries~\cite{beukelman2020}. Recent work has explored integrating language models into AAC workflows for word and phrase prediction~\cite{vertanen2015}, context-sensitive sentence completion, and open-vocabulary generation. Deploying language models on edge devices introduces a tension between response quality and latency that motivates the prefill amortization approach presented here.
+
+\subsection{Multimodal Sensor Fusion}
 \label{sec:related_fusion}
 
-Combining EMG and gaze signals for human-computer interaction has been explored in several assistive technology contexts. EMG-based gesture classification using convolutional and recurrent architectures has been evaluated on public datasets including NinaPro~\cite{ninapro} and the Myo Armband dataset. Gaze-based interaction using facial landmark models such as MediaPipe~\cite{mediapipe} provides a complementary channel that does not require residual motor function. Late fusion and cross-attention architectures have been compared for combining heterogeneous sensor modalities in gesture recognition~\cite{ngiam2011}, with late fusion often preferred for its simplicity and robustness when modality reliability varies.
+Combining EMG and gaze signals for human-computer interaction has been explored in assistive technology contexts. EMG-based gesture classification has been evaluated on public datasets including NinaPro~\cite{ninapro}. Gaze-based interaction using facial landmark models such as MediaPipe~\cite{mediapipe} provides a complementary input channel. Late fusion and cross-attention architectures have been compared for combining heterogeneous sensor modalities~\cite{ngiam2011}, with late fusion often preferred when modality reliability varies.
 
 \subsection{Positioning of This Work}
 \label{sec:positioning}
 
-The present work differs from prior KV cache optimization research in two respects. First, it targets a single-user, single-device edge deployment where background computation during idle periods can be exploited for prefill amortization---an operational model that is unavailable in cloud serving scenarios. Second, it introduces environmental sensor signals (GPS, BLE, time) as the basis for predictive cache state selection, replacing the purely textual prefix-matching strategies used in cloud KV cache systems.
+The present work differs from prior KV cache optimization research in two respects. First, it targets a single-user, single-device edge deployment where background computation during idle periods can be exploited for prefill amortization---an operational model unavailable in cloud serving. Prompt Cache~\cite{promptcache} and CacheBlend~\cite{cacheblend} assume a server-side setting where multiple requests share cached state; CAP-KVC instead serializes KV state to persistent storage for restoration by the same user across sessions. Second, it introduces environmental sensor signals (GPS, BLE proximity, time of day) as the basis for predictive cache state selection, replacing the textual prefix-matching strategies used in server-side systems.
 
 % ===========================================================================
 % III. METHODOLOGY
@@ -137,7 +136,7 @@ This section describes the design of the Context-Aware Predictive KV-Cache Primi
 
 \begin{figure*}[t]
 \centering
-\includegraphics[width=0.85\textwidth]{figures/system_architecture.png}
+\includegraphics[width=\textwidth]{system_architecture_new.png}
 \caption{CAP-KVC system architecture. Environmental sensors (blue) feed a deterministic scoring function that selects contexts for background priming (green). The multimodal intent pipeline (purple) combines sEMG and gaze inputs via late fusion. At inference time (orange), the pre-computed KV cache is restored and only intent tokens are processed by the llama.cpp/JNI backend. A periodic drift detector re-evaluates context relevance with hysteresis gating ($\Delta \geq 0.10$).}
 \label{fig:architecture}
 \end{figure*}
@@ -147,7 +146,7 @@ This section describes the design of the Context-Aware Predictive KV-Cache Primi
 
 Consider a user $u$ operating an AAC device in a physical environment characterized by temporal, spatial, and proximity signals. Let $C = \{c_1, c_2, \ldots, c_M\}$ denote a finite set of pre-configured semantic contexts, each associated with a textual system prompt $p_i$ of length $N_i$ tokens. In conventional retrieval-augmented generation (RAG) pipelines, the system prompt $p_i$ is concatenated with the user's intent tokens and submitted to the language model at inference time, incurring an $O(N_i)$ prefill cost that directly adds to user-perceived latency.
 
-CAP-KVC reformulates this as a scheduling problem: given a prediction of the user's most likely context $\hat{c}$ based on environmental signals, execute the prefill of $p_{\hat{c}}$ during idle periods and persist the resulting key-value (KV) cache tensors to persistent storage. At inference time, the system restores the pre-computed KV cache and appends only the user's intent tokens, reducing the inference-time cost from context-length-dependent prompt processing to a lightweight cache restoration operation whose cost is independent of the original prompt length $N_i$.
+CAP-KVC reformulates this as a scheduling problem: given a prediction of the user's most likely context $\hat{c}$ based on environmental signals, execute the prefill of $p_{\hat{c}}$ during idle periods and persist the resulting key-value (KV) cache tensors to persistent storage. At inference time, the system restores the pre-computed KV cache and appends only the user's intent tokens, reducing the inference-time cost from a prompt-length-dependent prefill to a cache restoration operation whose cost is independent of the original prompt length $N_i$.
 
 \subsection{System Execution Lifecycle}
 \label{sec:lifecycle}
@@ -204,7 +203,7 @@ S(c_i) = \alpha \cdot S_{\text{time}} + \beta \cdot S_{\text{gps}} + \gamma \cdo
 \label{eq:scoring}
 \end{equation}
 
-\noindent where $\alpha + \beta + \gamma = 1$ and each weight reflects the estimated reliability of its corresponding sensor.
+\noindent where $\alpha + \beta + \gamma = 1$. The weights are derived from dynamic reliability estimates of each sensor signal (Section~\ref{sec:scoring_weights}).
 
 \subsubsection{Temporal Scoring}
 The temporal similarity $S_{\text{time}}$ applies a Gaussian kernel to the circular distance between the current time and the context's expected activation time:
@@ -224,13 +223,14 @@ S_{\text{gps}} = \exp(-\lambda \cdot d_{\text{haversine}})
 \label{eq:gps_score}
 \end{equation}
 
-\noindent with $\lambda = 0.1$~m$^{-1}$, establishing a contextual boundary of approximately 100~meters.
+\noindent with $\lambda = 0.1$~km (decay constant), establishing a contextual boundary of approximately 100~meters. At $d = 100$~m, the score decays to $\approx 0.37$; at $d = 1$~km, it falls to near zero.
 
 \subsubsection{BLE Proximity Scoring}
 The BLE similarity $S_{\text{ble}}$ evaluates the overlap between currently detected Bluetooth devices and a context's registered device topology, with RSSI values mapped through a sigmoid function.
 
 \subsubsection{Dynamic Reliability Normalization}
-The weights $\alpha$, $\beta$, and $\gamma$ are computed dynamically from raw sensor reliability estimates. Time maintains a fixed baseline weight ($w_t = 0.4$), guaranteeing that the normalization denominator $w_t + w_g + w_b$ is always positive. If GPS is unavailable ($w_g = 0$) or no BLE devices are detected ($w_b = 0$), the corresponding weight contribution is redistributed proportionally, preserving the convex property. Contexts scoring below a dead-state threshold of 0.01 are excluded from routing consideration.
+\label{sec:scoring_weights}
+The weights $\alpha$, $\beta$, and $\gamma$ are computed dynamically from raw sensor reliability estimates rather than being statically configured. Time maintains a fixed baseline weight $w_t = 0.4$, guaranteeing that the normalization denominator $w_t + w_g + w_b$ is always positive even when both GPS and BLE are unavailable. GPS reliability $w_g$ decays exponentially with reported accuracy ($w_g = \exp(-a / 50.0)$ where $a$ is the accuracy in meters), reflecting the degradation of location precision in indoor environments. BLE reliability $w_b$ is computed from the mean sigmoid-transformed RSSI of detected devices, centered at $-70$~dBm. If GPS is unavailable ($w_g = 0$) or no BLE devices are detected ($w_b = 0$), the corresponding weight is zero and the remaining weights are renormalized to preserve the convex property $\alpha + \beta + \gamma = 1$. The value $w_t = 0.4$ was selected as an engineering heuristic to ensure meaningful temporal scoring under all sensor configurations; no systematic sensitivity analysis was performed. Contexts scoring below a dead-state threshold of 0.01 are excluded from routing consideration.
 
 \subsection{KV Cache Residency Management}
 \label{sec:residency}
@@ -246,7 +246,7 @@ Environmental sensors predict physical location but cannot detect whether the co
 
 To prevent cache thrashing under noisy sensor conditions, state replacements are gated by a hysteresis margin: a candidate context must exceed the weakest resident state's score by at least $\Delta = 0.10$ before a cache swap is authorized. This prevents oscillatory eviction-reload cycles that would impose unnecessary I/O and prefill costs.
 
-A separate offline ablation study evaluated the sensitivity of conversation-level drift detection to the sliding window size $k$ used for centroid computation, with $k \in \{1, 2, 3, 4, 5\}$ evaluated on annotated DailyDialog conversations (Section~\ref{sec:results_drift}). This ablation characterizes the detector's sensitivity on available annotated data; the deployed $k$ value was selected independently based on engineering considerations (see Section~\ref{sec:results_drift}).
+A separate offline characterization study evaluates the sensitivity of \emph{semantic} topic-shift detection---using Sentence-BERT centroid distances on annotated DailyDialog conversations~\cite{dailydialog}---to the sliding window size $k$ used for centroid smoothing (Section~\ref{sec:results_drift}). This offline study is distinct from the deployed \texttt{DriftDetector}, which operates on sensor-score deltas rather than semantic embeddings. The offline ablation characterizes detection sensitivity as a function of $k$ on available annotated data; the deployed system's behavior is governed by the hysteresis margin $\Delta$ described above.
 
 \subsection{Inference Fallback}
 \label{sec:fallback}
@@ -271,9 +271,9 @@ The Kotlin application layer communicates with the C++ inference backend through
 \subsection{JNI Boundary Contract}
 \label{sec:jni}
 
-The JNI layer exposes eight native functions to the Kotlin runtime, implemented in a single C++ source file (\texttt{llama\_jni.cpp}, 732 lines). A strict design constraint governs this boundary: \textbf{all arguments and return values are JNI scalar types} (\texttt{jstring}, \texttt{jint}, \texttt{jboolean}). No Java objects, arrays, or callbacks cross the JNI boundary. This eliminates the need for JNI global references, prevents garbage-collector root pinning, and simplifies the native lifecycle.
+The JNI layer exposes nine native functions to the Kotlin runtime, implemented in a single C++ source file (\texttt{llama\_jni.cpp}, 801 lines). Eight of these are application-facing; the ninth (\texttt{release}) handles lifecycle cleanup. A strict design constraint governs this boundary: \textbf{all arguments and return values are JNI scalar types} (\texttt{jstring}, \texttt{jint}, \texttt{jboolean}). No Java objects, arrays, or callbacks cross the JNI boundary. This eliminates the need for JNI global references, prevents garbage-collector root pinning, and simplifies the native lifecycle.
 
-The eight exposed functions are organized into three functional groups:
+The nine exposed functions are organized into three functional groups:
 
 \begin{enumerate}
     \item \textbf{Lifecycle:} \texttt{initializeBackend()}, \texttt{initializeModel(path)}, and \texttt{release()}, which manage the native \texttt{ggml} context allocation and model weight loading.
@@ -329,10 +329,12 @@ Background sensor acquisition is implemented through two cooperating components:
 
 A \texttt{BroadcastReceiver} registered for \texttt{BOOT\_COMPLETED} and \texttt{MY\_PACKAGE\_REPLACED} intents ensures that the predictive cache is populated immediately after device boot or application update, using the \texttt{goAsync()} pattern to extend the receiver's execution window.
 
+\textbf{Sensing cost.} The sensor acquisition imposes minimal runtime overhead: GPS uses \texttt{getLastKnownLocation} (cached, no active fix), and BLE performs a 3-second scan bounded by \texttt{stopScan}. The \texttt{DriftDetector} polls every 15 minutes via \texttt{WorkManager}, which batches execution with other background work to minimize wake-lock durations. The primary energy cost of the system is the background KV cache priming (one full inference per cache state); this occurs at most once per context transition and executes only during idle periods when the device is charging or above a configurable battery threshold.
+
 \subsection{Fusion Model Deployment}
 \label{sec:fusion_deploy}
 
-The winning late fusion model is exported to ONNX format and bundled in the application's \texttt{assets/} directory (\texttt{gaze\_emg\_fusion.onnx}, 45~KB). On-device inference is performed through ONNX Runtime's Android Java API. The session is lazily initialized at application scope to prevent repeated model loading during activity recreation events (e.g., screen rotation).
+The winning late fusion model is exported to ONNX format and bundled in the application's \texttt{assets/} directory (\texttt{gaze\_emg\_fusion.onnx}, 45,459~bytes). On-device inference uses ONNX Runtime~\cite{onnxruntime} with a single-threaded CPU execution provider. The session is lazily initialized at application scope to prevent repeated model loading during activity recreation events (e.g., screen rotation).
 
 Input tensors are constructed from the EMG embedding (shape $1 \times 1 \times 64$, \texttt{float32}) and gaze feature vector (shape $1 \times 5$, \texttt{float32}). The output logits are processed through an argmax operation followed by numerically stable softmax to extract both the predicted intent label and its associated confidence score. If the ONNX session fails to load or inference throws an exception, the system falls back to passing the raw gaze target through as the intent label with zero confidence.
 
@@ -357,7 +359,38 @@ All on-device benchmarks were conducted on a OnePlus~11R (Snapdragon~8+~Gen~1, 8
 \subsection{Language Model Configuration}
 \label{sec:model_config}
 
-The language model used throughout evaluation is Qwen2.5-0.5B-Instruct~\cite{qwen25}, quantized to Q4\_K\_M (4-bit mixed precision) via \texttt{llama.cpp}'s GGUF serialization format. This model was selected as the smallest instruction-tuned model in the Qwen2.5 family capable of producing coherent, context-aware responses on mobile hardware. Greedy sampling was used for all inference trials (temperature~$= 0$, top-$k = 1$) with a maximum generation length of 64 tokens, ensuring deterministic output sequences that minimize generation-phase variance across trials.
+The language model used throughout evaluation is Qwen2.5-0.5B-Instruct~\cite{qwen25}, quantized to Q4\_K\_M (4-bit mixed precision) via \texttt{llama.cpp}'s GGUF serialization format. This model was selected as the smallest instruction-tuned model in the Qwen2.5 family capable of producing coherent, context-aware responses on mobile hardware. The native context is configured with \texttt{n\_ctx} $= 2048$ (maximum sequence length), \texttt{n\_batch} $= 512$ (batch processing size), and \texttt{n\_threads} $= 4$ (inference thread count). Greedy decoding is used for all inference trials via \texttt{llama\_sampler\_init\_greedy()}, which deterministically selects the highest-probability token at each step. The maximum generation length is 64 tokens, ensuring deterministic output sequences that minimize generation-phase variance across trials.
+
+Table~\ref{tab:hyperparams} summarizes all configurable system parameters for reproducibility.
+
+\begin{table}[htbp]
+\centering
+\caption{System hyperparameters. All values are fixed at compile time except the model path.}
+\label{tab:hyperparams}
+\begin{tabular}{llr}
+\hline
+\textbf{Component} & \textbf{Parameter} & \textbf{Value} \\
+\hline
+\multirow{4}{*}{LLM Engine} & \texttt{n\_ctx} (max sequence) & 2048 \\
+ & \texttt{n\_batch} (batch size) & 512 \\
+ & \texttt{n\_threads} & 4 \\
+ & Max generation tokens & 64 \\
+\hline
+\multirow{3}{*}{Scoring} & $\alpha$ (time baseline weight) & 0.4 \\
+ & $\beta, \gamma$ (GPS, BLE) & dynamic \\
+ & Dead-state threshold & 0.01 \\
+\hline
+\multirow{2}{*}{Drift} & Hysteresis margin $\Delta$ & 0.10 \\
+ & Poll interval & 15 min \\
+\hline
+\multirow{2}{*}{Cache} & Max active KV states & 3 \\
+ & BLE scan window & 3000 ms \\
+\hline
+\multirow{2}{*}{Benchmark} & Warmup trials & 2 \\
+ & Measured trials & 30 \\
+\hline
+\end{tabular}
+\end{table}
 
 \subsection{Benchmark Conditions}
 \label{sec:conditions}
@@ -381,11 +414,13 @@ The CAP\_KVC condition was evaluated using cache files primed from the base cont
 
 Each benchmark condition executes 32 sequential trials: 2~warmup trials (discarded) followed by 30~measured trials. The warmup phase absorbs JIT compilation of Kotlin/ART code paths and initial thermal settling. All measurements are wall-clock latency captured via \texttt{System.nanoTime()} at the Kotlin layer, wrapping the complete JNI call sequence.
 
-\textbf{Important methodological note:} The JNI boundary encapsulates tokenization, prefill, and generation within single native function calls (\texttt{runInference} and \texttt{resumeInference}). True time-to-first-token (TTFT) instrumentation---which requires intercepting the decoder loop between the first and second generated tokens---is not possible without modifying the native inference engine. Accordingly, all latency values reported in this paper represent \textbf{end-to-end inference latency}, encompassing tokenization, prefill, and the complete generation phase (up to 64 tokens). We use the term ``inference latency'' throughout to avoid confusion with TTFT as defined in the LLM serving literature.
+\textbf{Prefill isolation via native instrumentation.} To decompose end-to-end latency into its constituent phases, \texttt{std::chrono::high\_resolution\_clock} timestamps are inserted immediately before and after each \texttt{llama\_decode()} call within both \texttt{runInference} and \texttt{resumeInference}. This isolates the prefill phase---the single \texttt{llama\_decode()} call that processes all prompt tokens through the transformer---from the subsequent autoregressive generation loop. The instrumentation also records the generation-phase duration (from sampler initialization through the final generated token) and emits both timings, along with prompt and generated token counts, via \texttt{\_\_android\_log\_print}. 
 
-For the CAP\_KVC condition, the benchmark instruments two sub-components separately: \texttt{cache\_load\_ms} (the \texttt{loadKVCache} call) and \texttt{inference\_ms} (the \texttt{resumeInference} call), both measured under a single engine lock acquisition to prevent interleaving. The total CAP\_KVC latency is the sum of both components.
+On the Android NDK libc++ runtime, \texttt{std::chrono::high\_resolution\_clock} maps directly to the monotonic \texttt{std::chrono::steady\_clock}, which is backed by the kernel's \texttt{CLOCK\_MONOTONIC} clock source. This prevents duration calculations from being corrupted by system NTP synchronization or manual clock adjustments. The overhead of the clock read call is $\approx 10$--50~ns (leveraging the vDSO-accelerated kernel interface), which is negligible relative to the millisecond-scale model inference. JNI boundaries, string copies, and log serialization calls occur strictly outside the timed regions.
 
-Results are emitted as structured CSV lines via Android's \texttt{Log.i()} facility and extracted post-run via \texttt{adb logcat}. The extraction pipeline is deterministic and produces 180 measured data points (6~conditions $\times$ 30~trials).
+For the CAP\_KVC condition, the benchmark instruments three sub-components separately: \texttt{cache\_load\_ms} (the \texttt{loadKVCache} call, measured at the Kotlin layer), \texttt{prefill\_ms} (the intent-only \texttt{llama\_decode} within \texttt{resumeInference}, measured at the native layer), and \texttt{gen\_ms} (the generation loop, measured at the native layer). Both Kotlin-layer and native-layer measurements are captured under the same engine lock acquisition to prevent interleaving.
+
+Results are emitted as structured CSV lines via Android's \texttt{Log.i()} facility and extracted post-run via \texttt{adb logcat}. To mitigate the risk of packet drops or transient buffer overflows in Android's logcat ring buffer, the post-run extraction script matches JNI timing entries to Kotlin bench entries by strict proximity and asserts alignment of trial indices and token counts. Any mismatch or incomplete sequence aborts the parser to ensure data integrity; the 180 trials reported here were fully verified and aligned.
 
 \subsection{Pre-Benchmark Validation}
 \label{sec:validation}
@@ -446,52 +481,58 @@ Table~\ref{tab:latency} summarizes the end-to-end inference latency across all b
 
 \begin{table}[htbp]
 \centering
-\caption{End-to-end inference latency (ms) across pipeline conditions. CAP\_KVC total includes both cache restoration and generation time. All values measured on OnePlus~11R, Qwen2.5-0.5B-Instruct Q4\_K\_M, greedy sampling, max 64~output tokens.}
+\caption{Inference latency decomposition (ms) across pipeline conditions. Prefill isolates the \texttt{llama\_decode()} forward pass; generation covers the autoregressive sampling loop. Both are measured via native-side \texttt{std::chrono} instrumentation. CAP\_KVC total includes cache restoration, prefill, and generation. All values: OnePlus~11R, Qwen2.5-0.5B-Instruct Q4\_K\_M, greedy sampling, max 64~output tokens, $n = 30$ trials.}
 \label{tab:latency}
-\begin{tabular}{lrrrr}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lrrrrr}
 \hline
-\textbf{Condition} & \textbf{Mean} & \textbf{Std} & \textbf{Min} & \textbf{Max} \\
+\textbf{Condition} & \textbf{E2E (ms)} & \textbf{Prefill (ms)} & \textbf{Gen (ms)} & \textbf{E2E $\sigma$} & \textbf{Tokens} \\
 \hline
-ZERO\_CONTEXT       & 3018.70 & 99.65  & 2902.29 & 3273.88 \\
-RAG\_INLINE ($N\!\approx\!50$)  & 4505.82 & 167.94 & 4378.63 & 5138.60 \\
-RAG\_INLINE ($N\!\approx\!100$) & 5538.74 & 202.85 & 5364.07 & 6208.34 \\
-RAG\_INLINE ($N\!\approx\!200$) & 8759.02 & 243.53 & 8590.38 & 9886.74 \\
-RAG\_INLINE ($N\!\approx\!500$) & 15632.06 & 802.95 & 15179.67 & 18445.82 \\
+ZERO\_CONTEXT       & 3823.78 & 274.79  & 3544.58  & 569.76  & 9  \\
+RAG ($N\!\approx\!50$)  & 6547.13 & 2021.46 & 4508.53  & 8392.58 & 52 \\
+RAG ($N\!\approx\!100$) & 7900.92 & 3015.09 & 4877.95  & 3857.18 & 89 \\
+RAG ($N\!\approx\!200$) & 12122.30 & 6673.53 & 5439.96 & 2740.12 & 206 \\
+RAG ($N\!\approx\!500$) & 19408.89 & 14001.46 & 5390.76 & 2113.04 & 439 \\
 \hline
-CAP\_KVC (cache load)       & 2.63  & 2.04  & 1.61   & 11.42 \\
-CAP\_KVC (inference)        & 3401.29 & 285.37 & 3257.96 & 4754.85 \\
-CAP\_KVC (total)            & 3403.92 & 285.30 & ---    & ---   \\
+CAP\_KVC (cache load)       & 2.74  & ---  & ---  & 1.35 & --- \\
+CAP\_KVC (inference)        & 4571.97 & 343.35 & 4226.74  & 373.65 & 9  \\
+CAP\_KVC (total)            & 4574.70 & ---    & ---      & 373.49 & ---  \\
 \hline
-\end{tabular}
+\end{tabular}%
+}
 \end{table}
 
 Fig.~\ref{fig:latency_comparison} visualizes these results, and Fig.~\ref{fig:latency_breakdown} provides a detailed breakdown showing the stacked composition of CAP-KVC latency.
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=\columnwidth]{figures/latency_comparison.png}
-\caption{End-to-end inference latency across pipeline conditions ($n = 30$ trials each). Error bars indicate one standard deviation. CAP-KVC achieves a 4.59$\times$ speedup relative to RAG\_INLINE at $N \approx 500$.}
+\includegraphics[width=\columnwidth]{latency_comparison_new.png}
+\caption{End-to-end inference latency across pipeline conditions ($n = 30$ trials each). Error bars indicate one standard deviation. CAP-KVC achieves a 4.24$\times$ end-to-end speedup relative to RAG\_INLINE at $N \approx 500$.}
 \label{fig:latency_comparison}
 \end{figure}
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=\columnwidth]{figures/latency_breakdown.png}
-\caption{Latency breakdown across pipeline conditions. RAG\_INLINE latency (dark bars) scales with context length. The CAP-KVC bar is stacked: the light segment represents cache restoration (2.63~ms mean, barely visible at this scale), and the dark segment represents generation-only inference. Error bars indicate one standard deviation ($n = 30$).}
+\includegraphics[width=\columnwidth]{latency_breakdown_new.png}
+\caption{Latency breakdown across pipeline conditions. Native-side \texttt{std::chrono} instrumentation decomposes each trial into prefill (dark) and generation (light) phases. RAG\_INLINE prefill scales linearly with context length (274~ms at $N\!=\!9$ to 14001~ms at $N\!=\!439$ tokens), whereas CAP\_KVC prefill is 343~ms regardless of cached context size, achieving a 40.78$\times$ prefill-specific speedup. Error bars: one standard deviation ($n = 30$).}
 \label{fig:latency_breakdown}
 \end{figure}
 
 Several observations follow from these results:
 
-\textbf{Cache restoration is negligible.} The mean cache load time is 2.63~ms ($\sigma = 2.04$~ms), representing less than 0.1\% of the total CAP\_KVC latency. The cache restoration is dominated by UFS flash read latency and native memory copy, not by computational processing.
+\textbf{Cache restoration is negligible.} The mean cache load time is 2.74~ms ($\sigma = 1.35$~ms), representing less than 0.1\% of the total CAP\_KVC latency. This duration measures the complete Kotlin-side \texttt{loadKVCache()} round trip, including JNI marshalling, native file I/O, and KV tensor deserialization. The restoration is dominated by hardware I/O and memory copy rather than computational processing.
 
-\textbf{CAP\_KVC avoids context-proportional prefill.} The RAG\_INLINE latency scales with prompt length: from 4505.82~ms at $N \approx 50$ to 15632.06~ms at $N \approx 500$, a 3.47$\times$ increase. The CAP\_KVC total latency (3403.92~ms) remained comparatively stable under the evaluated configuration because the prefill cost was amortized during background priming.
+\textbf{CAP\_KVC avoids context-proportional prefill.} The native-side prefill decomposition (Table~\ref{tab:latency}) confirms that RAG\_INLINE prefill scales linearly with prompt length: from 2021~ms at $N \approx 52$ tokens to 14001~ms at $N \approx 439$ tokens, a 6.93$\times$ increase. In contrast, the CAP\_KVC prefill cost is 343.35~ms ($\sigma = 45.00$~ms) for 9 intent-only tokens, regardless of the cached context size. This represents a \textbf{40.78$\times$ prefill speedup} relative to RAG\_INLINE at $N \approx 500$.
 
-\textbf{Speedup relative to RAG\_INLINE.} At comparable context length ($N \approx 50$), CAP\_KVC achieves a total latency of 3403.92~ms versus RAG\_INLINE's 4505.82~ms, a speedup of 1.32$\times$. At $N \approx 500$, the speedup increases to 4.59$\times$ (15632.06 / 3403.92). The speedup grows with context length because the RAG\_INLINE cost scales with prompt length while the CAP\_KVC cost remained comparatively stable under the evaluated configuration.
+\textbf{Speedup relative to RAG\_INLINE.} End-to-end, CAP\_KVC achieves a total latency of 4574.70~ms versus RAG\_INLINE's 19408.89~ms at $N \approx 500$, an end-to-end speedup of 4.24$\times$. At $N \approx 50$, the mean end-to-end speedup is 1.43$\times$ (6547.13 / 4574.70), though this end-to-end difference is not statistically significant ($p = 0.209$) due to high variance in the RAG\_INLINE generation phase; the prefill-specific speedup at $N \approx 50$ remains statistically significant ($p = 0.011$). The prefill decomposition reveals that the end-to-end speedup is heavily masked by the generation phase, which is comparable across conditions ($\sim$3500--5400~ms).
 
-\textbf{Statistical significance.} Welch's two-sample $t$-tests ($\alpha = 0.05$, two-tailed) confirm that the latency differences are statistically significant for both comparisons: CAP\_KVC versus RAG\_INLINE at $N \approx 50$ ($t(46.9) = -18.23$, $p < 10^{-22}$, Cohen's $d = 4.71$) and CAP\_KVC versus RAG\_INLINE at $N \approx 500$ ($t(36.2) = -78.60$, $p < 10^{-41}$, Cohen's $d = 20.29$). Both effect sizes exceed conventional thresholds for large effects ($d > 0.8$), indicating that the observed latency reductions are not attributable to measurement noise. Unequal variances are expected because RAG\_INLINE latency variance increases with prompt length due to variable prefill scheduling, whereas CAP\_KVC variance is driven primarily by the generation phase.
+\textbf{Statistical significance and assumptions.} Welch's two-sample $t$-tests ($\alpha = 0.05$, two-tailed) on the \emph{prefill-only} latency confirm statistical significance: CAP\_KVC versus RAG\_INLINE at $N \approx 50$ ($t(29.0) = -2.71$, $p = 0.011$, Cohen's $d = 0.70$) and CAP\_KVC versus RAG\_INLINE at $N \approx 500$ ($t(29.0) = -40.42$, $p < 10^{-26}$, Cohen's $d = 10.44$). The end-to-end comparison at $N \approx 500$ is also significant ($t(30.8) = -37.86$, $p < 10^{-26}$, $d = 9.78$). 
 
-\textbf{Confounding factor: generation-length variance.} The generated output lengths differ across conditions (ZERO\_CONTEXT: 252~characters, RAG@50: 223, RAG@200: 355, CAP\_KVC: 319), which introduces generation-phase variance into the end-to-end latency comparison. Because the generation phase contributes a substantial fraction of the measured time, the reported speedup ratios represent \emph{upper bounds} on the prefill-specific amortization advantage and should not be interpreted as direct measurements of prefill cost reduction. Isolating the prefill contribution would require sub-token TTFT instrumentation at the native decoder level---intercepting the transition between the final prefill step and the first generated token---which is not exposed by the current JNI architecture. Without such instrumentation, the precise fraction of latency attributable to prefill versus generation cannot be determined from the available measurements.
+Although Welch's $t$-test is robust to unequal variances (which are expected due to prompt-dependent prefill scaling), the extreme skewness of the underlying RAG latency distributions violates standard parametric normality assumptions. The resulting $t$-test statistics should be interpreted as general trends rather than exact probabilities. For $N \approx 50$ prefill, Cohen's $d = 0.70$ indicates a medium-to-large effect. For $N \approx 500$, $d = 10.44$ represents an overwhelming effect. Cohen's $d$ was computed using equal-sample pooled variance; we note that this value is attenuated by the high variance of the RAG condition.
+
+\textbf{Outlier analysis.} For diagnostic purposes, Tukey's outlier criterion ($Q_3 + 3 \times \text{IQR}$) was applied to identify extreme latency anomalies. This flagged 5 outlier trials (3 in RAG@50, 1 in ZERO\_CONTEXT, 1 in CAP\_KVC) exhibiting latency substantially above the condition mean. The precise mechanism underlying these outliers---whether OS-level thermal management, background scheduler preemption, garbage collection pauses, or other system-level effects---was not independently measured during the benchmark run. No thermal telemetry, CPU frequency logs, or scheduler event traces were captured alongside the benchmark data. To ensure scientific conservatism and preserve the operational reality of edge hardware, these outliers were not removed from the statistics reported in Table~\ref{tab:latency} or the primary t-test calculations.
+
+\textbf{Generation-phase analysis.} The generation-phase duration varies across conditions: ZERO\_CONTEXT 3544~ms (58 tokens), RAG\_INLINE@50 4508~ms (64 tokens), RAG\_INLINE@500 5390~ms (64 tokens), and CAP\_KVC 4226~ms (64 tokens). The variation in generation time is consistent with two factors: (1)~differences in per-token attention computation cost when the KV cache contains different numbers of entries, and (2)~system-level effects associated with sustained mobile execution over a 29-minute benchmark session (the benchmark captured no thermal telemetry or CPU frequency data to distinguish specific mechanisms). Critically, because prefill and generation are now decomposed, these generation-phase differences do not confound the prefill speedup measurement.
 
 \subsection{Multimodal Fusion Ablation (RQ3)}
 \label{sec:results_fusion}
@@ -516,7 +557,7 @@ Late fusion achieves a macro F1 of 0.9963 compared to 0.9437 for cross-attention
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.85\columnwidth]{figures/fusion_ablation.png}
+\includegraphics[width=\columnwidth]{fusion_ablation_new.png}
 \caption{Fusion architecture ablation on synthetic test data (400 samples). Late fusion exceeds cross-attention in both accuracy and F1.}
 \label{fig:fusion_ablation}
 \end{figure}
@@ -551,19 +592,19 @@ The low standalone accuracy is expected under cross-subject evaluation, where in
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=\columnwidth]{figures/training_curves.png}
+\includegraphics[width=\columnwidth]{training_curves.png}
 \caption{CNN-LSTM EMG classifier training and validation accuracy over 35 epochs. The red dashed line marks the best checkpoint at epoch~8. The gray dashed line indicates the 5-class random baseline (20\%).}
 \label{fig:training_curves}
 \end{figure}
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.85\columnwidth]{figures/emg_confusion_matrix.png}
+\includegraphics[width=\columnwidth]{emg_confusion_matrix.png}
 \caption{Confusion matrix for the EMG standalone classifier on the held-out subject. Strong \emph{call-help} and \emph{scroll} diagonal entries contrast with near-zero \emph{confirm} and \emph{reject} performance.}
 \label{fig:emg_confusion}
 \end{figure}
 
-These results motivate the multimodal fusion approach: the EMG embedding provides a discriminative signal that, when combined with gaze tracking, improves classification performance relative to either modality in isolation. The on-device CNN-LSTM inference latency is 1.98~ms (mean, $\sigma = 1.12$~ms, $n = 200$ trials), indicating real-time feasibility of the embedding extraction step.
+These results demonstrate that the standalone EMG classifier does not achieve sufficient accuracy for deployment as a primary intent recognizer under cross-subject conditions. The multimodal fusion approach compensates by combining the EMG embedding with gaze tracking, achieving higher classification performance on the synthetic evaluation set (Section~\ref{sec:results_fusion}). However, no gaze-only baseline was evaluated, so the claim that fusion improves upon both unimodal channels independently is \textbf{not supported} by the current experimental design. The on-device CNN-LSTM inference latency is 1.98~ms (mean, $\sigma = 1.12$~ms, $n = 200$ trials), indicating that embedding extraction is feasible within real-time constraints.
 
 \subsection{Memory Budget (RQ2)}
 \label{sec:results_memory}
@@ -590,7 +631,7 @@ The three-state KV cache residency adds approximately 118.7~MB of native heap (1
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.7\columnwidth]{figures/memory_budget.png}
+\includegraphics[width=\columnwidth]{memory_budget_new.png}
 \caption{Native heap memory usage at idle (0 KV states) and with 3 KV cache states loaded. The delta of 118.7~MB represents the marginal cost of predictive caching.}
 \label{fig:memory_budget}
 \end{figure}
@@ -598,7 +639,7 @@ The three-state KV cache residency adds approximately 118.7~MB of native heap (1
 \subsection{Drift Detection Ablation}
 \label{sec:results_drift}
 
-Table~\ref{tab:drift} presents the k-ablation results for the offline drift detection evaluation on annotated DailyDialog conversations ($\theta = 0.15$).
+Table~\ref{tab:drift} presents the k-ablation results for the offline semantic drift detection characterization on annotated DailyDialog conversations ($\theta = 0.15$). This evaluation uses Sentence-BERT centroid distances~\cite{minilm} to detect topic shifts in text transcripts and is methodologically distinct from the deployed \texttt{DriftDetector}, which operates on environmental sensor-score deltas (Section~\ref{sec:drift}).
 
 \begin{table}[htbp]
 \centering
@@ -619,11 +660,11 @@ $k$ & $\theta$ & Precision & Recall & F1 & $n_{\text{true}}$ & $n_{\text{pred}}$
 
 The highest F1 (0.367) is achieved at $k = 1$, with performance degrading monotonically as the window size increases (Fig.~\ref{fig:drift_kablation}). This indicates that the centroid smoothing introduced by larger $k$ values reduces sensitivity to genuine topic shifts under the selected threshold. However, the absolute F1 values are low across all $k$ (ranging from 0.367 to 0.020), reflecting both the inherent difficulty of unsupervised topic-shift detection and the substantial mismatch between DailyDialog's multi-turn conversational dynamics and the sparse, short-turn interactions typical of AAC usage.
 
-\textbf{Deployment rationale for $k = 3$.} The deployed system uses $k = 3$, which the DailyDialog ablation does \emph{not} support as optimal. This value was retained as an engineering smoothing heuristic: in the real-time mobile environment, sensor score sequences are noisier than annotated dialogue transcripts, and a larger window provides stability against transient score fluctuations. The DailyDialog ablation was not used as the deployment selection criterion because the corpus does not represent the target AAC communication pattern. The choice of $k = 3$ should therefore be understood as a conservative design decision rather than an empirically validated parameter.
+\textbf{Deployment rationale for $k = 3$.} The deployed \texttt{DriftDetector} uses $k = 3$ for its sensor-score smoothing window. The DailyDialog ablation operates on a different detection mechanism (Sentence-BERT centroid distances) and cannot directly inform the deployed sensor-score threshold. The value $k = 3$ was retained as an engineering smoothing heuristic: in the mobile environment, sensor score sequences are noisier than annotated dialogue transcripts, and a larger window provides stability against transient fluctuations. The choice should be understood as a conservative design decision rather than an empirically validated parameter.
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.85\columnwidth]{figures/drift_k_ablation.png}
+\includegraphics[width=\columnwidth]{drift_k_ablation_new.png}
 \caption{Drift detection precision, recall, and F1 as a function of sliding window size $k$ on DailyDialog ($\theta = 0.15$). Performance degrades monotonically with increasing $k$.}
 \label{fig:drift_kablation}
 \end{figure}
@@ -634,7 +675,7 @@ The highest F1 (0.367) is achieved at $k = 1$, with performance degrading monoto
 The experimental results support the following conclusions:
 
 \begin{enumerate}
-    \item CAP-KVC reduces end-to-end inference latency by 1.32$\times$ at comparable context length ($N \approx 50$) and by 4.59$\times$ when the context grows to $N \approx 500$ tokens, with a cache restoration cost of 2.63~ms (negligible relative to the generation phase).
+    \item CAP-KVC achieves a 40.78$\times$ prefill-specific speedup at $N \approx 500$ tokens (343~ms vs.\ 14001~ms), confirmed by native-side \texttt{std::chrono} instrumentation. The end-to-end speedup is 4.24$\times$ (4574~ms vs.\ 19408~ms), with the generation phase ($\sim$4000--5400~ms) accounting for the difference between prefill and end-to-end ratios. Cache restoration is 2.74~ms (negligible).
 
     \item The late fusion architecture achieves a macro F1 of 0.9963 on synthetic evaluation data, exceeding cross-attention (F1~=~0.9437) while requiring fewer parameters and lower inference latency, supporting the pre-specified selection criterion.
 
@@ -651,36 +692,50 @@ The experimental results support the following conclusions:
 \section{Conclusion}
 \label{sec:conclusion}
 
-This paper presented CAP-KVC, a predictive KV cache priming system that amortizes the context prefill cost of large language model inference on mobile AAC devices. By using environmental sensor signals to predict context needs and executing the prefill during idle periods, CAP-KVC reduces end-to-end inference latency by 1.32$\times$ at comparable context length and up to 4.59$\times$ as context length grows to approximately 500~tokens, with a mean cache restoration cost of 2.63~ms. The system is implemented as a complete Android application with a scalar-only JNI boundary, a reentrant-lock concurrency model, and a bounded KV cache residency manager operating within a 118.7~MB native heap budget for three simultaneous cache states.
+This paper presented CAP-KVC, a system that amortizes context prefill costs for language model inference on mobile hardware by predicting environmental context from sensor signals and pre-computing KV cache states during idle periods. On a OnePlus~11R with Qwen2.5-0.5B-Instruct (Q4\_K\_M), native-side prefill decomposition confirms a 40.78$\times$ prefill-specific speedup at $N \approx 500$ tokens: CAP-KVC processes 9 intent tokens (343~ms) versus 439 tokens for inline processing (14001~ms). End-to-end latency is reduced by 4.24$\times$ (4574~ms vs.\ 19408~ms). Cache restoration from persistent storage completes in 2.74~ms on average, confirming that the amortized prefill cost is negligible at inference time.
 
-The multimodal intent classification pipeline combines sEMG embeddings from a CNN-LSTM classifier with MediaPipe gaze tracking through a late fusion architecture selected via a pre-specified ablation criterion. The standalone EMG classifier achieves 42.4\% accuracy under cross-subject evaluation, motivating the fusion approach that achieves 99.7\% accuracy on synthetic evaluation data.
+The system is implemented as a deployable Android application with a scalar-only JNI boundary (9~native functions), a reentrant-lock concurrency model, and a bounded KV cache residency manager operating within a 118.7~MB native heap budget for three simultaneous cache states. A proof-of-concept multimodal intent layer combining sEMG and gaze inputs through late fusion demonstrates architectural feasibility on synthetic evaluation data (macro F1 = 0.9963); this component requires clinical validation before deployment.
+
+The primary contribution is the demonstration that sensor-driven predictive caching can eliminate prompt-length-dependent prefill latency on resource-constrained edge devices. The approach is applicable beyond the AAC scenario used as a motivating example: any application where a mobile language model processes recurring environmental contexts can benefit from idle-time cache priming.
 
 \subsection{Limitations}
 
 Several limitations constrain the generalizability of these results and should be addressed in future evaluations:
 
 \begin{enumerate}
-    \item \textbf{Single-device evaluation.} All benchmarks were conducted on a single device (OnePlus~11R, Snapdragon~8+~Gen~1). Latency characteristics, thermal behavior, and memory budgets may differ on other mobile SoCs.
+    \item \textbf{Single-device, limited-sample evaluation.} All benchmarks were conducted on a single device (OnePlus~11R, Snapdragon~8+~Gen~1) with $n = 30$ measured trials per condition. Latency characteristics, thermal behavior, and memory budgets may differ on other mobile SoCs, and the moderate sample size limits the precision of variance estimates.
 
-    \item \textbf{Single model.} Only Qwen2.5-0.5B-Instruct (Q4\_K\_M) was evaluated. The relationship between CAP-KVC speedup and model size has not been characterized.
+    \item \textbf{Single model.} Only Qwen2.5-0.5B-Instruct (Q4\_K\_M) was evaluated. The relationship between CAP-KVC speedup and model size, quantization level, or architecture family has not been characterized.
 
-    \item \textbf{Synthetic fusion data.} The fusion model was trained and evaluated on synthetically generated EMG-gaze pairs. The reported 99.7\% accuracy reflects the model's capacity under controlled conditions and should not be interpreted as clinical accuracy.
+    \item \textbf{Synthetic fusion data.} The fusion model was trained and evaluated on synthetically generated EMG-gaze pairs. The reported macro F1 of 0.9963 reflects model capacity under controlled conditions and does not predict clinical accuracy. No gaze-only unimodal baseline was evaluated.
 
-    \item \textbf{Latency metric.} The reported metric is end-to-end inference latency, not true time-to-first-token (TTFT). The JNI boundary does not expose sub-token timing, preventing isolation of the prefill cost from the generation cost. The varying output lengths across conditions introduce generation-phase confounding into the speedup ratios.
+    \item \textbf{Latency metric scope.} The prefill timing (Table~\ref{tab:latency}) measures the single \texttt{llama\_decode()} batch-decode call via native-side \texttt{std::chrono} instrumentation. Tokenization and batch construction overhead (estimated $< 1$~ms for prompts up to 500 tokens) are excluded. Generation-phase duration varies across conditions due to differing KV cache sizes affecting per-token attention cost and uncharacterized system-level effects during the 29-minute benchmark session. No thermal telemetry, CPU frequency logs, or OS scheduler traces were captured during the benchmark run, so the specific mechanisms underlying generation-phase variance cannot be attributed. Because prefill and generation are decomposed independently, these generation-phase differences do not confound the prefill speedup measurement.
 
-    \item \textbf{Hardcoded context states.} The benchmarking uses five pre-configured semantic contexts rather than dynamically learned user profiles. A production deployment would require a configurable persistence layer and a user study to evaluate context relevance.
+    \item \textbf{Static context configurations.} The benchmarking uses five pre-configured semantic contexts rather than dynamically learned user profiles. A production deployment would require user-configurable contexts and longitudinal evaluation of context relevance.
 
-    \item \textbf{Drift detection.} The offline k-ablation yields a maximum F1 of 0.367 at $k = 1$ on DailyDialog, yet the deployed system uses $k = 3$ (F1 = 0.120 on DailyDialog). This discrepancy reflects a deliberate engineering trade-off: $k = 3$ provides smoothing against transient sensor noise in the real-time environment, but the DailyDialog evaluation corpus differs substantially from AAC communication patterns, preventing direct transfer of the ablation ranking. The selected parameters ($k = 3$, $\theta = 0.15$) are engineering heuristics and have not been validated on AAC-representative data.
+    \item \textbf{No non-predictive cache baseline.} The evaluation compares CAP-KVC against inline context processing (RAG\_INLINE) and zero-context inference but does not include a static cache baseline (i.e., a fixed pre-loaded KV cache without prediction or drift detection). Such a baseline would isolate the contribution of the predictive routing and drift components from the raw benefit of cache restoration itself.
+
+    \item \textbf{Drift detection.} The offline Sentence-BERT k-ablation yields a maximum F1 of 0.367 ($k = 1$) on DailyDialog, while the deployed sensor-score-based system uses $k = 3$. These are methodologically different detection mechanisms, and the DailyDialog results cannot directly validate the deployed sensor-score hysteresis. Both the window size ($k = 3$) and threshold ($\theta = 0.15$, $\Delta = 0.10$) are engineering heuristics.
 
     \item \textbf{No clinical evaluation.} The system has not been evaluated with AAC users in clinical or naturalistic settings. User satisfaction, communicative effectiveness, and caregiver acceptance remain to be assessed.
+
+    \item \textbf{No thermal or power telemetry.} The benchmark run captured only application-level timing data via \texttt{adb logcat} filtered to the AACBridge process. No thermal sensor readings, CPU frequency logs, OS-level thermal management events, or power consumption measurements were collected during the 29-minute benchmark session. Consequently, the specific mechanisms underlying latency outliers and generation-phase variance cannot be attributed to thermal throttling versus other system-level effects.
+
+    \item \textbf{No cache file encryption.} Serialized KV cache tensors are stored as raw binary files in the application's internal storage directory. Protection relies entirely on the Android application sandbox; no additional encryption or integrity verification is applied. In threat models involving rooted devices or physical access, cached KV tensors---which encode the semantic content of contextual prompts---could be extracted.
+
+    \item \textbf{Battery impact not characterized.} The \texttt{ContextDaemon} foreground service (60-second sweep interval) and the \texttt{DriftDetector} periodic worker (15-minute interval via WorkManager) impose recurring sensor acquisition and, when cache states require priming, full model inference. The aggregate battery impact of these background operations has not been measured. No WakeLock, PowerManager, or battery-level gating is implemented beyond the Android system's standard WorkManager batching behavior and the daemon's \texttt{onLowMemory()} sweep cancellation. Additionally, the coroutine-based \texttt{delay()} scheduling in \texttt{ContextDaemon} does not hold a WakeLock, so sweep intervals may be deferred by Android Doze mode when the device is idle and stationary.
 \end{enumerate}
 
-Despite these limitations, the results suggest that predictive KV cache priming is a viable strategy for reducing context-dependent inference latency on resource-constrained mobile hardware, and that the cache restoration cost ($\sim$3~ms) is negligible relative to the generation phase, supporting the amortization approach.
+Despite these limitations, the results demonstrate that predictive KV cache priming is a viable strategy for reducing context-dependent inference latency on resource-constrained mobile hardware, and that the cache restoration cost ($\sim$3~ms) is negligible relative to the generation phase.
+
+\subsection{Artifact Availability}
+
+The source code, benchmark scripts, and raw benchmark logs are publicly available at \url{https://github.com/omni-ar/AACBridge}.
 
 % ===========================================================================
 % REFERENCES
 % ===========================================================================
-\begin{thebibliography}{19}
+\begin{thebibliography}{30}
 
 \bibitem{beukelman2020}
 D.~R. Beukelman and J.~C. Light,
@@ -776,6 +831,61 @@ Y.~Li, H.~Su, X.~Shen, W.~Li, Z.~Cao, and S.~Niu,
 W.~Wang, F.~Wei, L.~Dong, H.~Bao, N.~Yang, and M.~Zhou,
 ``{MiniLM: Deep self-attention distillation for task-agnostic compression of pre-trained transformers},''
 in \emph{Proc. NeurIPS}, 2020.
+
+\bibitem{snapkv}
+Y.~Li, Y.~Huang, B.~Yang, B.~Venkitesh, A.~Locatelli, H.~Ye, T.~Cai, P.~Lewis, and D.~Chen,
+``{SnapKV: LLM Knows What You are Looking for Before Generation},''
+\emph{arXiv preprint arXiv:2404.14469}, 2024.
+
+\bibitem{promptcache}
+I.~Gim, G.~Chen, S.-J.~Lee, N.~Sarda, A.~Khandelwal, and L.~Zhong,
+``{Prompt Cache: Modular Attention Reuse for Low-Latency Inference},''
+in \emph{Proc. MLSys}, 2024.
+
+\bibitem{cacheblend}
+J.~Yao, H.~Li, Y.~Liu, S.~Ray, Y.~Huang, Q.~Zhang, K.~Du, S.~Lu, G.~Ananthanarayanan, M.~Maire, H.~Hoffmann, A.~Holtzman, and J.~Jiang,
+``{CacheBlend: Fast Large Language Model Serving for RAG with Cached Knowledge Fusion},''
+\emph{arXiv preprint arXiv:2405.16444}, 2024.
+
+\bibitem{powerinfer2}
+Z.~Xue, Y.~Huang, S.~Du, L.~Lu, H.~Chen, J.~Wen, Y.~Zhang, X.~Li, Z.~Li, W.~Zhang, X.~Zhuang, L.~Xia, Z.~Xu, S.~Song, Y.~Xu, D.~Shu, L.~Yuan, and H.~Chen,
+``{PowerInfer-2: Fast Large Language Model Inference on a Smartphone},''
+\emph{arXiv preprint arXiv:2406.06282}, 2024.
+
+\bibitem{kvquant}
+C.~Hooper, S.~Kim, H.~Mohammadzadeh, M.~W.~Mahoney, Y.~S.~Shao, K.~Keutzer, and A.~Gholami,
+``{KVQuant: Towards 10 Million Context Length LLM Inference with KV Cache Quantization},''
+in \emph{Proc. NeurIPS}, 2024.
+
+\bibitem{awq}
+J.~Lin, J.~Tang, H.~Tang, S.~Yang, W.-M.~Chen, W.-C.~Wang, G.~Xiao, X.~Dang, C.~Gan, and S.~Han,
+``{AWQ: Activation-Aware Weight Quantization for LLM Compression and Acceleration},''
+in \emph{Proc. MLSys}, 2024.
+
+\bibitem{mobilellm}
+Z.~Liu, C.~Zhao, F.~Iandola, C.~Lai, Y.~Tian, I.~Fedorov, Y.~Xiong, E.~Chang, Y.~Shi, R.~Krishnamoorthi, L.~Lai, and V.~Chandra,
+``{MobileLLM: Optimizing Sub-billion Parameter Language Models for On-Device Use Cases},''
+in \emph{Proc. ICML}, 2024.
+
+\bibitem{llminaflash}
+K.~Alizadeh, I.~Mirzadeh, D.~Belenko, K.~Khatamifard, M.~Cho, C.~C.~Del~Mundo, M.~Rastegari, and M.~Farajtabar,
+``{LLM in a Flash: Efficient Large Language Model Inference with Limited Memory},''
+\emph{arXiv preprint arXiv:2312.11514}, 2023.
+
+\bibitem{flexgen}
+Y.~Sheng, L.~Zheng, B.~Yuan, Z.~Li, M.~Ryabinin, B.~Chen, P.~Liang, C.~R\'{e}, I.~Stoica, and C.~Zhang,
+``{FlexGen: High-Throughput Generative Inference of Large Language Models with a Single GPU},''
+in \emph{Proc. ICML}, 2023.
+
+\bibitem{vaswani2017}
+A.~Vaswani, N.~Shazeer, N.~Parmar, J.~Uszkoreit, L.~Jones, A.~N.~Gomez, {\L}.~Kaiser, and I.~Polosukhin,
+``{Attention is all you need},''
+in \emph{Proc. NeurIPS}, 2017.
+
+\bibitem{onnxruntime}
+ONNX Runtime Contributors,
+``{ONNX Runtime},''
+2021. [Online]. Available: \url{https://onnxruntime.ai}
 
 \end{thebibliography}
 

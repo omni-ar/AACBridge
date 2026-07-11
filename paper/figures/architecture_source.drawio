@@ -1,0 +1,118 @@
+<mxfile host="app.diagrams.net" modified="2026-07-11T11:22:00.000Z" agent="AACBridge Day3" version="24.0.0" type="device">
+  <diagram id="cap-kvc-architecture" name="CAP-KVC Runtime Architecture">
+    <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title" value="CAP-KVC Runtime Architecture (Reconstructed from repository)" style="text;html=1;align=center;fontSize=14;fontFamily=Inter;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="400" y="10" width="500" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="app-group" value="Application Layer (Kotlin)" style="swimlane;startSize=22;fontSize=10;fontFamily=Inter;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="40" y="60" width="350" height="180" as="geometry"/>
+        </mxCell>
+        <mxCell id="main-activity" value="MainActivity (471 lines) - UI + JNI bootstrap" style="rounded=1;whiteSpace=wrap;html=1;fontSize=9;fontFamily=Inter;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="app-group">
+          <mxGeometry x="15" y="30" width="150" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="fallback" value="FallbackRouter - Template responses" style="rounded=1;whiteSpace=wrap;html=1;fontSize=9;fontFamily=Inter;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="app-group">
+          <mxGeometry x="15" y="100" width="150" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="app-container" value="AppContainer (172 lines) - Manual DI" style="rounded=1;whiteSpace=wrap;html=1;fontSize=9;fontFamily=Inter;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="app-group">
+          <mxGeometry x="185" y="30" width="150" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="speech" value="SpeechOutputManager - Android TTS" style="rounded=1;whiteSpace=wrap;html=1;fontSize=9;fontFamily=Inter;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="app-group">
+          <mxGeometry x="185" y="100" width="150" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="sensor-group" value="Sensor Layer (Android Framework)" style="swimlane;startSize=22;fontSize=10;fontFamily=Inter;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="40" y="270" width="350" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="gps" value="LocationManager getLastKnownLocation()" style="rounded=1;whiteSpace=wrap;html=1;fontSize=8;fontFamily=Inter;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="sensor-group">
+          <mxGeometry x="10" y="35" width="100" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="ble" value="BluetoothLeScanner 3s scan window" style="rounded=1;whiteSpace=wrap;html=1;fontSize=8;fontFamily=Inter;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="sensor-group">
+          <mxGeometry x="125" y="35" width="100" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="camera" value="CameraX ImageAnalysis ~30Hz" style="rounded=1;whiteSpace=wrap;html=1;fontSize=8;fontFamily=Inter;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="sensor-group">
+          <mxGeometry x="240" y="35" width="100" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="routing-group" value="Context Routing Engine (Kotlin)" style="swimlane;startSize=22;fontSize=10;fontFamily=Inter;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="420" y="60" width="360" height="180" as="geometry"/>
+        </mxCell>
+        <mxCell id="state-router" value="StateRouter (214 lines) Convex scoring S(c_i) = a*S_time + b*S_gps + g*S_ble" style="rounded=1;whiteSpace=wrap;html=1;fontSize=8;fontFamily=Inter;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="routing-group">
+          <mxGeometry x="70" y="30" width="220" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="time-scorer" value="TimeScorer sigma=2.0h Gaussian" style="rounded=1;whiteSpace=wrap;html=1;fontSize=8;fontFamily=Inter;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="routing-group">
+          <mxGeometry x="10" y="110" width="100" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="gps-scorer" value="GPSScorer lambda=0.1km Haversine" style="rounded=1;whiteSpace=wrap;html=1;fontSize=8;fontFamily=Inter;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="routing-group">
+          <mxGeometry x="125" y="110" width="100" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="ble-scorer" value="BLEScorer Sigmoid RSSI r0=-70dBm" style="rounded=1;whiteSpace=wrap;html=1;fontSize=8;fontFamily=Inter;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="routing-group">
+          <mxGeometry x="240" y="110" width="110" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="bg-group" value="Background Services" style="swimlane;startSize=22;fontSize=10;fontFamily=Inter;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="420" y="270" width="360" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="context-daemon" value="ContextDaemon ForegroundService 60s sweep interval" style="rounded=1;whiteSpace=wrap;html=1;fontSize=8;fontFamily=Inter;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="bg-group">
+          <mxGeometry x="10" y="30" width="110" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="active-sweep" value="ActiveSweep (183 lines) Sensor->Router->Cache" style="rounded=1;whiteSpace=wrap;html=1;fontSize=8;fontFamily=Inter;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="bg-group">
+          <mxGeometry x="130" y="30" width="110" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="drift-detector" value="DriftDetector WorkManager 15min delta>=0.10" style="rounded=1;whiteSpace=wrap;html=1;fontSize=8;fontFamily=Inter;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="bg-group">
+          <mxGeometry x="250" y="30" width="100" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="cache-group" value="Cache Orchestration (Kotlin)" style="swimlane;startSize=22;fontSize=10;fontFamily=Inter;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="810" y="60" width="370" height="180" as="geometry"/>
+        </mxCell>
+        <mxCell id="kv-cache-mgr" value="KVCacheManager (371 lines) k=3 slots, LRU eviction, refCount safety" style="rounded=1;whiteSpace=wrap;html=1;fontSize=8;fontFamily=Inter;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="cache-group">
+          <mxGeometry x="10" y="30" width="165" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="context-primer" value="ContextPrimerImpl (170 lines) prefillOnly -> saveKVCache -> atomic rename" style="rounded=1;whiteSpace=wrap;html=1;fontSize=8;fontFamily=Inter;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="cache-group">
+          <mxGeometry x="190" y="30" width="170" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="cache-state" value="CacheState seqId, refCount isActive, LRU" style="rounded=1;whiteSpace=wrap;html=1;fontSize=8;fontFamily=Inter;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="cache-group">
+          <mxGeometry x="10" y="110" width="100" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="seeded-repo" value="SeededStateRepository 5 pre-configured contexts" style="rounded=1;whiteSpace=wrap;html=1;fontSize=8;fontFamily=Inter;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="cache-group">
+          <mxGeometry x="125" y="110" width="115" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="mutex-registry" value="CacheMutexRegistry Per-state Mutex" style="rounded=1;whiteSpace=wrap;html=1;fontSize=8;fontFamily=Inter;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="cache-group">
+          <mxGeometry x="255" y="110" width="105" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="jni-boundary" value="JNI Boundary -- engineLock (ReentrantLock) serializes ALL native access" style="rounded=0;whiteSpace=wrap;html=1;fontSize=10;fontFamily=Inter;fillColor=#f8cecc;strokeColor=#b85450;dashed=1;dashPattern=8 8;" vertex="1" parent="1">
+          <mxGeometry x="810" y="270" width="370" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="llama-bridge" value="LlamaBridge (object) + LlamaBridgeAdapter (interface) -- 9 external native functions" style="rounded=1;whiteSpace=wrap;html=1;fontSize=9;fontFamily=Inter;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="840" y="320" width="310" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="native-group" value="Native Inference Engine (C++)" style="swimlane;startSize=22;fontSize=10;fontFamily=Inter;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="810" y="380" width="370" height="110" as="geometry"/>
+        </mxCell>
+        <mxCell id="llama-jni" value="llama_jni.cpp (801 lines) static model, ctx, session_tokens std::chrono prefill/gen instrumentation" style="rounded=1;whiteSpace=wrap;html=1;fontSize=8;fontFamily=Inter;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="native-group">
+          <mxGeometry x="10" y="30" width="175" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="native-ops" value="initializeBackend / initializeModel prefillOnly / runInference / resumeInference saveKVCache / loadKVCache / clearKVCache release" style="rounded=1;whiteSpace=wrap;html=1;fontSize=7;fontFamily=Inter;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="native-group">
+          <mxGeometry x="195" y="30" width="165" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="fusion-group" value="Multimodal Intent Layer (Proof-of-Concept)" style="swimlane;startSize=22;fontSize=10;fontFamily=Inter;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="400" width="350" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="gaze-tracker" value="GazeTracker MediaPipe Face Mesh 5-dim gaze vector, 400ms dwell FSM" style="rounded=1;whiteSpace=wrap;html=1;fontSize=8;fontFamily=Inter;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="fusion-group">
+          <mxGeometry x="10" y="30" width="155" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="fusion-inference" value="FusionInference ONNX Runtime (45KB model) Late fusion: EMG(64)+Gaze(5)->5 classes" style="rounded=1;whiteSpace=wrap;html=1;fontSize=8;fontFamily=Inter;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="fusion-group">
+          <mxGeometry x="180" y="30" width="160" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="benchmark" value="LatencyProfiler (959 lines) - Benchmark only, non-production 30 trials x 6 conditions -> CSV via logcat" style="rounded=1;whiteSpace=wrap;html=1;fontSize=8;fontFamily=Inter;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="420" y="420" width="350" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="boot" value="BootReceiver BOOT_COMPLETED MY_PACKAGE_REPLACED" style="rounded=1;whiteSpace=wrap;html=1;fontSize=7;fontFamily=Inter;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="420" y="390" width="100" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="storage" value="Persistent Storage kv_cache/*.bin (raw, unencrypted)" style="shape=cylinder3;whiteSpace=wrap;html=1;fontSize=8;fontFamily=Inter;fillColor=#f5f5f5;strokeColor=#666666;size=10;" vertex="1" parent="1">
+          <mxGeometry x="1210" y="250" width="120" height="65" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

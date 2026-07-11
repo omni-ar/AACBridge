@@ -46,14 +46,7 @@ class ContextPrimerImplTest {
     @Before
     fun setUp() {
         bridge = FakeLlamaBridge()
-        adapter = object : LlamaBridgeAdapter {
-            override fun loadKVCache(filepath: String, seqId: Int) =
-                bridge.loadKVCache(filepath, seqId)
-            override fun saveKVCache(filepath: String, seqId: Int) =
-                bridge.saveKVCache(filepath, seqId)
-            override fun runInference(prompt: String) =
-                bridge.runInference(prompt)
-        }
+        adapter = bridge
         repository = FakeStateRepository(testStates)
         engineLock = ReentrantLock()
         primer = ContextPrimerImpl(
@@ -78,11 +71,11 @@ class ContextPrimerImplTest {
 
             assertTrue("primeAndSave must succeed", success)
 
-            // runInference was called
-            assertEquals(1, bridge.inferenceCallCount)
+            // prefillOnly was called
+            assertEquals(1, bridge.prefillCallCount)
             assertTrue(
                 "Prompt must contain stateId context",
-                bridge.inferencePrompts[0].contains("home_morning")
+                bridge.prefillPrompts[0].contains("home_morning")
             )
 
             // saveKVCache was called with .tmp path
@@ -106,7 +99,7 @@ class ContextPrimerImplTest {
         }
 
     @Test
-    fun `runInference called before saveKVCache`() =
+    fun `prefillOnly called before saveKVCache`() =
         runTest {
             val cacheDir = tempDir.newFolder("kv_cache_order")
             val binPath = File(cacheDir, "home_morning.bin").absolutePath
@@ -118,6 +111,12 @@ class ContextPrimerImplTest {
                     callOrder.add("loadKVCache")
                     return true
                 }
+                override fun clearKVCache() {}
+                override fun prefillOnly(prompt: String): Boolean {
+                    callOrder.add("prefillOnly")
+                    return true
+                }
+                override fun resumeInference(prompt: String) = ""
                 override fun saveKVCache(filepath: String, seqId: Int): Boolean {
                     callOrder.add("saveKVCache")
                     java.io.File(filepath).apply {
@@ -141,8 +140,8 @@ class ContextPrimerImplTest {
             orderPrimer.primeAndSave("home_morning", 0, binPath)
 
             assertEquals(
-                "runInference must be called first",
-                listOf("runInference", "saveKVCache"),
+                "prefillOnly must be called first",
+                listOf("prefillOnly", "saveKVCache"),
                 callOrder
             )
         }
@@ -185,8 +184,8 @@ class ContextPrimerImplTest {
 
             assertFalse("Must return false on save failure", success)
 
-            // runInference was still called (prefill attempted)
-            assertEquals(1, bridge.inferenceCallCount)
+            // prefillOnly was still called (prefill attempted)
+            assertEquals(1, bridge.prefillCallCount)
 
             // .bin must NOT exist
             assertFalse(
@@ -207,11 +206,17 @@ class ContextPrimerImplTest {
             val cacheDir = tempDir.newFolder("kv_cache_lock")
             val binPath = File(cacheDir, "home_morning.bin").absolutePath
 
-            var lockHeldDuringInference = false
+            var lockHeldDuringPrefill = false
             var lockHeldDuringSave = false
 
             val lockCheckAdapter = object : LlamaBridgeAdapter {
                 override fun loadKVCache(filepath: String, seqId: Int) = true
+                override fun clearKVCache() {}
+                override fun prefillOnly(prompt: String): Boolean {
+                    lockHeldDuringPrefill = engineLock.isHeldByCurrentThread
+                    return true
+                }
+                override fun resumeInference(prompt: String) = ""
                 override fun saveKVCache(filepath: String, seqId: Int): Boolean {
                     lockHeldDuringSave = engineLock.isHeldByCurrentThread
                     java.io.File(filepath).apply {
@@ -221,7 +226,6 @@ class ContextPrimerImplTest {
                     return true
                 }
                 override fun runInference(prompt: String): String {
-                    lockHeldDuringInference = engineLock.isHeldByCurrentThread
                     return "test"
                 }
             }
@@ -235,8 +239,8 @@ class ContextPrimerImplTest {
             lockPrimer.primeAndSave("home_morning", 0, binPath)
 
             assertTrue(
-                "Engine lock must be held during runInference",
-                lockHeldDuringInference
+                "Engine lock must be held during prefillOnly",
+                lockHeldDuringPrefill
             )
             assertTrue(
                 "Engine lock must be held during saveKVCache",

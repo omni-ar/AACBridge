@@ -33,9 +33,8 @@ import kotlin.concurrent.withLock
  * vector is shared — releasing between calls allows another
  * thread to corrupt it.
  *
- * This is a benchmarking-phase implementation.
- * Future optimization: add prefillOnly() JNI function
- * that skips the sampling loop.
+ * Uses prefillOnly() JNI function to skip the
+ * sampling loop — only KV tensors are computed.
  */
 class ContextPrimerImpl(
     private val repository: StateRepository,

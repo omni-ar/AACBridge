@@ -1,32 +1,31 @@
-*.gguf
-*.bin
-data/raw/
-__pycache__/
-build/
-.gradle/
-*.pyc
+# ===== Android Build =====
+android/app/build/
+android/build/
+android/.gradle/
+android/app/.cxx/
+android/app/.gradle/
+android/local.properties
 
-# Android Studio
+*.apk
+*.aab
+
+# ===== IDE =====
 .idea/
-local.properties
-.cxx/
-externalNativeBuild/
-
-# Native objects
-*.o
-*.obj
-
-# OS
+*.iml
 .DS_Store
 Thumbs.db
+desktop.ini
 
-android/app/src/main/jniLibs/
-
-# Python Virtual Environments
+# ===== Python =====
+__pycache__/
+*.pyc
+*.pyo
 .venv/
-venv/
-env/
+*.egg-info/
 
-# Logs and Secrets
-*.log
-.env
+# ===== Generated/Temporary =====
+archive/
+
+# ===== OS =====
+.DS_Store
+Thumbs.db

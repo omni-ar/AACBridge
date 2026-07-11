@@ -1,0 +1,905 @@
+﻿--------- beginning of main
+07-11 09:54:54.909 30598 30651 I AACBridgeJNI: Llama backend initialized
+07-11 09:54:54.948 30598 30651 I AACBridgeJNI: Initializing model from path: /data/local/tmp/models/qwen2.5-0.5b-instruct-q4_k_m.gguf
+07-11 09:54:57.106 30598 30651 I AACBridgeJNI: Model initialized successfully
+07-11 09:55:03.241 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=642.11,gen_ms=5462.64,prompt_tokens=6,gen_tokens=64
+07-11 09:55:03.242 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:55:03.246 30598 30651 I LatencyProfiler: === BENCHMARK SUITE START ===
+07-11 09:55:03.246 30598 30651 I LatencyProfiler: Config: trials=30 warmup=2 state=home_morning
+07-11 09:55:03.246 30598 30651 I LatencyProfiler: BENCH,trial,mode,stateId,prompt_token_target,inference_ms,cache_load_ms,gen_length
+07-11 09:55:03.246 30598 30651 I LatencyProfiler: === VALIDATION START ===
+07-11 09:55:03.246 30598 30651 I LatencyProfiler: Validation prompt: 
+07-11 09:55:03.246 30598 30651 I LatencyProfiler: User: What should I have for breakfast and is my morning medication due?
+07-11 09:55:03.246 30598 30651 I LatencyProfiler: Assistant:
+07-11 09:55:03.262 30598 30772 I AACBridgeJNI: KV cache loaded successfully
+07-11 09:55:03.264 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:55:10.878 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=538.70,gen_ms=7074.97,prompt_tokens=18,gen_tokens=64
+07-11 09:55:10.878 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:55:10.878 30598 30651 I LatencyProfiler: ZERO_VALIDATION:  As an AI language model, I don't have access to your personal information or your medical history. However, I can provide you with some general advice on what you should have for breakfast and what your morning medication is due.
+07-11 09:55:10.878 30598 30651 I LatencyProfiler: 
+07-11 09:55:10.878 30598 30651 I LatencyProfiler: For breakfast, you should have a balanced meal that includes a source of protein, a source of
+07-11 09:55:10.880 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:55:15.775 30598 30651 I AACBridgeJNI: EOS token reached
+07-11 09:55:15.775 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=2234.91,gen_ms=2659.12,prompt_tokens=61,gen_tokens=36
+07-11 09:55:15.775 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:55:15.776 30598 30651 I LatencyProfiler: RAG_VALIDATION:  Breakfast: Oatmeal with fruit and nuts. Morning medication: Take your medication as directed by your doctor. Greeting family members: Have a friendly conversation with your family members.
+07-11 09:55:15.786 30598 30651 I AACBridgeJNI: KV cache loaded successfully
+07-11 09:55:15.786 30598 30651 I AACBridgeJNI: resumeInference: n_past = 44
+07-11 09:55:15.787 30598 30651 I AACBridgeJNI: resumeInference: appending 18 intent tokens at pos 44
+07-11 09:55:20.086 30598 30651 I AACBridgeJNI: TIMING,resumeInference,prefill_ms=546.12,gen_ms=3753.44,prompt_tokens=18,gen_tokens=64
+07-11 09:55:20.087 30598 30651 I AACBridgeJNI: Resume inference completed successfully
+07-11 09:55:20.087 30598 30651 I LatencyProfiler: CAP_KVC_VALIDATION:  You should have eggs and toast for breakfast. Your morning medication is due tomorrow. ≡ƒìîΓ£¿
+07-11 09:55:20.087 30598 30651 I LatencyProfiler: 
+07-11 09:55:20.087 30598 30651 I LatencyProfiler: # Math Problem Solver
+07-11 09:55:20.087 30598 30651 I LatencyProfiler: 
+07-11 09:55:20.087 30598 30651 I LatencyProfiler: ## Problem: Solve the equation 3x + 5 = 17 for x.
+07-11 09:55:20.087 30598 30651 I LatencyProfiler: 
+07-11 09:55:20.087 30598 30651 I LatencyProfiler: ### Solution:
+07-11 09:55:20.087 30598 30651 I LatencyProfiler: 
+07-11 09:55:20.087 30598 30651 I LatencyProfiler: ToYou are a communication assistant for a person with ALS. The user is at
+07-11 09:55:20.087 30598 30651 I LatencyProfiler: === VALIDATION COMPLETE ===
+07-11 09:55:20.087 30598 30651 I LatencyProfiler: --- ZERO_CONTEXT ---
+07-11 09:55:20.094 30598 30772 I AACBridgeJNI: KV cache loaded successfully
+07-11 09:55:20.097 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:55:23.804 30598 30651 I AACBridgeJNI: EOS token reached
+07-11 09:55:23.804 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=282.72,gen_ms=3424.37,prompt_tokens=9,gen_tokens=58
+07-11 09:55:23.804 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:55:23.806 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:55:28.992 30598 30651 I AACBridgeJNI: EOS token reached
+07-11 09:55:28.992 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=279.77,gen_ms=4905.97,prompt_tokens=9,gen_tokens=58
+07-11 09:55:28.992 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:55:28.996 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:55:32.676 30598 30651 I AACBridgeJNI: EOS token reached
+07-11 09:55:32.676 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=301.14,gen_ms=3378.06,prompt_tokens=9,gen_tokens=58
+07-11 09:55:32.676 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:55:32.677 30598 30651 I LatencyProfiler: BENCH,1,ZERO_CONTEXT,none,0,3683.27,0.00,252
+07-11 09:55:32.700 30598 30772 I AACBridgeJNI: KV cache loaded successfully
+07-11 09:55:32.705 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:55:39.154 30598 30651 I AACBridgeJNI: EOS token reached
+07-11 09:55:39.154 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=256.60,gen_ms=6192.11,prompt_tokens=9,gen_tokens=58
+07-11 09:55:39.154 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:55:39.154 30598 30651 I LatencyProfiler: BENCH,2,ZERO_CONTEXT,none,0,6476.90,0.00,252
+07-11 09:55:39.156 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:55:43.339 30598 30651 I AACBridgeJNI: EOS token reached
+07-11 09:55:43.339 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=273.30,gen_ms=3909.80,prompt_tokens=9,gen_tokens=58
+07-11 09:55:43.339 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:55:43.340 30598 30651 I LatencyProfiler: BENCH,3,ZERO_CONTEXT,none,0,4185.22,0.00,252
+07-11 09:55:43.343 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:55:46.859 30598 30651 I AACBridgeJNI: EOS token reached
+07-11 09:55:46.859 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=253.70,gen_ms=3262.48,prompt_tokens=9,gen_tokens=58
+07-11 09:55:46.859 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:55:46.860 30598 30651 I LatencyProfiler: BENCH,4,ZERO_CONTEXT,none,0,3519.35,0.00,252
+07-11 09:55:46.862 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:55:50.432 30598 30651 I AACBridgeJNI: EOS token reached
+07-11 09:55:50.432 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=277.27,gen_ms=3292.93,prompt_tokens=9,gen_tokens=58
+07-11 09:55:50.432 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:55:50.433 30598 30651 I LatencyProfiler: BENCH,5,ZERO_CONTEXT,none,0,3572.51,0.00,252
+07-11 09:55:50.435 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:55:53.975 30598 30651 I AACBridgeJNI: EOS token reached
+07-11 09:55:53.975 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=302.82,gen_ms=3237.44,prompt_tokens=9,gen_tokens=58
+07-11 09:55:53.975 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:55:53.975 30598 30651 I LatencyProfiler: BENCH,6,ZERO_CONTEXT,none,0,3542.57,0.00,252
+07-11 09:55:53.977 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:55:57.459 30598 30651 I AACBridgeJNI: EOS token reached
+07-11 09:55:57.459 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=268.13,gen_ms=3213.10,prompt_tokens=9,gen_tokens=58
+07-11 09:55:57.459 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:55:57.468 30598 30651 I LatencyProfiler: BENCH,7,ZERO_CONTEXT,none,0,3492.21,0.00,252
+07-11 09:55:57.471 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:56:00.891 30598 30651 I AACBridgeJNI: EOS token reached
+07-11 09:56:00.891 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=246.86,gen_ms=3172.70,prompt_tokens=9,gen_tokens=58
+07-11 09:56:00.891 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:56:00.892 30598 30651 I LatencyProfiler: BENCH,8,ZERO_CONTEXT,none,0,3423.28,0.00,252
+07-11 09:56:00.894 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:56:04.401 30598 30651 I AACBridgeJNI: EOS token reached
+07-11 09:56:04.401 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=251.34,gen_ms=3255.98,prompt_tokens=9,gen_tokens=58
+07-11 09:56:04.401 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:56:04.401 30598 30651 I LatencyProfiler: BENCH,9,ZERO_CONTEXT,none,0,3509.62,0.00,252
+07-11 09:56:04.403 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:56:07.878 30598 30651 I AACBridgeJNI: EOS token reached
+07-11 09:56:07.878 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=332.15,gen_ms=3142.54,prompt_tokens=9,gen_tokens=58
+07-11 09:56:07.878 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:56:07.879 30598 30651 I LatencyProfiler: BENCH,10,ZERO_CONTEXT,none,0,3477.03,0.00,252
+07-11 09:56:07.881 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:56:11.553 30598 30651 I AACBridgeJNI: EOS token reached
+07-11 09:56:11.553 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=268.83,gen_ms=3403.61,prompt_tokens=9,gen_tokens=58
+07-11 09:56:11.553 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:56:11.554 30598 30651 I LatencyProfiler: BENCH,11,ZERO_CONTEXT,none,0,3674.53,0.00,252
+07-11 09:56:11.556 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:56:15.368 30598 30651 I AACBridgeJNI: EOS token reached
+07-11 09:56:15.368 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=302.26,gen_ms=3510.36,prompt_tokens=9,gen_tokens=58
+07-11 09:56:15.368 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:56:15.369 30598 30651 I LatencyProfiler: BENCH,12,ZERO_CONTEXT,none,0,3814.90,0.00,252
+07-11 09:56:15.371 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:56:19.644 30598 30651 I AACBridgeJNI: EOS token reached
+07-11 09:56:19.644 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=266.42,gen_ms=4006.48,prompt_tokens=9,gen_tokens=58
+07-11 09:56:19.644 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:56:19.644 30598 30651 I LatencyProfiler: BENCH,13,ZERO_CONTEXT,none,0,4275.15,0.00,252
+07-11 09:56:19.649 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:56:23.246 30598 30651 I AACBridgeJNI: EOS token reached
+07-11 09:56:23.246 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=270.96,gen_ms=3325.70,prompt_tokens=9,gen_tokens=58
+07-11 09:56:23.246 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:56:23.246 30598 30651 I LatencyProfiler: BENCH,14,ZERO_CONTEXT,none,0,3601.84,0.00,252
+07-11 09:56:23.248 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:56:26.805 30598 30651 I AACBridgeJNI: EOS token reached
+07-11 09:56:26.806 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=289.29,gen_ms=3267.91,prompt_tokens=9,gen_tokens=58
+07-11 09:56:26.806 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:56:26.806 30598 30651 I LatencyProfiler: BENCH,15,ZERO_CONTEXT,none,0,3559.28,0.00,252
+07-11 09:56:26.808 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:56:30.710 30598 30651 I AACBridgeJNI: EOS token reached
+07-11 09:56:30.710 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=256.32,gen_ms=3637.14,prompt_tokens=9,gen_tokens=58
+07-11 09:56:30.710 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:56:30.711 30598 30651 I LatencyProfiler: BENCH,16,ZERO_CONTEXT,none,0,3904.62,0.00,252
+07-11 09:56:30.713 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:56:34.306 30598 30651 I AACBridgeJNI: EOS token reached
+07-11 09:56:34.306 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=267.25,gen_ms=3325.63,prompt_tokens=9,gen_tokens=58
+07-11 09:56:34.306 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:56:34.306 30598 30651 I LatencyProfiler: BENCH,17,ZERO_CONTEXT,none,0,3595.06,0.00,252
+07-11 09:56:34.308 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:56:37.829 30598 30651 I AACBridgeJNI: EOS token reached
+07-11 09:56:37.829 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=256.98,gen_ms=3264.11,prompt_tokens=9,gen_tokens=58
+07-11 09:56:37.829 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:56:37.829 30598 30651 I LatencyProfiler: BENCH,18,ZERO_CONTEXT,none,0,3523.24,0.00,252
+07-11 09:56:37.832 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:56:41.601 30598 30651 I AACBridgeJNI: EOS token reached
+07-11 09:56:41.602 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=267.40,gen_ms=3500.49,prompt_tokens=9,gen_tokens=58
+07-11 09:56:41.602 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:56:41.603 30598 30651 I LatencyProfiler: BENCH,19,ZERO_CONTEXT,none,0,3772.25,0.00,252
+07-11 09:56:41.606 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:56:45.311 30598 30651 I AACBridgeJNI: EOS token reached
+07-11 09:56:45.311 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=274.56,gen_ms=3430.00,prompt_tokens=9,gen_tokens=58
+07-11 09:56:45.311 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:56:45.317 30598 30651 I LatencyProfiler: BENCH,20,ZERO_CONTEXT,none,0,3713.83,0.00,252
+07-11 09:56:45.319 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:56:48.917 30598 30651 I AACBridgeJNI: EOS token reached
+07-11 09:56:48.917 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=263.79,gen_ms=3333.64,prompt_tokens=9,gen_tokens=58
+07-11 09:56:48.917 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:56:48.917 30598 30651 I LatencyProfiler: BENCH,21,ZERO_CONTEXT,none,0,3600.33,0.00,252
+07-11 09:56:48.920 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:56:52.590 30598 30651 I AACBridgeJNI: EOS token reached
+07-11 09:56:52.590 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=265.39,gen_ms=3404.65,prompt_tokens=9,gen_tokens=58
+07-11 09:56:52.590 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:56:52.590 30598 30651 I LatencyProfiler: BENCH,22,ZERO_CONTEXT,none,0,3672.88,0.00,252
+07-11 09:56:52.595 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:56:56.227 30598 30651 I AACBridgeJNI: EOS token reached
+07-11 09:56:56.227 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=257.34,gen_ms=3374.60,prompt_tokens=9,gen_tokens=58
+07-11 09:56:56.227 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:56:56.228 30598 30651 I LatencyProfiler: BENCH,23,ZERO_CONTEXT,none,0,3637.39,0.00,252
+07-11 09:56:56.231 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:57:00.472 30598 30651 I AACBridgeJNI: EOS token reached
+07-11 09:57:00.472 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=246.47,gen_ms=3994.39,prompt_tokens=9,gen_tokens=58
+07-11 09:57:00.472 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:57:00.472 30598 30651 I LatencyProfiler: BENCH,24,ZERO_CONTEXT,none,0,4243.73,0.00,252
+07-11 09:57:00.474 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:57:04.457 30598 30651 I AACBridgeJNI: EOS token reached
+07-11 09:57:04.457 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=414.57,gen_ms=3567.73,prompt_tokens=9,gen_tokens=58
+07-11 09:57:04.457 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:57:04.457 30598 30651 I LatencyProfiler: BENCH,25,ZERO_CONTEXT,none,0,3984.97,0.00,252
+07-11 09:57:04.459 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:57:08.403 30598 30651 I AACBridgeJNI: EOS token reached
+07-11 09:57:08.403 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=257.91,gen_ms=3685.22,prompt_tokens=9,gen_tokens=58
+07-11 09:57:08.403 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:57:08.403 30598 30651 I LatencyProfiler: BENCH,26,ZERO_CONTEXT,none,0,3945.38,0.00,252
+07-11 09:57:08.405 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:57:11.825 30598 30651 I AACBridgeJNI: EOS token reached
+07-11 09:57:11.825 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=268.71,gen_ms=3150.95,prompt_tokens=9,gen_tokens=58
+07-11 09:57:11.825 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:57:11.825 30598 30651 I LatencyProfiler: BENCH,27,ZERO_CONTEXT,none,0,3421.79,0.00,252
+07-11 09:57:11.827 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:57:15.356 30598 30651 I AACBridgeJNI: EOS token reached
+07-11 09:57:15.356 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=259.16,gen_ms=3269.41,prompt_tokens=9,gen_tokens=58
+07-11 09:57:15.356 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:57:15.356 30598 30651 I LatencyProfiler: BENCH,28,ZERO_CONTEXT,none,0,3530.78,0.00,252
+07-11 09:57:15.358 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:57:19.824 30598 30651 I AACBridgeJNI: EOS token reached
+07-11 09:57:19.824 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=250.44,gen_ms=4215.10,prompt_tokens=9,gen_tokens=58
+07-11 09:57:19.824 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:57:19.824 30598 30651 I LatencyProfiler: BENCH,29,ZERO_CONTEXT,none,0,4467.72,0.00,252
+07-11 09:57:19.826 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:57:23.716 30598 30651 I AACBridgeJNI: EOS token reached
+07-11 09:57:23.716 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=276.44,gen_ms=3613.21,prompt_tokens=9,gen_tokens=58
+07-11 09:57:23.716 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:57:23.717 30598 30651 I LatencyProfiler: BENCH,30,ZERO_CONTEXT,none,0,3891.85,0.00,252
+07-11 09:57:23.717 30598 30651 I LatencyProfiler: --- RAG_INLINE N=50 ---
+07-11 09:57:23.717 30598 30651 I LatencyProfiler: Expanded prompt length: 224 chars (target ~50 tokens)
+07-11 09:57:23.721 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:57:29.005 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=1414.02,gen_ms=3866.51,prompt_tokens=52,gen_tokens=64
+07-11 09:57:29.005 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:57:29.007 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:57:33.876 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=1353.25,gen_ms=3514.18,prompt_tokens=52,gen_tokens=64
+07-11 09:57:33.876 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:57:33.878 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:57:38.971 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=1548.65,gen_ms=3542.75,prompt_tokens=52,gen_tokens=64
+07-11 09:57:38.971 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:57:38.971 30598 30651 I LatencyProfiler: BENCH,1,RAG_INLINE,home_morning,50,5095.05,0.00,223
+07-11 09:57:38.976 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:57:48.837 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=1516.51,gen_ms=8343.84,prompt_tokens=52,gen_tokens=64
+07-11 09:57:48.837 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:57:48.837 30598 30651 I LatencyProfiler: BENCH,2,RAG_INLINE,home_morning,50,9865.58,0.00,223
+07-11 09:57:48.839 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:57:53.978 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=1455.45,gen_ms=3682.22,prompt_tokens=52,gen_tokens=64
+07-11 09:57:53.978 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:57:53.979 30598 30651 I LatencyProfiler: BENCH,3,RAG_INLINE,home_morning,50,5140.97,0.00,223
+07-11 09:57:53.983 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:57:58.987 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=1348.35,gen_ms=3652.37,prompt_tokens=52,gen_tokens=64
+07-11 09:57:58.987 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:57:58.988 30598 30651 I LatencyProfiler: BENCH,4,RAG_INLINE,home_morning,50,5008.87,0.00,223
+07-11 09:57:58.990 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:58:03.960 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=1653.41,gen_ms=3315.50,prompt_tokens=52,gen_tokens=64
+07-11 09:58:03.960 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:58:03.961 30598 30651 I LatencyProfiler: BENCH,5,RAG_INLINE,home_morning,50,4972.70,0.00,223
+07-11 09:58:03.963 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:58:50.069 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=1634.27,gen_ms=44465.39,prompt_tokens=52,gen_tokens=64
+07-11 09:58:50.069 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:58:50.076 30598 30651 I LatencyProfiler: BENCH,6,RAG_INLINE,home_morning,50,46108.42,0.00,223
+07-11 09:58:50.167 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:59:14.606 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=19971.38,gen_ms=4221.04,prompt_tokens=52,gen_tokens=64
+07-11 09:59:14.607 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:59:14.617 30598 30651 I LatencyProfiler: BENCH,7,RAG_INLINE,home_morning,50,24531.85,0.00,223
+07-11 09:59:14.655 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:59:19.694 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=1416.88,gen_ms=3597.63,prompt_tokens=52,gen_tokens=64
+07-11 09:59:19.694 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:59:19.695 30598 30651 I LatencyProfiler: BENCH,8,RAG_INLINE,home_morning,50,5078.06,0.00,223
+07-11 09:59:19.699 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:59:23.731 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=1325.53,gen_ms=2705.09,prompt_tokens=52,gen_tokens=64
+07-11 09:59:23.731 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:59:23.732 30598 30651 I LatencyProfiler: BENCH,9,RAG_INLINE,home_morning,50,4035.51,0.00,223
+07-11 09:59:23.734 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:59:27.799 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=1340.31,gen_ms=2723.50,prompt_tokens=52,gen_tokens=64
+07-11 09:59:27.799 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:59:27.800 30598 30651 I LatencyProfiler: BENCH,10,RAG_INLINE,home_morning,50,4067.51,0.00,223
+07-11 09:59:27.802 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:59:31.730 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=1313.98,gen_ms=2613.31,prompt_tokens=52,gen_tokens=64
+07-11 09:59:31.730 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:59:31.731 30598 30651 I LatencyProfiler: BENCH,11,RAG_INLINE,home_morning,50,3930.88,0.00,223
+07-11 09:59:31.733 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:59:35.673 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=1337.43,gen_ms=2601.39,prompt_tokens=52,gen_tokens=64
+07-11 09:59:35.673 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:59:35.674 30598 30651 I LatencyProfiler: BENCH,12,RAG_INLINE,home_morning,50,3942.26,0.00,223
+07-11 09:59:35.675 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:59:40.636 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=1318.21,gen_ms=3641.45,prompt_tokens=52,gen_tokens=64
+07-11 09:59:40.636 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:59:40.637 30598 30651 I LatencyProfiler: BENCH,13,RAG_INLINE,home_morning,50,4962.75,0.00,223
+07-11 09:59:40.639 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:59:45.045 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=1804.99,gen_ms=2600.31,prompt_tokens=52,gen_tokens=64
+07-11 09:59:45.045 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:59:45.046 30598 30651 I LatencyProfiler: BENCH,14,RAG_INLINE,home_morning,50,4408.61,0.00,223
+07-11 09:59:45.048 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:59:49.390 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=1321.11,gen_ms=3018.59,prompt_tokens=52,gen_tokens=64
+07-11 09:59:49.391 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:59:49.391 30598 30651 I LatencyProfiler: BENCH,15,RAG_INLINE,home_morning,50,4345.24,0.00,223
+07-11 09:59:49.394 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:59:53.379 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=1364.41,gen_ms=2620.17,prompt_tokens=52,gen_tokens=64
+07-11 09:59:53.380 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:59:53.380 30598 30651 I LatencyProfiler: BENCH,16,RAG_INLINE,home_morning,50,3988.20,0.00,223
+07-11 09:59:53.382 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 09:59:57.389 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=1392.83,gen_ms=2613.13,prompt_tokens=52,gen_tokens=64
+07-11 09:59:57.389 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 09:59:57.390 30598 30651 I LatencyProfiler: BENCH,17,RAG_INLINE,home_morning,50,4009.31,0.00,223
+07-11 09:59:57.392 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:00:01.549 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=1324.79,gen_ms=2831.72,prompt_tokens=52,gen_tokens=64
+07-11 10:00:01.550 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:00:01.550 30598 30651 I LatencyProfiler: BENCH,18,RAG_INLINE,home_morning,50,4159.91,0.00,223
+07-11 10:00:01.553 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:00:05.894 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=1539.67,gen_ms=2799.85,prompt_tokens=52,gen_tokens=64
+07-11 10:00:05.895 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:00:05.895 30598 30651 I LatencyProfiler: BENCH,19,RAG_INLINE,home_morning,50,4344.70,0.00,223
+07-11 10:00:05.897 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:00:09.837 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=1329.20,gen_ms=2609.63,prompt_tokens=52,gen_tokens=64
+07-11 10:00:09.837 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:00:09.838 30598 30651 I LatencyProfiler: BENCH,20,RAG_INLINE,home_morning,50,3942.14,0.00,223
+07-11 10:00:09.840 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:00:13.771 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=1315.26,gen_ms=2614.70,prompt_tokens=52,gen_tokens=64
+07-11 10:00:13.771 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:00:13.771 30598 30651 I LatencyProfiler: BENCH,21,RAG_INLINE,home_morning,50,3933.36,0.00,223
+07-11 10:00:13.773 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:00:17.707 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=1318.28,gen_ms=2614.57,prompt_tokens=52,gen_tokens=64
+07-11 10:00:17.708 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:00:17.708 30598 30651 I LatencyProfiler: BENCH,22,RAG_INLINE,home_morning,50,3936.13,0.00,223
+07-11 10:00:17.710 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:00:21.634 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=1317.45,gen_ms=2605.29,prompt_tokens=52,gen_tokens=64
+07-11 10:00:21.634 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:00:21.635 30598 30651 I LatencyProfiler: BENCH,23,RAG_INLINE,home_morning,50,3926.15,0.00,223
+07-11 10:00:21.637 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:00:25.559 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=1314.92,gen_ms=2606.92,prompt_tokens=52,gen_tokens=64
+07-11 10:00:25.560 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:00:25.560 30598 30651 I LatencyProfiler: BENCH,24,RAG_INLINE,home_morning,50,3925.01,0.00,223
+07-11 10:00:25.562 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:00:29.485 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=1314.13,gen_ms=2607.37,prompt_tokens=52,gen_tokens=64
+07-11 10:00:29.485 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:00:29.485 30598 30651 I LatencyProfiler: BENCH,25,RAG_INLINE,home_morning,50,3924.79,0.00,223
+07-11 10:00:29.487 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:00:33.464 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=1315.88,gen_ms=2659.84,prompt_tokens=52,gen_tokens=64
+07-11 10:00:33.464 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:00:33.464 30598 30651 I LatencyProfiler: BENCH,26,RAG_INLINE,home_morning,50,3978.86,0.00,223
+07-11 10:00:33.466 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:00:37.392 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=1319.93,gen_ms=2604.65,prompt_tokens=52,gen_tokens=64
+07-11 10:00:37.392 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:00:37.393 30598 30651 I LatencyProfiler: BENCH,27,RAG_INLINE,home_morning,50,3927.87,0.00,223
+07-11 10:00:37.395 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:00:42.461 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=1531.21,gen_ms=3533.49,prompt_tokens=52,gen_tokens=64
+07-11 10:00:42.461 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:00:42.461 30598 30651 I LatencyProfiler: BENCH,28,RAG_INLINE,home_morning,50,5068.08,0.00,223
+07-11 10:00:42.463 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:00:46.392 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=1320.78,gen_ms=2607.43,prompt_tokens=52,gen_tokens=64
+07-11 10:00:46.392 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:00:46.392 30598 30651 I LatencyProfiler: BENCH,29,RAG_INLINE,home_morning,50,3931.05,0.00,223
+07-11 10:00:46.394 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:00:50.316 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=1318.45,gen_ms=2602.71,prompt_tokens=52,gen_tokens=64
+07-11 10:00:50.316 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:00:50.317 30598 30651 I LatencyProfiler: BENCH,30,RAG_INLINE,home_morning,50,3924.10,0.00,223
+07-11 10:00:50.317 30598 30651 I LatencyProfiler: --- RAG_INLINE N=100 ---
+07-11 10:00:50.317 30598 30651 I LatencyProfiler: Expanded prompt length: 452 chars (target ~100 tokens)
+07-11 10:00:50.319 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:00:55.339 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=2340.78,gen_ms=2662.38,prompt_tokens=89,gen_tokens=64
+07-11 10:00:55.339 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:00:55.341 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:01:01.412 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=2378.89,gen_ms=3689.60,prompt_tokens=89,gen_tokens=64
+07-11 10:01:01.412 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:01:01.414 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:01:06.339 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=2282.92,gen_ms=2639.93,prompt_tokens=89,gen_tokens=64
+07-11 10:01:06.339 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:01:06.339 30598 30651 I LatencyProfiler: BENCH,1,RAG_INLINE,home_morning,100,4927.00,0.00,300
+07-11 10:01:06.341 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:01:11.233 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=2252.12,gen_ms=2636.94,prompt_tokens=89,gen_tokens=64
+07-11 10:01:11.233 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:01:11.233 30598 30651 I LatencyProfiler: BENCH,2,RAG_INLINE,home_morning,100,4893.15,0.00,300
+07-11 10:01:11.235 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:01:16.121 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=2256.13,gen_ms=2627.96,prompt_tokens=89,gen_tokens=64
+07-11 10:01:16.121 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:01:16.122 30598 30651 I LatencyProfiler: BENCH,3,RAG_INLINE,home_morning,100,4888.32,0.00,300
+07-11 10:01:16.124 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:01:21.006 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=2249.46,gen_ms=2631.06,prompt_tokens=89,gen_tokens=64
+07-11 10:01:21.006 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:01:21.007 30598 30651 I LatencyProfiler: BENCH,4,RAG_INLINE,home_morning,100,4884.59,0.00,300
+07-11 10:01:21.009 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:01:25.927 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=2281.11,gen_ms=2635.43,prompt_tokens=89,gen_tokens=64
+07-11 10:01:25.927 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:01:25.928 30598 30651 I LatencyProfiler: BENCH,5,RAG_INLINE,home_morning,100,4920.57,0.00,300
+07-11 10:01:25.930 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:01:30.823 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=2246.01,gen_ms=2645.77,prompt_tokens=89,gen_tokens=64
+07-11 10:01:30.823 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:01:30.824 30598 30651 I LatencyProfiler: BENCH,6,RAG_INLINE,home_morning,100,4895.66,0.00,300
+07-11 10:01:30.826 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:01:35.716 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=2255.65,gen_ms=2633.36,prompt_tokens=89,gen_tokens=64
+07-11 10:01:35.716 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:01:35.717 30598 30651 I LatencyProfiler: BENCH,7,RAG_INLINE,home_morning,100,4892.57,0.00,300
+07-11 10:01:35.719 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:01:40.595 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=2247.16,gen_ms=2628.33,prompt_tokens=89,gen_tokens=64
+07-11 10:01:40.596 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:01:40.596 30598 30651 I LatencyProfiler: BENCH,8,RAG_INLINE,home_morning,100,4879.08,0.00,300
+07-11 10:01:40.598 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:01:45.490 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=2250.38,gen_ms=2640.16,prompt_tokens=89,gen_tokens=64
+07-11 10:01:45.490 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:01:45.491 30598 30651 I LatencyProfiler: BENCH,9,RAG_INLINE,home_morning,100,4894.16,0.00,300
+07-11 10:01:45.493 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:01:50.381 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=2247.68,gen_ms=2639.25,prompt_tokens=89,gen_tokens=64
+07-11 10:01:50.382 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:01:50.382 30598 30651 I LatencyProfiler: BENCH,10,RAG_INLINE,home_morning,100,4891.05,0.00,300
+07-11 10:01:50.384 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:02:00.499 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=2254.18,gen_ms=7858.61,prompt_tokens=89,gen_tokens=64
+07-11 10:02:00.499 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:02:00.499 30598 30651 I LatencyProfiler: BENCH,11,RAG_INLINE,home_morning,100,10116.72,0.00,300
+07-11 10:02:00.501 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:02:20.135 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=6309.03,gen_ms=13321.94,prompt_tokens=89,gen_tokens=64
+07-11 10:02:20.135 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:02:20.135 30598 30651 I LatencyProfiler: BENCH,12,RAG_INLINE,home_morning,100,19635.84,0.00,300
+07-11 10:02:20.167 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:02:28.411 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=2853.57,gen_ms=5365.63,prompt_tokens=89,gen_tokens=64
+07-11 10:02:28.411 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:02:28.412 30598 30651 I LatencyProfiler: BENCH,13,RAG_INLINE,home_morning,100,8276.47,0.00,300
+07-11 10:02:28.416 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:02:34.124 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=1942.02,gen_ms=3764.20,prompt_tokens=89,gen_tokens=64
+07-11 10:02:34.124 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:02:34.124 30598 30651 I LatencyProfiler: BENCH,14,RAG_INLINE,home_morning,100,5711.85,0.00,300
+07-11 10:02:34.126 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:02:41.160 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=2818.78,gen_ms=4214.29,prompt_tokens=89,gen_tokens=64
+07-11 10:02:41.160 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:02:41.161 30598 30651 I LatencyProfiler: BENCH,15,RAG_INLINE,home_morning,100,7036.73,0.00,300
+07-11 10:02:41.165 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:02:53.453 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=3856.99,gen_ms=8428.42,prompt_tokens=89,gen_tokens=64
+07-11 10:02:53.453 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:02:53.454 30598 30651 I LatencyProfiler: BENCH,16,RAG_INLINE,home_morning,100,12291.83,0.00,300
+07-11 10:02:53.462 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:03:01.680 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=3330.21,gen_ms=4883.37,prompt_tokens=89,gen_tokens=64
+07-11 10:03:01.680 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:03:01.681 30598 30651 I LatencyProfiler: BENCH,17,RAG_INLINE,home_morning,100,8226.88,0.00,300
+07-11 10:03:01.683 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:03:11.745 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=2801.84,gen_ms=7259.32,prompt_tokens=89,gen_tokens=64
+07-11 10:03:11.745 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:03:11.746 30598 30651 I LatencyProfiler: BENCH,18,RAG_INLINE,home_morning,100,10065.10,0.00,300
+07-11 10:03:11.763 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:03:20.234 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=4392.62,gen_ms=4066.31,prompt_tokens=89,gen_tokens=64
+07-11 10:03:20.235 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:03:20.236 30598 30651 I LatencyProfiler: BENCH,19,RAG_INLINE,home_morning,100,8488.48,0.00,300
+07-11 10:03:20.238 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:03:25.614 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=2530.57,gen_ms=2843.28,prompt_tokens=89,gen_tokens=64
+07-11 10:03:25.614 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:03:25.614 30598 30651 I LatencyProfiler: BENCH,20,RAG_INLINE,home_morning,100,5378.26,0.00,300
+07-11 10:03:25.619 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:03:35.613 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=2313.46,gen_ms=7677.01,prompt_tokens=89,gen_tokens=64
+07-11 10:03:35.613 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:03:35.614 30598 30651 I LatencyProfiler: BENCH,21,RAG_INLINE,home_morning,100,9998.76,0.00,300
+07-11 10:03:35.616 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:03:40.805 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=2315.92,gen_ms=2871.61,prompt_tokens=89,gen_tokens=64
+07-11 10:03:40.805 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:03:40.805 30598 30651 I LatencyProfiler: BENCH,22,RAG_INLINE,home_morning,100,5191.53,0.00,300
+07-11 10:03:40.807 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:03:47.028 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=2364.27,gen_ms=3854.37,prompt_tokens=89,gen_tokens=64
+07-11 10:03:47.028 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:03:47.034 30598 30651 I LatencyProfiler: BENCH,23,RAG_INLINE,home_morning,100,6227.98,0.00,300
+07-11 10:03:47.038 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:03:55.686 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=4890.76,gen_ms=3754.30,prompt_tokens=89,gen_tokens=64
+07-11 10:03:55.686 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:03:55.686 30598 30651 I LatencyProfiler: BENCH,24,RAG_INLINE,home_morning,100,8651.72,0.00,300
+07-11 10:03:55.688 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:04:03.190 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=2307.90,gen_ms=5192.28,prompt_tokens=89,gen_tokens=64
+07-11 10:04:03.190 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:04:03.191 30598 30651 I LatencyProfiler: BENCH,25,RAG_INLINE,home_morning,100,7504.34,0.00,300
+07-11 10:04:03.194 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:04:21.793 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=8329.79,gen_ms=10263.12,prompt_tokens=89,gen_tokens=64
+07-11 10:04:21.793 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:04:21.793 30598 30651 I LatencyProfiler: BENCH,26,RAG_INLINE,home_morning,100,18602.19,0.00,300
+07-11 10:04:21.795 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:04:28.137 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=2322.03,gen_ms=4018.37,prompt_tokens=89,gen_tokens=64
+07-11 10:04:28.137 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:04:28.137 30598 30651 I LatencyProfiler: BENCH,27,RAG_INLINE,home_morning,100,6343.68,0.00,300
+07-11 10:04:28.139 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:04:41.441 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=2713.37,gen_ms=10579.56,prompt_tokens=89,gen_tokens=64
+07-11 10:04:41.441 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:04:41.441 30598 30651 I LatencyProfiler: BENCH,28,RAG_INLINE,home_morning,100,13303.48,0.00,300
+07-11 10:04:41.443 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:04:49.945 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=4520.09,gen_ms=3980.46,prompt_tokens=89,gen_tokens=64
+07-11 10:04:49.945 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:04:49.946 30598 30651 I LatencyProfiler: BENCH,29,RAG_INLINE,home_morning,100,8504.43,0.00,300
+07-11 10:04:49.948 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:04:58.451 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=2716.71,gen_ms=5783.84,prompt_tokens=89,gen_tokens=64
+07-11 10:04:58.451 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:04:58.451 30598 30651 I LatencyProfiler: BENCH,30,RAG_INLINE,home_morning,100,8505.19,0.00,300
+07-11 10:04:58.452 30598 30651 I LatencyProfiler: --- RAG_INLINE N=200 ---
+07-11 10:04:58.452 30598 30651 I LatencyProfiler: Expanded prompt length: 878 chars (target ~200 tokens)
+07-11 10:04:58.454 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:05:09.416 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=6668.68,gen_ms=4270.43,prompt_tokens=206,gen_tokens=64
+07-11 10:05:09.416 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:05:09.418 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:05:20.022 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=6214.24,gen_ms=4387.43,prompt_tokens=206,gen_tokens=64
+07-11 10:05:20.022 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:05:20.024 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:05:31.587 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=6126.14,gen_ms=5434.46,prompt_tokens=206,gen_tokens=64
+07-11 10:05:31.587 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:05:31.593 30598 30651 I LatencyProfiler: BENCH,1,RAG_INLINE,home_morning,200,11566.14,0.00,355
+07-11 10:05:31.597 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:05:45.494 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=8280.08,gen_ms=5597.36,prompt_tokens=206,gen_tokens=64
+07-11 10:05:45.494 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:05:45.494 30598 30651 I LatencyProfiler: BENCH,2,RAG_INLINE,home_morning,200,13900.77,0.00,355
+07-11 10:05:45.497 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:06:00.218 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=6218.98,gen_ms=8499.84,prompt_tokens=206,gen_tokens=64
+07-11 10:06:00.218 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:06:00.219 30598 30651 I LatencyProfiler: BENCH,3,RAG_INLINE,home_morning,200,14724.21,0.00,355
+07-11 10:06:00.221 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:06:10.880 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=6364.37,gen_ms=4289.11,prompt_tokens=206,gen_tokens=64
+07-11 10:06:10.880 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:06:10.880 30598 30651 I LatencyProfiler: BENCH,4,RAG_INLINE,home_morning,200,10661.07,0.00,355
+07-11 10:06:10.885 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:06:31.723 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=6115.16,gen_ms=14719.04,prompt_tokens=206,gen_tokens=64
+07-11 10:06:31.723 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:06:31.723 30598 30651 I LatencyProfiler: BENCH,5,RAG_INLINE,home_morning,200,20842.83,0.00,355
+07-11 10:06:31.726 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:06:42.052 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=6183.13,gen_ms=4140.85,prompt_tokens=206,gen_tokens=64
+07-11 10:06:42.052 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:06:42.053 30598 30651 I LatencyProfiler: BENCH,6,RAG_INLINE,home_morning,200,10329.03,0.00,355
+07-11 10:06:42.056 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:06:58.408 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=7684.07,gen_ms=8663.59,prompt_tokens=206,gen_tokens=64
+07-11 10:06:58.408 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:06:58.409 30598 30651 I LatencyProfiler: BENCH,7,RAG_INLINE,home_morning,200,16355.58,0.00,355
+07-11 10:06:58.411 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:07:12.215 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=8202.42,gen_ms=5586.51,prompt_tokens=206,gen_tokens=64
+07-11 10:07:12.215 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:07:12.215 30598 30651 I LatencyProfiler: BENCH,8,RAG_INLINE,home_morning,200,13806.40,0.00,355
+07-11 10:07:12.217 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:07:25.539 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=7468.74,gen_ms=5846.95,prompt_tokens=206,gen_tokens=64
+07-11 10:07:25.539 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:07:25.541 30598 30651 I LatencyProfiler: BENCH,9,RAG_INLINE,home_morning,200,13325.43,0.00,355
+07-11 10:07:25.545 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:07:36.892 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=6328.82,gen_ms=5004.10,prompt_tokens=206,gen_tokens=64
+07-11 10:07:36.892 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:07:36.892 30598 30651 I LatencyProfiler: BENCH,10,RAG_INLINE,home_morning,200,11350.31,0.00,355
+07-11 10:07:36.894 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:07:47.551 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=6403.29,gen_ms=4250.90,prompt_tokens=206,gen_tokens=64
+07-11 10:07:47.552 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:07:47.552 30598 30651 I LatencyProfiler: BENCH,11,RAG_INLINE,home_morning,200,10659.46,0.00,355
+07-11 10:07:47.554 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:07:57.936 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=6228.15,gen_ms=4151.70,prompt_tokens=206,gen_tokens=64
+07-11 10:07:57.936 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:07:57.937 30598 30651 I LatencyProfiler: BENCH,12,RAG_INLINE,home_morning,200,10384.49,0.00,355
+07-11 10:07:57.939 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:08:08.621 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=6228.31,gen_ms=4451.33,prompt_tokens=206,gen_tokens=64
+07-11 10:08:08.621 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:08:08.624 30598 30651 I LatencyProfiler: BENCH,13,RAG_INLINE,home_morning,200,10686.77,0.00,355
+07-11 10:08:08.626 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:08:19.223 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=6330.63,gen_ms=4264.03,prompt_tokens=206,gen_tokens=64
+07-11 10:08:19.223 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:08:19.223 30598 30651 I LatencyProfiler: BENCH,14,RAG_INLINE,home_morning,200,10599.32,0.00,355
+07-11 10:08:19.226 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:08:29.658 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=6133.41,gen_ms=4295.46,prompt_tokens=206,gen_tokens=64
+07-11 10:08:29.658 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:08:29.658 30598 30651 I LatencyProfiler: BENCH,15,RAG_INLINE,home_morning,200,10434.45,0.00,355
+07-11 10:08:29.660 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:08:40.301 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=6226.40,gen_ms=4410.90,prompt_tokens=206,gen_tokens=64
+07-11 10:08:40.301 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:08:40.302 30598 30651 I LatencyProfiler: BENCH,16,RAG_INLINE,home_morning,200,10643.12,0.00,355
+07-11 10:08:40.304 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:08:50.639 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=6173.13,gen_ms=4158.30,prompt_tokens=206,gen_tokens=64
+07-11 10:08:50.639 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:08:50.639 30598 30651 I LatencyProfiler: BENCH,17,RAG_INLINE,home_morning,200,10337.06,0.00,355
+07-11 10:08:50.645 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:09:01.199 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=6205.77,gen_ms=4338.87,prompt_tokens=206,gen_tokens=64
+07-11 10:09:01.199 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:09:01.199 30598 30651 I LatencyProfiler: BENCH,18,RAG_INLINE,home_morning,200,10559.64,0.00,355
+07-11 10:09:01.202 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:09:14.609 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=6609.92,gen_ms=6794.11,prompt_tokens=206,gen_tokens=64
+07-11 10:09:14.610 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:09:14.610 30598 30651 I LatencyProfiler: BENCH,19,RAG_INLINE,home_morning,200,13410.62,0.00,355
+07-11 10:09:14.612 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:09:23.476 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=5327.60,gen_ms=3532.39,prompt_tokens=206,gen_tokens=64
+07-11 10:09:23.476 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:09:23.476 30598 30651 I LatencyProfiler: BENCH,20,RAG_INLINE,home_morning,200,8865.70,0.00,355
+07-11 10:09:23.478 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:09:35.694 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=6551.91,gen_ms=5659.98,prompt_tokens=206,gen_tokens=64
+07-11 10:09:35.694 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:09:35.694 30598 30651 I LatencyProfiler: BENCH,21,RAG_INLINE,home_morning,200,12217.74,0.00,355
+07-11 10:09:35.697 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:09:46.296 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=6238.73,gen_ms=4357.58,prompt_tokens=206,gen_tokens=64
+07-11 10:09:46.297 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:09:46.297 30598 30651 I LatencyProfiler: BENCH,22,RAG_INLINE,home_morning,200,10602.29,0.00,355
+07-11 10:09:46.303 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:09:57.323 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=6865.45,gen_ms=4150.73,prompt_tokens=206,gen_tokens=64
+07-11 10:09:57.323 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:09:57.326 30598 30651 I LatencyProfiler: BENCH,23,RAG_INLINE,home_morning,200,11027.68,0.00,355
+07-11 10:09:57.330 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:10:08.044 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=6397.13,gen_ms=4312.43,prompt_tokens=206,gen_tokens=64
+07-11 10:10:08.044 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:10:08.044 30598 30651 I LatencyProfiler: BENCH,24,RAG_INLINE,home_morning,200,10717.36,0.00,355
+07-11 10:10:08.046 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:10:18.840 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=6618.22,gen_ms=4171.56,prompt_tokens=206,gen_tokens=64
+07-11 10:10:18.840 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:10:18.840 30598 30651 I LatencyProfiler: BENCH,25,RAG_INLINE,home_morning,200,10795.72,0.00,355
+07-11 10:10:18.845 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:10:29.152 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=6098.45,gen_ms=4194.65,prompt_tokens=206,gen_tokens=64
+07-11 10:10:29.152 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:10:29.152 30598 30651 I LatencyProfiler: BENCH,26,RAG_INLINE,home_morning,200,10311.64,0.00,355
+07-11 10:10:29.156 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:10:40.155 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=6356.38,gen_ms=4639.12,prompt_tokens=206,gen_tokens=64
+07-11 10:10:40.155 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:10:40.155 30598 30651 I LatencyProfiler: BENCH,27,RAG_INLINE,home_morning,200,11002.46,0.00,355
+07-11 10:10:40.157 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:10:59.951 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=9739.95,gen_ms=10052.28,prompt_tokens=206,gen_tokens=64
+07-11 10:10:59.951 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:10:59.952 30598 30651 I LatencyProfiler: BENCH,28,RAG_INLINE,home_morning,200,19796.89,0.00,355
+07-11 10:10:59.959 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:11:11.940 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=7601.10,gen_ms=4371.47,prompt_tokens=206,gen_tokens=64
+07-11 10:11:11.940 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:11:11.941 30598 30651 I LatencyProfiler: BENCH,29,RAG_INLINE,home_morning,200,11987.56,0.00,355
+07-11 10:11:11.942 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:11:23.708 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=6900.00,gen_ms=4859.15,prompt_tokens=206,gen_tokens=64
+07-11 10:11:23.708 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:11:23.709 30598 30651 I LatencyProfiler: BENCH,30,RAG_INLINE,home_morning,200,11767.21,0.00,355
+07-11 10:11:23.709 30598 30651 I LatencyProfiler: --- RAG_INLINE N=500 ---
+07-11 10:11:23.709 30598 30651 I LatencyProfiler: Expanded prompt length: 2181 chars (target ~500 tokens)
+07-11 10:11:23.713 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:11:41.867 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=13621.59,gen_ms=4477.19,prompt_tokens=439,gen_tokens=64
+07-11 10:11:41.867 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:11:41.870 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:11:59.939 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=13264.76,gen_ms=4787.04,prompt_tokens=439,gen_tokens=64
+07-11 10:11:59.939 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:11:59.942 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:12:19.797 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=14152.60,gen_ms=5692.13,prompt_tokens=439,gen_tokens=64
+07-11 10:12:19.797 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:12:19.798 30598 30651 I LatencyProfiler: BENCH,1,RAG_INLINE,home_morning,500,19857.66,0.00,343
+07-11 10:12:19.800 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:12:46.723 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=22399.94,gen_ms=4515.42,prompt_tokens=439,gen_tokens=64
+07-11 10:12:46.723 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:12:46.723 30598 30651 I LatencyProfiler: BENCH,2,RAG_INLINE,home_morning,500,26925.39,0.00,343
+07-11 10:12:46.729 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:13:04.644 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=13251.24,gen_ms=4650.62,prompt_tokens=439,gen_tokens=64
+07-11 10:13:04.644 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:13:04.645 30598 30651 I LatencyProfiler: BENCH,3,RAG_INLINE,home_morning,500,17921.12,0.00,343
+07-11 10:13:04.647 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:13:26.477 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=13247.04,gen_ms=8574.07,prompt_tokens=439,gen_tokens=64
+07-11 10:13:26.477 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:13:26.485 30598 30651 I LatencyProfiler: BENCH,4,RAG_INLINE,home_morning,500,21839.37,0.00,343
+07-11 10:13:26.489 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:13:46.724 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=15504.82,gen_ms=4718.88,prompt_tokens=439,gen_tokens=64
+07-11 10:13:46.724 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:13:46.735 30598 30651 I LatencyProfiler: BENCH,5,RAG_INLINE,home_morning,500,20249.43,0.00,343
+07-11 10:13:46.748 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:14:06.243 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=13706.82,gen_ms=5768.99,prompt_tokens=439,gen_tokens=64
+07-11 10:14:06.243 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:14:06.255 30598 30651 I LatencyProfiler: BENCH,6,RAG_INLINE,home_morning,500,19519.77,0.00,343
+07-11 10:14:06.257 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:14:26.497 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=15046.68,gen_ms=5181.56,prompt_tokens=439,gen_tokens=64
+07-11 10:14:26.497 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:14:26.497 30598 30651 I LatencyProfiler: BENCH,7,RAG_INLINE,home_morning,500,20241.78,0.00,343
+07-11 10:14:26.500 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:14:45.105 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=13597.87,gen_ms=4997.15,prompt_tokens=439,gen_tokens=64
+07-11 10:14:45.105 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:14:45.105 30598 30651 I LatencyProfiler: BENCH,8,RAG_INLINE,home_morning,500,18608.07,0.00,343
+07-11 10:14:45.107 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:15:04.283 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=13207.45,gen_ms=5960.19,prompt_tokens=439,gen_tokens=64
+07-11 10:15:04.283 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:15:04.285 30598 30651 I LatencyProfiler: BENCH,9,RAG_INLINE,home_morning,500,19178.27,0.00,343
+07-11 10:15:04.288 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:15:22.318 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=13317.00,gen_ms=4702.68,prompt_tokens=439,gen_tokens=64
+07-11 10:15:22.318 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:15:22.318 30598 30651 I LatencyProfiler: BENCH,10,RAG_INLINE,home_morning,500,18032.58,0.00,343
+07-11 10:15:22.320 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:15:40.398 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=13292.38,gen_ms=4766.35,prompt_tokens=439,gen_tokens=64
+07-11 10:15:40.398 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:15:40.419 30598 30651 I LatencyProfiler: BENCH,11,RAG_INLINE,home_morning,500,18099.45,0.00,343
+07-11 10:15:40.425 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:15:58.836 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=13378.82,gen_ms=5013.18,prompt_tokens=439,gen_tokens=64
+07-11 10:15:58.836 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:15:58.836 30598 30651 I LatencyProfiler: BENCH,12,RAG_INLINE,home_morning,500,18416.50,0.00,343
+07-11 10:15:58.838 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:16:18.302 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=14956.95,gen_ms=4493.68,prompt_tokens=439,gen_tokens=64
+07-11 10:16:18.302 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:16:18.302 30598 30651 I LatencyProfiler: BENCH,13,RAG_INLINE,home_morning,500,19465.15,0.00,343
+07-11 10:16:18.304 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:16:39.095 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=13186.49,gen_ms=7592.92,prompt_tokens=439,gen_tokens=64
+07-11 10:16:39.095 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:16:39.096 30598 30651 I LatencyProfiler: BENCH,14,RAG_INLINE,home_morning,500,20793.74,0.00,343
+07-11 10:16:39.101 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:16:57.875 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=13957.88,gen_ms=4795.83,prompt_tokens=439,gen_tokens=64
+07-11 10:16:57.875 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:16:57.876 30598 30651 I LatencyProfiler: BENCH,15,RAG_INLINE,home_morning,500,18778.60,0.00,343
+07-11 10:16:57.878 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:17:20.886 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=16189.99,gen_ms=6811.06,prompt_tokens=439,gen_tokens=64
+07-11 10:17:20.886 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:17:20.887 30598 30651 I LatencyProfiler: BENCH,16,RAG_INLINE,home_morning,500,23010.79,0.00,343
+07-11 10:17:20.890 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:17:39.820 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=14002.56,gen_ms=4918.00,prompt_tokens=439,gen_tokens=64
+07-11 10:17:39.820 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:17:39.821 30598 30651 I LatencyProfiler: BENCH,17,RAG_INLINE,home_morning,500,18933.55,0.00,343
+07-11 10:17:39.823 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:17:57.499 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=13119.77,gen_ms=4546.55,prompt_tokens=439,gen_tokens=64
+07-11 10:17:57.499 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:17:57.500 30598 30651 I LatencyProfiler: BENCH,18,RAG_INLINE,home_morning,500,17678.60,0.00,343
+07-11 10:17:57.502 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:18:15.405 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=13110.11,gen_ms=4784.31,prompt_tokens=439,gen_tokens=64
+07-11 10:18:15.405 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:18:15.406 30598 30651 I LatencyProfiler: BENCH,19,RAG_INLINE,home_morning,500,17905.74,0.00,343
+07-11 10:18:15.410 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:18:36.635 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=14004.41,gen_ms=7209.91,prompt_tokens=439,gen_tokens=64
+07-11 10:18:36.635 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:18:36.636 30598 30651 I LatencyProfiler: BENCH,20,RAG_INLINE,home_morning,500,21229.38,0.00,343
+07-11 10:18:36.639 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:18:55.032 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=12962.82,gen_ms=5423.51,prompt_tokens=439,gen_tokens=64
+07-11 10:18:55.032 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:18:55.032 30598 30651 I LatencyProfiler: BENCH,21,RAG_INLINE,home_morning,500,18396.36,0.00,343
+07-11 10:18:55.034 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:19:10.836 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=11346.37,gen_ms=4447.28,prompt_tokens=439,gen_tokens=64
+07-11 10:19:10.836 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:19:10.836 30598 30651 I LatencyProfiler: BENCH,22,RAG_INLINE,home_morning,500,15803.75,0.00,343
+07-11 10:19:10.839 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:19:28.744 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=13463.00,gen_ms=4431.41,prompt_tokens=439,gen_tokens=64
+07-11 10:19:28.744 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:19:28.745 30598 30651 I LatencyProfiler: BENCH,23,RAG_INLINE,home_morning,500,17907.84,0.00,343
+07-11 10:19:28.747 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:19:46.221 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=13048.50,gen_ms=4415.45,prompt_tokens=439,gen_tokens=64
+07-11 10:19:46.221 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:19:46.221 30598 30651 I LatencyProfiler: BENCH,24,RAG_INLINE,home_morning,500,17476.35,0.00,343
+07-11 10:19:46.224 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:20:08.091 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=12972.45,gen_ms=8887.96,prompt_tokens=439,gen_tokens=64
+07-11 10:20:08.092 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:20:08.092 30598 30651 I LatencyProfiler: BENCH,25,RAG_INLINE,home_morning,500,21870.30,0.00,343
+07-11 10:20:08.095 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:20:28.207 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=15469.51,gen_ms=4623.96,prompt_tokens=439,gen_tokens=64
+07-11 10:20:28.207 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:20:28.207 30598 30651 I LatencyProfiler: BENCH,26,RAG_INLINE,home_morning,500,20114.73,0.00,343
+07-11 10:20:28.210 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:20:48.316 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=14007.34,gen_ms=6090.22,prompt_tokens=439,gen_tokens=64
+07-11 10:20:48.316 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:20:48.317 30598 30651 I LatencyProfiler: BENCH,27,RAG_INLINE,home_morning,500,20109.24,0.00,343
+07-11 10:20:48.320 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:21:06.041 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=13224.17,gen_ms=4467.84,prompt_tokens=439,gen_tokens=64
+07-11 10:21:06.041 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:21:06.041 30598 30651 I LatencyProfiler: BENCH,28,RAG_INLINE,home_morning,500,17723.83,0.00,343
+07-11 10:21:06.043 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:21:23.631 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=13055.18,gen_ms=4525.95,prompt_tokens=439,gen_tokens=64
+07-11 10:21:23.631 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:21:23.631 30598 30651 I LatencyProfiler: BENCH,29,RAG_INLINE,home_morning,500,17590.01,0.00,343
+07-11 10:21:23.633 30598 30651 I AACBridgeJNI: KV cache cleared
+07-11 10:21:42.221 30598 30651 I AACBridgeJNI: TIMING,runInference,prefill_ms=13863.52,gen_ms=4715.83,prompt_tokens=439,gen_tokens=64
+07-11 10:21:42.221 30598 30651 I AACBridgeJNI: Inference completed successfully
+07-11 10:21:42.221 30598 30651 I LatencyProfiler: BENCH,30,RAG_INLINE,home_morning,500,18589.42,0.00,343
+07-11 10:21:42.221 30598 30651 I LatencyProfiler: --- CAP_KVC ---
+07-11 10:21:42.245 30598 30651 I AACBridgeJNI: KV cache loaded successfully
+07-11 10:21:42.245 30598 30651 I AACBridgeJNI: resumeInference: n_past = 44
+07-11 10:21:42.245 30598 30651 I AACBridgeJNI: resumeInference: appending 9 intent tokens at pos 44
+07-11 10:21:46.825 30598 30651 I AACBridgeJNI: TIMING,resumeInference,prefill_ms=326.00,gen_ms=4253.41,prompt_tokens=9,gen_tokens=64
+07-11 10:21:46.830 30598 30651 I AACBridgeJNI: Resume inference completed successfully
+07-11 10:21:46.840 30598 30651 I AACBridgeJNI: KV cache loaded successfully
+07-11 10:21:46.840 30598 30651 I AACBridgeJNI: resumeInference: n_past = 44
+07-11 10:21:46.840 30598 30651 I AACBridgeJNI: resumeInference: appending 9 intent tokens at pos 44
+07-11 10:21:51.549 30598 30651 I AACBridgeJNI: TIMING,resumeInference,prefill_ms=356.81,gen_ms=4351.78,prompt_tokens=9,gen_tokens=64
+07-11 10:21:51.549 30598 30651 I AACBridgeJNI: Resume inference completed successfully
+07-11 10:21:51.551 30598 30651 I AACBridgeJNI: KV cache loaded successfully
+07-11 10:21:51.551 30598 30651 I AACBridgeJNI: resumeInference: n_past = 44
+07-11 10:21:51.551 30598 30651 I AACBridgeJNI: resumeInference: appending 9 intent tokens at pos 44
+07-11 10:21:56.744 30598 30651 I AACBridgeJNI: TIMING,resumeInference,prefill_ms=345.53,gen_ms=4847.39,prompt_tokens=9,gen_tokens=64
+07-11 10:21:56.744 30598 30651 I AACBridgeJNI: Resume inference completed successfully
+07-11 10:21:56.745 30598 30651 I LatencyProfiler: BENCH,1,CAP_KVC,home_morning,50,5193.40,1.99,319
+07-11 10:21:56.746 30598 30651 I AACBridgeJNI: KV cache loaded successfully
+07-11 10:21:56.746 30598 30651 I AACBridgeJNI: resumeInference: n_past = 44
+07-11 10:21:56.747 30598 30651 I AACBridgeJNI: resumeInference: appending 9 intent tokens at pos 44
+07-11 10:22:01.412 30598 30651 I AACBridgeJNI: TIMING,resumeInference,prefill_ms=341.36,gen_ms=4324.10,prompt_tokens=9,gen_tokens=64
+07-11 10:22:01.412 30598 30651 I AACBridgeJNI: Resume inference completed successfully
+07-11 10:22:01.413 30598 30651 I LatencyProfiler: BENCH,2,CAP_KVC,home_morning,50,4665.99,1.85,319
+07-11 10:22:01.415 30598 30651 I AACBridgeJNI: KV cache loaded successfully
+07-11 10:22:01.415 30598 30651 I AACBridgeJNI: resumeInference: n_past = 44
+07-11 10:22:01.415 30598 30651 I AACBridgeJNI: resumeInference: appending 9 intent tokens at pos 44
+07-11 10:22:06.018 30598 30651 I AACBridgeJNI: TIMING,resumeInference,prefill_ms=344.39,gen_ms=4258.21,prompt_tokens=9,gen_tokens=64
+07-11 10:22:06.018 30598 30651 I AACBridgeJNI: Resume inference completed successfully
+07-11 10:22:06.018 30598 30651 I LatencyProfiler: BENCH,3,CAP_KVC,home_morning,50,4603.14,2.08,319
+07-11 10:22:06.020 30598 30651 I AACBridgeJNI: KV cache loaded successfully
+07-11 10:22:06.020 30598 30651 I AACBridgeJNI: resumeInference: n_past = 44
+07-11 10:22:06.020 30598 30651 I AACBridgeJNI: resumeInference: appending 9 intent tokens at pos 44
+07-11 10:22:10.625 30598 30651 I AACBridgeJNI: TIMING,resumeInference,prefill_ms=378.99,gen_ms=4225.95,prompt_tokens=9,gen_tokens=64
+07-11 10:22:10.625 30598 30651 I AACBridgeJNI: Resume inference completed successfully
+07-11 10:22:10.626 30598 30651 I LatencyProfiler: BENCH,4,CAP_KVC,home_morning,50,4605.41,1.74,319
+07-11 10:22:10.628 30598 30651 I AACBridgeJNI: KV cache loaded successfully
+07-11 10:22:10.628 30598 30651 I AACBridgeJNI: resumeInference: n_past = 44
+07-11 10:22:10.630 30598 30651 I AACBridgeJNI: resumeInference: appending 9 intent tokens at pos 44
+07-11 10:22:15.345 30598 30651 I AACBridgeJNI: TIMING,resumeInference,prefill_ms=336.18,gen_ms=4378.98,prompt_tokens=9,gen_tokens=64
+07-11 10:22:15.345 30598 30651 I AACBridgeJNI: Resume inference completed successfully
+07-11 10:22:15.346 30598 30651 I LatencyProfiler: BENCH,5,CAP_KVC,home_morning,50,4717.95,1.77,319
+07-11 10:22:15.349 30598 30651 I AACBridgeJNI: KV cache loaded successfully
+07-11 10:22:15.349 30598 30651 I AACBridgeJNI: resumeInference: n_past = 44
+07-11 10:22:15.349 30598 30651 I AACBridgeJNI: resumeInference: appending 9 intent tokens at pos 44
+07-11 10:22:20.707 30598 30651 I AACBridgeJNI: TIMING,resumeInference,prefill_ms=351.97,gen_ms=5005.53,prompt_tokens=9,gen_tokens=64
+07-11 10:22:20.707 30598 30651 I AACBridgeJNI: Resume inference completed successfully
+07-11 10:22:20.707 30598 30651 I LatencyProfiler: BENCH,6,CAP_KVC,home_morning,50,5358.04,3.06,319
+07-11 10:22:20.709 30598 30651 I AACBridgeJNI: KV cache loaded successfully
+07-11 10:22:20.709 30598 30651 I AACBridgeJNI: resumeInference: n_past = 44
+07-11 10:22:20.709 30598 30651 I AACBridgeJNI: resumeInference: appending 9 intent tokens at pos 44
+07-11 10:22:25.651 30598 30651 I AACBridgeJNI: TIMING,resumeInference,prefill_ms=345.85,gen_ms=4595.57,prompt_tokens=9,gen_tokens=64
+07-11 10:22:25.651 30598 30651 I AACBridgeJNI: Resume inference completed successfully
+07-11 10:22:25.651 30598 30651 I LatencyProfiler: BENCH,7,CAP_KVC,home_morning,50,4941.97,1.82,319
+07-11 10:22:25.656 30598 30651 I AACBridgeJNI: KV cache loaded successfully
+07-11 10:22:25.657 30598 30651 I AACBridgeJNI: resumeInference: n_past = 44
+07-11 10:22:25.657 30598 30651 I AACBridgeJNI: resumeInference: appending 9 intent tokens at pos 44
+07-11 10:22:30.188 30598 30651 I AACBridgeJNI: TIMING,resumeInference,prefill_ms=336.37,gen_ms=4194.53,prompt_tokens=9,gen_tokens=64
+07-11 10:22:30.188 30598 30651 I AACBridgeJNI: Resume inference completed successfully
+07-11 10:22:30.189 30598 30651 I LatencyProfiler: BENCH,8,CAP_KVC,home_morning,50,4531.47,5.06,319
+07-11 10:22:30.193 30598 30651 I AACBridgeJNI: KV cache loaded successfully
+07-11 10:22:30.193 30598 30651 I AACBridgeJNI: resumeInference: n_past = 44
+07-11 10:22:30.194 30598 30651 I AACBridgeJNI: resumeInference: appending 9 intent tokens at pos 44
+07-11 10:22:34.717 30598 30651 I AACBridgeJNI: TIMING,resumeInference,prefill_ms=334.40,gen_ms=4188.85,prompt_tokens=9,gen_tokens=64
+07-11 10:22:34.717 30598 30651 I AACBridgeJNI: Resume inference completed successfully
+07-11 10:22:34.717 30598 30651 I LatencyProfiler: BENCH,9,CAP_KVC,home_morning,50,4523.82,4.68,319
+07-11 10:22:34.719 30598 30651 I AACBridgeJNI: KV cache loaded successfully
+07-11 10:22:34.719 30598 30651 I AACBridgeJNI: resumeInference: n_past = 44
+07-11 10:22:34.719 30598 30651 I AACBridgeJNI: resumeInference: appending 9 intent tokens at pos 44
+07-11 10:22:38.926 30598 30651 I AACBridgeJNI: TIMING,resumeInference,prefill_ms=325.45,gen_ms=3881.31,prompt_tokens=9,gen_tokens=64
+07-11 10:22:38.926 30598 30651 I AACBridgeJNI: Resume inference completed successfully
+07-11 10:22:38.927 30598 30651 I LatencyProfiler: BENCH,10,CAP_KVC,home_morning,50,4207.32,1.68,319
+07-11 10:22:38.932 30598 30651 I AACBridgeJNI: KV cache loaded successfully
+07-11 10:22:38.932 30598 30651 I AACBridgeJNI: resumeInference: n_past = 44
+07-11 10:22:38.932 30598 30651 I AACBridgeJNI: resumeInference: appending 9 intent tokens at pos 44
+07-11 10:22:43.176 30598 30651 I AACBridgeJNI: TIMING,resumeInference,prefill_ms=322.85,gen_ms=3920.41,prompt_tokens=9,gen_tokens=64
+07-11 10:22:43.176 30598 30651 I AACBridgeJNI: Resume inference completed successfully
+07-11 10:22:43.176 30598 30651 I LatencyProfiler: BENCH,11,CAP_KVC,home_morning,50,4243.76,5.42,319
+07-11 10:22:43.178 30598 30651 I AACBridgeJNI: KV cache loaded successfully
+07-11 10:22:43.178 30598 30651 I AACBridgeJNI: resumeInference: n_past = 44
+07-11 10:22:43.179 30598 30651 I AACBridgeJNI: resumeInference: appending 9 intent tokens at pos 44
+07-11 10:22:47.671 30598 30651 I AACBridgeJNI: TIMING,resumeInference,prefill_ms=372.68,gen_ms=4120.02,prompt_tokens=9,gen_tokens=64
+07-11 10:22:47.671 30598 30651 I AACBridgeJNI: Resume inference completed successfully
+07-11 10:22:47.672 30598 30651 I LatencyProfiler: BENCH,12,CAP_KVC,home_morning,50,4493.26,2.13,319
+07-11 10:22:47.675 30598 30651 I AACBridgeJNI: KV cache loaded successfully
+07-11 10:22:47.675 30598 30651 I AACBridgeJNI: resumeInference: n_past = 44
+07-11 10:22:47.675 30598 30651 I AACBridgeJNI: resumeInference: appending 9 intent tokens at pos 44
+07-11 10:22:52.175 30598 30651 I AACBridgeJNI: TIMING,resumeInference,prefill_ms=365.85,gen_ms=4134.19,prompt_tokens=9,gen_tokens=64
+07-11 10:22:52.175 30598 30651 I AACBridgeJNI: Resume inference completed successfully
+07-11 10:22:52.175 30598 30651 I LatencyProfiler: BENCH,13,CAP_KVC,home_morning,50,4500.56,2.75,319
+07-11 10:22:52.179 30598 30651 I AACBridgeJNI: KV cache loaded successfully
+07-11 10:22:52.179 30598 30651 I AACBridgeJNI: resumeInference: n_past = 44
+07-11 10:22:52.179 30598 30651 I AACBridgeJNI: resumeInference: appending 9 intent tokens at pos 44
+07-11 10:22:56.470 30598 30651 I AACBridgeJNI: TIMING,resumeInference,prefill_ms=325.90,gen_ms=3964.56,prompt_tokens=9,gen_tokens=64
+07-11 10:22:56.470 30598 30651 I AACBridgeJNI: Resume inference completed successfully
+07-11 10:22:56.471 30598 30651 I LatencyProfiler: BENCH,14,CAP_KVC,home_morning,50,4291.03,1.79,319
+07-11 10:22:56.472 30598 30651 I AACBridgeJNI: KV cache loaded successfully
+07-11 10:22:56.472 30598 30651 I AACBridgeJNI: resumeInference: n_past = 44
+07-11 10:22:56.473 30598 30651 I AACBridgeJNI: resumeInference: appending 9 intent tokens at pos 44
+07-11 10:23:00.697 30598 30651 I AACBridgeJNI: TIMING,resumeInference,prefill_ms=326.85,gen_ms=3897.56,prompt_tokens=9,gen_tokens=64
+07-11 10:23:00.697 30598 30651 I AACBridgeJNI: Resume inference completed successfully
+07-11 10:23:00.697 30598 30651 I LatencyProfiler: BENCH,15,CAP_KVC,home_morning,50,4224.88,1.71,319
+07-11 10:23:00.700 30598 30651 I AACBridgeJNI: KV cache loaded successfully
+07-11 10:23:00.700 30598 30651 I AACBridgeJNI: resumeInference: n_past = 44
+07-11 10:23:00.700 30598 30651 I AACBridgeJNI: resumeInference: appending 9 intent tokens at pos 44
+07-11 10:23:06.608 30598 30651 I AACBridgeJNI: TIMING,resumeInference,prefill_ms=320.98,gen_ms=5587.29,prompt_tokens=9,gen_tokens=64
+07-11 10:23:06.608 30598 30651 I AACBridgeJNI: Resume inference completed successfully
+07-11 10:23:06.609 30598 30651 I LatencyProfiler: BENCH,16,CAP_KVC,home_morning,50,5908.79,2.20,319
+07-11 10:23:06.612 30598 30651 I AACBridgeJNI: KV cache loaded successfully
+07-11 10:23:06.612 30598 30651 I AACBridgeJNI: resumeInference: n_past = 44
+07-11 10:23:06.613 30598 30651 I AACBridgeJNI: resumeInference: appending 9 intent tokens at pos 44
+07-11 10:23:11.248 30598 30651 I AACBridgeJNI: TIMING,resumeInference,prefill_ms=565.81,gen_ms=4069.03,prompt_tokens=9,gen_tokens=64
+07-11 10:23:11.248 30598 30651 I AACBridgeJNI: Resume inference completed successfully
+07-11 10:23:11.248 30598 30651 I LatencyProfiler: BENCH,17,CAP_KVC,home_morning,50,4635.76,3.43,319
+07-11 10:23:11.250 30598 30651 I AACBridgeJNI: KV cache loaded successfully
+07-11 10:23:11.250 30598 30651 I AACBridgeJNI: resumeInference: n_past = 44
+07-11 10:23:11.250 30598 30651 I AACBridgeJNI: resumeInference: appending 9 intent tokens at pos 44
+07-11 10:23:15.479 30598 30651 I AACBridgeJNI: TIMING,resumeInference,prefill_ms=325.25,gen_ms=3903.31,prompt_tokens=9,gen_tokens=64
+07-11 10:23:15.479 30598 30651 I AACBridgeJNI: Resume inference completed successfully
+07-11 10:23:15.479 30598 30651 I LatencyProfiler: BENCH,18,CAP_KVC,home_morning,50,4229.08,1.75,319
+07-11 10:23:15.481 30598 30651 I AACBridgeJNI: KV cache loaded successfully
+07-11 10:23:15.481 30598 30651 I AACBridgeJNI: resumeInference: n_past = 44
+07-11 10:23:15.481 30598 30651 I AACBridgeJNI: resumeInference: appending 9 intent tokens at pos 44
+07-11 10:23:20.020 30598 30651 I AACBridgeJNI: TIMING,resumeInference,prefill_ms=307.77,gen_ms=4230.77,prompt_tokens=9,gen_tokens=64
+07-11 10:23:20.020 30598 30651 I AACBridgeJNI: Resume inference completed successfully
+07-11 10:23:20.021 30598 30651 I LatencyProfiler: BENCH,19,CAP_KVC,home_morning,50,4539.49,1.58,319
+07-11 10:23:20.023 30598 30651 I AACBridgeJNI: KV cache loaded successfully
+07-11 10:23:20.024 30598 30651 I AACBridgeJNI: resumeInference: n_past = 44
+07-11 10:23:20.024 30598 30651 I AACBridgeJNI: resumeInference: appending 9 intent tokens at pos 44
+07-11 10:23:24.753 30598 30651 I AACBridgeJNI: TIMING,resumeInference,prefill_ms=335.16,gen_ms=4393.28,prompt_tokens=9,gen_tokens=64
+07-11 10:23:24.753 30598 30651 I AACBridgeJNI: Resume inference completed successfully
+07-11 10:23:24.754 30598 30651 I LatencyProfiler: BENCH,20,CAP_KVC,home_morning,50,4729.70,2.33,319
+07-11 10:23:24.756 30598 30651 I AACBridgeJNI: KV cache loaded successfully
+07-11 10:23:24.756 30598 30651 I AACBridgeJNI: resumeInference: n_past = 44
+07-11 10:23:24.756 30598 30651 I AACBridgeJNI: resumeInference: appending 9 intent tokens at pos 44
+07-11 10:23:29.040 30598 30651 I AACBridgeJNI: TIMING,resumeInference,prefill_ms=330.68,gen_ms=3953.36,prompt_tokens=9,gen_tokens=64
+07-11 10:23:29.040 30598 30651 I AACBridgeJNI: Resume inference completed successfully
+07-11 10:23:29.041 30598 30651 I LatencyProfiler: BENCH,21,CAP_KVC,home_morning,50,4284.60,2.25,319
+07-11 10:23:29.042 30598 30651 I AACBridgeJNI: KV cache loaded successfully
+07-11 10:23:29.042 30598 30651 I AACBridgeJNI: resumeInference: n_past = 44
+07-11 10:23:29.042 30598 30651 I AACBridgeJNI: resumeInference: appending 9 intent tokens at pos 44
+07-11 10:23:33.416 30598 30651 I AACBridgeJNI: TIMING,resumeInference,prefill_ms=325.84,gen_ms=4048.10,prompt_tokens=9,gen_tokens=64
+07-11 10:23:33.417 30598 30651 I AACBridgeJNI: Resume inference completed successfully
+07-11 10:23:33.417 30598 30651 I LatencyProfiler: BENCH,22,CAP_KVC,home_morning,50,4374.42,1.60,319
+07-11 10:23:33.419 30598 30651 I AACBridgeJNI: KV cache loaded successfully
+07-11 10:23:33.419 30598 30651 I AACBridgeJNI: resumeInference: n_past = 44
+07-11 10:23:33.419 30598 30651 I AACBridgeJNI: resumeInference: appending 9 intent tokens at pos 44
+07-11 10:23:37.711 30598 30651 I AACBridgeJNI: TIMING,resumeInference,prefill_ms=324.42,gen_ms=3966.78,prompt_tokens=9,gen_tokens=64
+07-11 10:23:37.711 30598 30651 I AACBridgeJNI: Resume inference completed successfully
+07-11 10:23:37.711 30598 30651 I LatencyProfiler: BENCH,23,CAP_KVC,home_morning,50,4291.73,2.09,319
+07-11 10:23:37.713 30598 30651 I AACBridgeJNI: KV cache loaded successfully
+07-11 10:23:37.713 30598 30651 I AACBridgeJNI: resumeInference: n_past = 44
+07-11 10:23:37.713 30598 30651 I AACBridgeJNI: resumeInference: appending 9 intent tokens at pos 44
+07-11 10:23:42.424 30598 30651 I AACBridgeJNI: TIMING,resumeInference,prefill_ms=329.05,gen_ms=4382.35,prompt_tokens=9,gen_tokens=64
+07-11 10:23:42.425 30598 30651 I AACBridgeJNI: Resume inference completed successfully
+07-11 10:23:42.425 30598 30651 I LatencyProfiler: BENCH,24,CAP_KVC,home_morning,50,4711.87,1.61,319
+07-11 10:23:42.429 30598 30651 I AACBridgeJNI: KV cache loaded successfully
+07-11 10:23:42.429 30598 30651 I AACBridgeJNI: resumeInference: n_past = 44
+07-11 10:23:42.430 30598 30651 I AACBridgeJNI: resumeInference: appending 9 intent tokens at pos 44
+07-11 10:23:47.003 30598 30651 I AACBridgeJNI: TIMING,resumeInference,prefill_ms=333.33,gen_ms=4239.08,prompt_tokens=9,gen_tokens=64
+07-11 10:23:47.003 30598 30651 I AACBridgeJNI: Resume inference completed successfully
+07-11 10:23:47.004 30598 30651 I LatencyProfiler: BENCH,25,CAP_KVC,home_morning,50,4574.11,4.52,319
+07-11 10:23:47.009 30598 30651 I AACBridgeJNI: KV cache loaded successfully
+07-11 10:23:47.009 30598 30651 I AACBridgeJNI: resumeInference: n_past = 44
+07-11 10:23:47.009 30598 30651 I AACBridgeJNI: resumeInference: appending 9 intent tokens at pos 44
+07-11 10:23:51.297 30598 30651 I AACBridgeJNI: TIMING,resumeInference,prefill_ms=317.55,gen_ms=3969.79,prompt_tokens=9,gen_tokens=64
+07-11 10:23:51.297 30598 30651 I AACBridgeJNI: Resume inference completed successfully
+07-11 10:23:51.327 30598 30651 I LatencyProfiler: BENCH,26,CAP_KVC,home_morning,50,4318.01,4.54,319
+07-11 10:23:51.334 30598 30651 I AACBridgeJNI: KV cache loaded successfully
+07-11 10:23:51.334 30598 30651 I AACBridgeJNI: resumeInference: n_past = 44
+07-11 10:23:51.334 30598 30651 I AACBridgeJNI: resumeInference: appending 9 intent tokens at pos 44
+07-11 10:23:55.825 30598 30651 I AACBridgeJNI: TIMING,resumeInference,prefill_ms=323.36,gen_ms=4167.14,prompt_tokens=9,gen_tokens=64
+07-11 10:23:55.825 30598 30651 I AACBridgeJNI: Resume inference completed successfully
+07-11 10:23:55.825 30598 30651 I LatencyProfiler: BENCH,27,CAP_KVC,home_morning,50,4491.37,6.20,319
+07-11 10:23:55.828 30598 30651 I AACBridgeJNI: KV cache loaded successfully
+07-11 10:23:55.828 30598 30651 I AACBridgeJNI: resumeInference: n_past = 44
+07-11 10:23:55.828 30598 30651 I AACBridgeJNI: resumeInference: appending 9 intent tokens at pos 44
+07-11 10:24:00.168 30598 30651 I AACBridgeJNI: TIMING,resumeInference,prefill_ms=351.90,gen_ms=3988.03,prompt_tokens=9,gen_tokens=64
+07-11 10:24:00.168 30598 30651 I AACBridgeJNI: Resume inference completed successfully
+07-11 10:24:00.168 30598 30651 I LatencyProfiler: BENCH,28,CAP_KVC,home_morning,50,4340.47,2.15,319
+07-11 10:24:00.173 30598 30651 I AACBridgeJNI: KV cache loaded successfully
+07-11 10:24:00.173 30598 30651 I AACBridgeJNI: resumeInference: n_past = 44
+07-11 10:24:00.173 30598 30651 I AACBridgeJNI: resumeInference: appending 9 intent tokens at pos 44
+07-11 10:24:04.419 30598 30651 I AACBridgeJNI: TIMING,resumeInference,prefill_ms=321.16,gen_ms=3924.24,prompt_tokens=9,gen_tokens=64
+07-11 10:24:04.419 30598 30651 I AACBridgeJNI: Resume inference completed successfully
+07-11 10:24:04.427 30598 30651 I LatencyProfiler: BENCH,29,CAP_KVC,home_morning,50,4250.91,4.26,319
+07-11 10:24:04.429 30598 30651 I AACBridgeJNI: KV cache loaded successfully
+07-11 10:24:04.429 30598 30651 I AACBridgeJNI: resumeInference: n_past = 44
+07-11 10:24:04.429 30598 30651 I AACBridgeJNI: resumeInference: appending 9 intent tokens at pos 44
+07-11 10:24:08.805 30598 30651 I AACBridgeJNI: TIMING,resumeInference,prefill_ms=333.64,gen_ms=4042.50,prompt_tokens=9,gen_tokens=64
+07-11 10:24:08.805 30598 30651 I AACBridgeJNI: Resume inference completed successfully
+07-11 10:24:08.806 30598 30651 I LatencyProfiler: BENCH,30,CAP_KVC,home_morning,50,4376.73,2.04,319
+07-11 10:24:08.806 30598 30651 I LatencyProfiler: === BENCHMARK SUITE COMPLETE ===

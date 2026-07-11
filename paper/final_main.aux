@@ -1,0 +1,213 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\citation{dettmers2022}
+\citation{frantar2022}
+\citation{llamacpp}
+\citation{vaswani2017}
+\citation{beukelman2020}
+\citation{sglang}
+\citation{vllm}
+\citation{cachegen}
+\citation{llamacpp}
+\@writefile{toc}{\contentsline {section}{\numberline {I}Introduction}{1}{section.1}\protected@file@percent }
+\newlabel{sec:introduction}{{I}{1}{Introduction}{section.1}{}}
+\citation{scissorhands}
+\citation{h2o}
+\citation{snapkv}
+\citation{streamingllm}
+\citation{kvquant}
+\citation{sglang}
+\citation{vllm}
+\citation{promptcache}
+\citation{cacheblend}
+\citation{infinigen}
+\citation{cachegen}
+\citation{dettmers2022}
+\citation{frantar2022}
+\citation{awq}
+\citation{mobilellm}
+\citation{llamacpp}
+\citation{mlcllm}
+\citation{powerinfer2}
+\citation{llminaflash}
+\citation{flexgen}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {I-A}}Research Questions}{2}{subsection.1.1}\protected@file@percent }
+\newlabel{sec:rqs}{{\mbox  {I-A}}{2}{Research Questions}{subsection.1.1}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {II}Related Work}{2}{section.2}\protected@file@percent }
+\newlabel{sec:related}{{II}{2}{Related Work}{section.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-A}}KV Cache Optimization}{2}{subsection.2.1}\protected@file@percent }
+\newlabel{sec:related_kvcache}{{\mbox  {II-A}}{2}{KV Cache Optimization}{subsection.2.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-B}}Edge Deployment of Language Models}{2}{subsection.2.2}\protected@file@percent }
+\newlabel{sec:related_edge}{{\mbox  {II-B}}{2}{Edge Deployment of Language Models}{subsection.2.2}{}}
+\citation{beukelman2020}
+\citation{vertanen2015}
+\citation{ninapro}
+\citation{mediapipe}
+\citation{ngiam2011}
+\citation{promptcache}
+\citation{cacheblend}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-C}}Augmentative and Alternative Communication}{3}{subsection.2.3}\protected@file@percent }
+\newlabel{sec:related_aac}{{\mbox  {II-C}}{3}{Augmentative and Alternative Communication}{subsection.2.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-D}}Multimodal Sensor Fusion}{3}{subsection.2.4}\protected@file@percent }
+\newlabel{sec:related_fusion}{{\mbox  {II-D}}{3}{Multimodal Sensor Fusion}{subsection.2.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-E}}Positioning of This Work}{3}{subsection.2.5}\protected@file@percent }
+\newlabel{sec:positioning}{{\mbox  {II-E}}{3}{Positioning of This Work}{subsection.2.5}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {III}Methodology}{3}{section.3}\protected@file@percent }
+\newlabel{sec:methodology}{{III}{3}{Methodology}{section.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-A}}Problem Formulation}{3}{subsection.3.1}\protected@file@percent }
+\newlabel{sec:problem}{{\mbox  {III-A}}{3}{Problem Formulation}{subsection.3.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-B}}System Execution Lifecycle}{3}{subsection.3.2}\protected@file@percent }
+\newlabel{sec:lifecycle}{{\mbox  {III-B}}{3}{System Execution Lifecycle}{subsection.3.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-C}}Multimodal Intent Classification}{3}{subsection.3.3}\protected@file@percent }
+\newlabel{sec:fusion}{{\mbox  {III-C}}{3}{Multimodal Intent Classification}{subsection.3.3}{}}
+\citation{mediapipe}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces CAP-KVC system architecture. Environmental sensors (blue) feed a deterministic scoring function that selects contexts for background priming (green). The multimodal intent pipeline (purple) combines sEMG and gaze inputs via late fusion. At inference time (orange), the pre-computed KV cache is restored and only intent tokens are processed by the llama.cpp/JNI backend. A periodic drift detector re-evaluates context relevance with hysteresis gating ($\Delta \geq 0.10$).}}{4}{figure.1}\protected@file@percent }
+\newlabel{fig:architecture}{{1}{4}{CAP-KVC system architecture. Environmental sensors (blue) feed a deterministic scoring function that selects contexts for background priming (green). The multimodal intent pipeline (purple) combines sEMG and gaze inputs via late fusion. At inference time (orange), the pre-computed KV cache is restored and only intent tokens are processed by the llama.cpp/JNI backend. A periodic drift detector re-evaluates context relevance with hysteresis gating ($\Delta \geq 0.10$)}{figure.1}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-C}1}Surface Electromyography (sEMG)}{4}{subsubsection.3.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-C}2}Gaze Tracking}{4}{subsubsection.3.3.2}\protected@file@percent }
+\newlabel{eq:gaze_vector}{{1}{4}{Gaze Tracking}{equation.1}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-C}3}Late Fusion Architecture}{4}{subsubsection.3.3.3}\protected@file@percent }
+\newlabel{eq:late_fusion}{{2}{4}{Late Fusion Architecture}{equation.2}{}}
+\citation{dailydialog}
+\citation{llamacpp}
+\citation{qwen25}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-D}}Deterministic Context Scoring}{5}{subsection.3.4}\protected@file@percent }
+\newlabel{sec:scoring}{{\mbox  {III-D}}{5}{Deterministic Context Scoring}{subsection.3.4}{}}
+\newlabel{eq:scoring}{{3}{5}{Deterministic Context Scoring}{equation.3}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-D}1}Temporal Scoring}{5}{subsubsection.3.4.1}\protected@file@percent }
+\newlabel{eq:time_score}{{4}{5}{Temporal Scoring}{equation.4}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-D}2}Spatial Scoring}{5}{subsubsection.3.4.2}\protected@file@percent }
+\newlabel{eq:gps_score}{{5}{5}{Spatial Scoring}{equation.5}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-D}3}BLE Proximity Scoring}{5}{subsubsection.3.4.3}\protected@file@percent }
+\newlabel{sec:scoring_weights}{{\mbox  {III-D}4}{5}{Dynamic Reliability Normalization}{subsubsection.3.4.4}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {\mbox  {III-D}4}Dynamic Reliability Normalization}{5}{subsubsection.3.4.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-E}}KV Cache Residency Management}{5}{subsection.3.5}\protected@file@percent }
+\newlabel{sec:residency}{{\mbox  {III-E}}{5}{KV Cache Residency Management}{subsection.3.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-F}}Asynchronous Drift Detection}{5}{subsection.3.6}\protected@file@percent }
+\newlabel{sec:drift}{{\mbox  {III-F}}{5}{Asynchronous Drift Detection}{subsection.3.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-G}}Inference Fallback}{5}{subsection.3.7}\protected@file@percent }
+\newlabel{sec:fallback}{{\mbox  {III-G}}{5}{Inference Fallback}{subsection.3.7}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {IV}Implementation}{5}{section.4}\protected@file@percent }
+\newlabel{sec:implementation}{{IV}{5}{Implementation}{section.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-A}}Platform and Runtime}{6}{subsection.4.1}\protected@file@percent }
+\newlabel{sec:platform}{{\mbox  {IV-A}}{6}{Platform and Runtime}{subsection.4.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-B}}JNI Boundary Contract}{6}{subsection.4.2}\protected@file@percent }
+\newlabel{sec:jni}{{\mbox  {IV-B}}{6}{JNI Boundary Contract}{subsection.4.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-C}}Concurrency Model}{6}{subsection.4.3}\protected@file@percent }
+\newlabel{sec:concurrency}{{\mbox  {IV-C}}{6}{Concurrency Model}{subsection.4.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-D}}KV Cache Priming Lifecycle}{6}{subsection.4.4}\protected@file@percent }
+\newlabel{sec:priming}{{\mbox  {IV-D}}{6}{KV Cache Priming Lifecycle}{subsection.4.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-E}}KV Cache Residency and Eviction}{6}{subsection.4.5}\protected@file@percent }
+\newlabel{sec:eviction}{{\mbox  {IV-E}}{6}{KV Cache Residency and Eviction}{subsection.4.5}{}}
+\citation{onnxruntime}
+\citation{mediapipe}
+\citation{qwen25}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-F}}Sensor Integration}{7}{subsection.4.6}\protected@file@percent }
+\newlabel{sec:sensors}{{\mbox  {IV-F}}{7}{Sensor Integration}{subsection.4.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-G}}Fusion Model Deployment}{7}{subsection.4.7}\protected@file@percent }
+\newlabel{sec:fusion_deploy}{{\mbox  {IV-G}}{7}{Fusion Model Deployment}{subsection.4.7}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-H}}Gaze Tracking}{7}{subsection.4.8}\protected@file@percent }
+\newlabel{sec:gaze_impl}{{\mbox  {IV-H}}{7}{Gaze Tracking}{subsection.4.8}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {V}Experimental Setup}{7}{section.5}\protected@file@percent }
+\newlabel{sec:experiments}{{V}{7}{Experimental Setup}{section.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-A}}Hardware Platform}{7}{subsection.5.1}\protected@file@percent }
+\newlabel{sec:hardware}{{\mbox  {V-A}}{7}{Hardware Platform}{subsection.5.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-B}}Language Model Configuration}{7}{subsection.5.2}\protected@file@percent }
+\newlabel{sec:model_config}{{\mbox  {V-B}}{7}{Language Model Configuration}{subsection.5.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-C}}Benchmark Conditions}{7}{subsection.5.3}\protected@file@percent }
+\newlabel{sec:conditions}{{\mbox  {V-C}}{7}{Benchmark Conditions}{subsection.5.3}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {I}{\ignorespaces System hyperparameters. All values are fixed at compile time except the model path.}}{8}{table.1}\protected@file@percent }
+\newlabel{tab:hyperparams}{{I}{8}{System hyperparameters. All values are fixed at compile time except the model path}{table.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-D}}Measurement Methodology}{8}{subsection.5.4}\protected@file@percent }
+\newlabel{sec:measurement}{{\mbox  {V-D}}{8}{Measurement Methodology}{subsection.5.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-E}}Pre-Benchmark Validation}{8}{subsection.5.5}\protected@file@percent }
+\newlabel{sec:validation}{{\mbox  {V-E}}{8}{Pre-Benchmark Validation}{subsection.5.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-F}}Memory Profiling}{8}{subsection.5.6}\protected@file@percent }
+\newlabel{sec:memory_profiling}{{\mbox  {V-F}}{8}{Memory Profiling}{subsection.5.6}{}}
+\citation{ninapro}
+\citation{dailydialog}
+\citation{minilm}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-G}}Fusion Model Evaluation}{9}{subsection.5.7}\protected@file@percent }
+\newlabel{sec:fusion_eval}{{\mbox  {V-G}}{9}{Fusion Model Evaluation}{subsection.5.7}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-H}}EMG Classifier Evaluation}{9}{subsection.5.8}\protected@file@percent }
+\newlabel{sec:emg_eval}{{\mbox  {V-H}}{9}{EMG Classifier Evaluation}{subsection.5.8}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-I}}Drift Detection Ablation}{9}{subsection.5.9}\protected@file@percent }
+\newlabel{sec:drift_eval}{{\mbox  {V-I}}{9}{Drift Detection Ablation}{subsection.5.9}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {VI}Results}{9}{section.6}\protected@file@percent }
+\newlabel{sec:results}{{VI}{9}{Results}{section.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-A}}End-to-End Inference Latency (RQ1)}{9}{subsection.6.1}\protected@file@percent }
+\newlabel{sec:results_latency}{{\mbox  {VI-A}}{9}{End-to-End Inference Latency (RQ1)}{subsection.6.1}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {II}{\ignorespaces Inference latency decomposition (ms) across pipeline conditions. Prefill isolates the \texttt  {llama\_decode()} forward pass; generation covers the autoregressive sampling loop. Both are measured via native-side \texttt  {std::chrono} instrumentation. CAP\_KVC total includes cache restoration, prefill, and generation. All values: OnePlus~11R, Qwen2.5-0.5B-Instruct Q4\_K\_M, greedy sampling, max 64~output tokens, $n = 30$ trials.}}{9}{table.2}\protected@file@percent }
+\newlabel{tab:latency}{{II}{9}{Inference latency decomposition (ms) across pipeline conditions. Prefill isolates the \texttt {llama\_decode()} forward pass; generation covers the autoregressive sampling loop. Both are measured via native-side \texttt {std::chrono} instrumentation. CAP\_KVC total includes cache restoration, prefill, and generation. All values: OnePlus~11R, Qwen2.5-0.5B-Instruct Q4\_K\_M, greedy sampling, max 64~output tokens, $n = 30$ trials}{table.2}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces End-to-end inference latency across pipeline conditions ($n = 30$ trials each). Error bars indicate one standard deviation. CAP-KVC achieves a 4.24$\times $ end-to-end speedup relative to RAG\_INLINE at $N \approx 500$.}}{9}{figure.2}\protected@file@percent }
+\newlabel{fig:latency_comparison}{{2}{9}{End-to-end inference latency across pipeline conditions ($n = 30$ trials each). Error bars indicate one standard deviation. CAP-KVC achieves a 4.24$\times $ end-to-end speedup relative to RAG\_INLINE at $N \approx 500$}{figure.2}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Latency breakdown across pipeline conditions. Native-side \texttt  {std::chrono} instrumentation decomposes each trial into prefill (dark) and generation (light) phases. RAG\_INLINE prefill scales linearly with context length (274~ms at $N\!=\!9$ to 14001~ms at $N\!=\!439$ tokens), whereas CAP\_KVC prefill is 343~ms regardless of cached context size, achieving a 40.78$\times $ prefill-specific speedup. Error bars: one standard deviation ($n = 30$).}}{10}{figure.3}\protected@file@percent }
+\newlabel{fig:latency_breakdown}{{3}{10}{Latency breakdown across pipeline conditions. Native-side \texttt {std::chrono} instrumentation decomposes each trial into prefill (dark) and generation (light) phases. RAG\_INLINE prefill scales linearly with context length (274~ms at $N\!=\!9$ to 14001~ms at $N\!=\!439$ tokens), whereas CAP\_KVC prefill is 343~ms regardless of cached context size, achieving a 40.78$\times $ prefill-specific speedup. Error bars: one standard deviation ($n = 30$)}{figure.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-B}}Multimodal Fusion Ablation (RQ3)}{10}{subsection.6.2}\protected@file@percent }
+\newlabel{sec:results_fusion}{{\mbox  {VI-B}}{10}{Multimodal Fusion Ablation (RQ3)}{subsection.6.2}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {III}{\ignorespaces Fusion architecture ablation results. Values from \texttt  {fusion\_ablation.csv}. Latency is per-sample CPU inference time.}}{10}{table.3}\protected@file@percent }
+\newlabel{tab:fusion}{{III}{10}{Fusion architecture ablation results. Values from \texttt {fusion\_ablation.csv}. Latency is per-sample CPU inference time}{table.3}{}}
+\citation{ninapro}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Fusion architecture ablation on synthetic test data (400 samples). Late fusion exceeds cross-attention in both accuracy and F1.}}{11}{figure.4}\protected@file@percent }
+\newlabel{fig:fusion_ablation}{{4}{11}{Fusion architecture ablation on synthetic test data (400 samples). Late fusion exceeds cross-attention in both accuracy and F1}{figure.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-C}}EMG Classifier Performance}{11}{subsection.6.3}\protected@file@percent }
+\newlabel{sec:results_emg}{{\mbox  {VI-C}}{11}{EMG Classifier Performance}{subsection.6.3}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {IV}{\ignorespaces EMG standalone classification report (held-out subject). Values from \texttt  {classification\_report.txt}.}}{11}{table.4}\protected@file@percent }
+\newlabel{tab:emg}{{IV}{11}{EMG standalone classification report (held-out subject). Values from \texttt {classification\_report.txt}}{table.4}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces CNN-LSTM EMG classifier training and validation accuracy over 35 epochs. The red dashed line marks the best checkpoint at epoch~8. The gray dashed line indicates the 5-class random baseline (20\%).}}{11}{figure.5}\protected@file@percent }
+\newlabel{fig:training_curves}{{5}{11}{CNN-LSTM EMG classifier training and validation accuracy over 35 epochs. The red dashed line marks the best checkpoint at epoch~8. The gray dashed line indicates the 5-class random baseline (20\%)}{figure.5}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Confusion matrix for the EMG standalone classifier on the held-out subject. Strong \emph  {call-help} and \emph  {scroll} diagonal entries contrast with near-zero \emph  {confirm} and \emph  {reject} performance.}}{11}{figure.6}\protected@file@percent }
+\newlabel{fig:emg_confusion}{{6}{11}{Confusion matrix for the EMG standalone classifier on the held-out subject. Strong \emph {call-help} and \emph {scroll} diagonal entries contrast with near-zero \emph {confirm} and \emph {reject} performance}{figure.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-D}}Memory Budget (RQ2)}{11}{subsection.6.4}\protected@file@percent }
+\newlabel{sec:results_memory}{{\mbox  {VI-D}}{11}{Memory Budget (RQ2)}{subsection.6.4}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {V}{\ignorespaces Native heap memory usage (KB) from \texttt  {dumpsys meminfo}. Delta represents the marginal cost of loading three KV cache states.}}{11}{table.5}\protected@file@percent }
+\newlabel{tab:memory}{{V}{11}{Native heap memory usage (KB) from \texttt {dumpsys meminfo}. Delta represents the marginal cost of loading three KV cache states}{table.5}{}}
+\citation{minilm}
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Native heap memory usage at idle (0 KV states) and with 3 KV cache states loaded. The delta of 118.7~MB represents the marginal cost of predictive caching.}}{12}{figure.7}\protected@file@percent }
+\newlabel{fig:memory_budget}{{7}{12}{Native heap memory usage at idle (0 KV states) and with 3 KV cache states loaded. The delta of 118.7~MB represents the marginal cost of predictive caching}{figure.7}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-E}}Drift Detection Ablation}{12}{subsection.6.5}\protected@file@percent }
+\newlabel{sec:results_drift}{{\mbox  {VI-E}}{12}{Drift Detection Ablation}{subsection.6.5}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {VI}{\ignorespaces Drift detection F1 as a function of sliding window size $k$, evaluated on DailyDialog with $\theta = 0.15$. $n_{\text  {true}}$ and $n_{\text  {pred}}$ denote the number of ground-truth and predicted shift points, respectively.}}{12}{table.6}\protected@file@percent }
+\newlabel{tab:drift}{{VI}{12}{Drift detection F1 as a function of sliding window size $k$, evaluated on DailyDialog with $\theta = 0.15$. $n_{\text {true}}$ and $n_{\text {pred}}$ denote the number of ground-truth and predicted shift points, respectively}{table.6}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces Drift detection precision, recall, and F1 as a function of sliding window size $k$ on DailyDialog ($\theta = 0.15$). Performance degrades monotonically with increasing $k$.}}{12}{figure.8}\protected@file@percent }
+\newlabel{fig:drift_kablation}{{8}{12}{Drift detection precision, recall, and F1 as a function of sliding window size $k$ on DailyDialog ($\theta = 0.15$). Performance degrades monotonically with increasing $k$}{figure.8}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-F}}Summary of Key Findings}{12}{subsection.6.6}\protected@file@percent }
+\newlabel{sec:results_summary}{{\mbox  {VI-F}}{12}{Summary of Key Findings}{subsection.6.6}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {VII}Conclusion}{13}{section.7}\protected@file@percent }
+\newlabel{sec:conclusion}{{VII}{13}{Conclusion}{section.7}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VII-A}}Limitations}{13}{subsection.7.1}\protected@file@percent }
+\bibcite{beukelman2020}{1}
+\bibcite{llamacpp}{2}
+\bibcite{qwen25}{3}
+\bibcite{dettmers2022}{4}
+\bibcite{frantar2022}{5}
+\bibcite{mlcllm}{6}
+\bibcite{scissorhands}{7}
+\bibcite{h2o}{8}
+\bibcite{streamingllm}{9}
+\bibcite{sglang}{10}
+\bibcite{vllm}{11}
+\bibcite{infinigen}{12}
+\bibcite{cachegen}{13}
+\bibcite{ninapro}{14}
+\bibcite{mediapipe}{15}
+\bibcite{vertanen2015}{16}
+\bibcite{ngiam2011}{17}
+\bibcite{dailydialog}{18}
+\bibcite{minilm}{19}
+\bibcite{snapkv}{20}
+\bibcite{promptcache}{21}
+\bibcite{cacheblend}{22}
+\bibcite{powerinfer2}{23}
+\bibcite{kvquant}{24}
+\bibcite{awq}{25}
+\bibcite{mobilellm}{26}
+\bibcite{llminaflash}{27}
+\bibcite{flexgen}{28}
+\bibcite{vaswani2017}{29}
+\bibcite{onnxruntime}{30}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VII-B}}Artifact Availability}{14}{subsection.7.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{References}{14}{section*.1}\protected@file@percent }
+\gdef \@abspage@last{14}

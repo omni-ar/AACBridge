@@ -88,6 +88,9 @@ class KVCacheManagerTest {
             jniBridge = object : LlamaBridgeAdapter {
                 override fun loadKVCache(filepath: String, seqId: Int) =
                     bridge.loadKVCache(filepath, seqId)
+                override fun clearKVCache() {}
+                override fun prefillOnly(prompt: String) = true
+                override fun resumeInference(prompt: String) = ""
                 override fun saveKVCache(filepath: String, seqId: Int) =
                     bridge.saveKVCache(filepath, seqId)
                 override fun runInference(prompt: String) =
@@ -152,6 +155,9 @@ fun `failed JNI load returns seqId to pool`() =
                             seqId
                         )
                     }
+                    override fun clearKVCache() {}
+                    override fun prefillOnly(prompt: String) = true
+                    override fun resumeInference(prompt: String) = ""
                     override fun saveKVCache(filepath: String, seqId: Int) =
                         bridge.saveKVCache(filepath, seqId)
                     override fun runInference(prompt: String) =
@@ -216,6 +222,9 @@ fun `resident state is not redundantly reloaded`() =
                             seqId
                         )
                     }
+                    override fun clearKVCache() {}
+                    override fun prefillOnly(prompt: String) = true
+                    override fun resumeInference(prompt: String) = ""
                     override fun saveKVCache(filepath: String, seqId: Int) =
                         bridge.saveKVCache(filepath, seqId)
                     override fun runInference(prompt: String) =
@@ -280,6 +289,9 @@ fun `state loads successfully into available seqId`() =
                             seqId
                         )
                     }
+                    override fun clearKVCache() {}
+                    override fun prefillOnly(prompt: String) = true
+                    override fun resumeInference(prompt: String) = ""
                     override fun saveKVCache(filepath: String, seqId: Int) =
                         bridge.saveKVCache(filepath, seqId)
                     override fun runInference(prompt: String) =

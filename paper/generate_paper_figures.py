@@ -117,8 +117,9 @@ def generate_latency_figure():
     # Annotate CAP-KVC speedup
     rag500_mean = np.mean(data[("RAG_INLINE", 500)])
     cap_mean = np.mean(cap_totals)
+    speedup = rag500_mean / cap_mean
     ax.annotate(
-        f"4.59× speedup",
+        f"{speedup:.2f}\u00d7 speedup",
         xy=(5, cap_mean + stds[-1] + 200),
         fontsize=7.5, ha="center", color=COLORS["cap"],
         fontweight="bold"
@@ -134,6 +135,95 @@ def generate_latency_figure():
     plt.close(fig)
     print(f"  [OK] latency_comparison.png/pdf")
 
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Figure A2: Latency Breakdown (Prefill vs Generation)
+# ═══════════════════════════════════════════════════════════════════════════════
+def generate_latency_breakdown():
+    """Stacked bar chart showing prefill and generation decomposition."""
+    enriched = REPO / "benchmarks" / "results" / "ttft_enriched.csv"
+    data = defaultdict(lambda: {"prefill": [], "gen": [], "cache_load": []})
+
+    with open(enriched, "r") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            mode = row["mode"]
+            target = int(row["prompt_token_target"])
+            key = (mode, target)
+            data[key]["prefill"].append(float(row["prefill_ms"]))
+            data[key]["gen"].append(float(row["gen_ms"]))
+            if mode == "CAP_KVC":
+                data[key]["cache_load"].append(float(row.get("cache_load_ms", 0)))
+
+    conditions = [
+        (("ZERO_CONTEXT", 0), "No\nContext"),
+        (("RAG_INLINE", 50), "RAG\nN\u224850"),
+        (("RAG_INLINE", 100), "RAG\nN\u2248100"),
+        (("RAG_INLINE", 200), "RAG\nN\u2248200"),
+        (("RAG_INLINE", 500), "RAG\nN\u2248500"),
+        (("CAP_KVC", 50), "CAP-\nKVC"),
+    ]
+
+    labels = [c[1] for c in conditions]
+    prefill_means = []
+    gen_means = []
+    prefill_stds = []
+    gen_stds = []
+
+    for key, _ in conditions:
+        d = data[key]
+        prefill_means.append(np.mean(d["prefill"]))
+        gen_means.append(np.mean(d["gen"]))
+        prefill_stds.append(np.std(d["prefill"], ddof=1))
+        gen_stds.append(np.std(d["gen"], ddof=1))
+
+    fig, ax = plt.subplots(figsize=(5.5, 3.2))
+    x = np.arange(len(labels))
+    width = 0.65
+
+    # Stacked: prefill on bottom, gen on top
+    bar_colors_pf = [COLORS["zero"]] + [COLORS["rag"]] * 4 + [COLORS["cap"]]
+    bar_colors_gen = ["#5d6d7e"] + ["#b2bec3"] * 4 + ["#f1948a"]
+
+    bars_pf = ax.bar(x, prefill_means, width, label="Prefill",
+                     color=bar_colors_pf, edgecolor="black", linewidth=0.6)
+    bars_gen = ax.bar(x, gen_means, width, bottom=prefill_means,
+                      label="Generation", color=bar_colors_gen,
+                      edgecolor="black", linewidth=0.6)
+
+    # Error bars on total
+    totals = [p + g for p, g in zip(prefill_means, gen_means)]
+    total_stds = [np.sqrt(ps**2 + gs**2) for ps, gs in zip(prefill_stds, gen_stds)]
+    ax.errorbar(x, totals, yerr=total_stds, fmt="none", ecolor="black",
+               capsize=3, linewidth=0.8)
+
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels)
+    ax.set_ylabel("Latency (ms)")
+    ax.set_title("Latency Breakdown: Prefill vs Generation")
+    ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda v, _: f"{v:,.0f}"))
+    ax.legend(loc="upper left", framealpha=0.9)
+
+    # Annotate prefill speedup
+    cap_pf = prefill_means[-1]
+    rag500_pf = prefill_means[4]
+    speedup = rag500_pf / cap_pf
+    ax.annotate(
+        f"{speedup:.1f}\u00d7 prefill\nspeedup",
+        xy=(5, totals[-1] + total_stds[-1] + 200),
+        fontsize=7.5, ha="center", color=COLORS["cap"],
+        fontweight="bold"
+    )
+
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.set_xlim(-0.5, len(labels) - 0.5)
+
+    plt.tight_layout()
+    fig.savefig(OUT / "latency_breakdown.png")
+    fig.savefig(OUT / "latency_breakdown.pdf")
+    plt.close(fig)
+    print(f"  [OK] latency_breakdown.png/pdf")
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Figure B: Memory Budget
@@ -274,6 +364,7 @@ def generate_fusion_figure():
 if __name__ == "__main__":
     print("Generating paper figures...")
     generate_latency_figure()
+    generate_latency_breakdown()
     generate_memory_figure()
     generate_drift_figure()
     generate_fusion_figure()

@@ -1,6 +1,7 @@
 #include <jni.h>
 #include <string>
 #include <vector>
+#include <chrono>
 
 #include <android/log.h>
 
@@ -238,8 +239,21 @@ llama_batch batch =
                 session_tokens.size()
         );
 
+auto prefill_start =
+    std::chrono::high_resolution_clock::now();
+
 int decode_result =
         llama_decode(ctx, batch);
+
+auto prefill_end =
+    std::chrono::high_resolution_clock::now();
+
+double prefill_ms =
+    std::chrono::duration<double, std::milli>(
+        prefill_end - prefill_start
+    ).count();
+
+int n_prompt_tokens = (int) session_tokens.size();
 
 if (decode_result != 0) {
 LOGE("Initial decode failed");
@@ -263,6 +277,11 @@ std::string generated_text;
 
 const int max_generation_tokens = 64;
 
+auto gen_start =
+    std::chrono::high_resolution_clock::now();
+
+int gen_token_count = 0;
+
 for (int i = 0;
 i < max_generation_tokens;
 i++) {
@@ -285,6 +304,7 @@ break;
 }
 
 session_tokens.push_back(new_token);
+gen_token_count++;
 
 char piece[256];
 
@@ -332,6 +352,22 @@ return env->NewStringUTF(
 }
 
 llama_sampler_free(smpl);
+
+auto gen_end =
+    std::chrono::high_resolution_clock::now();
+
+double gen_ms =
+    std::chrono::duration<double, std::milli>(
+        gen_end - gen_start
+    ).count();
+
+LOGI("TIMING,runInference,"
+     "prefill_ms=%.2f,"
+     "gen_ms=%.2f,"
+     "prompt_tokens=%d,"
+     "gen_tokens=%d",
+     prefill_ms, gen_ms,
+     n_prompt_tokens, gen_token_count);
 
 LOGI("Inference completed successfully");
 
@@ -586,8 +622,19 @@ llama_batch batch =
                 n_new
         );
 
+auto prefill_start =
+    std::chrono::high_resolution_clock::now();
+
 int decode_result =
         llama_decode(ctx, batch);
+
+auto prefill_end =
+    std::chrono::high_resolution_clock::now();
+
+double prefill_ms =
+    std::chrono::duration<double, std::milli>(
+        prefill_end - prefill_start
+    ).count();
 
 if (decode_result != 0) {
 LOGE("Resume prefill decode failed");
@@ -626,6 +673,11 @@ std::string generated_text;
 
 const int max_generation_tokens = 64;
 
+auto gen_start =
+    std::chrono::high_resolution_clock::now();
+
+int gen_token_count = 0;
+
 for (int i = 0;
      i < max_generation_tokens;
      i++) {
@@ -648,6 +700,7 @@ for (int i = 0;
     }
 
     session_tokens.push_back(new_token);
+    gen_token_count++;
 
     char piece[256];
 
@@ -696,6 +749,22 @@ for (int i = 0;
 }
 
 llama_sampler_free(smpl);
+
+auto gen_end =
+    std::chrono::high_resolution_clock::now();
+
+double gen_ms =
+    std::chrono::duration<double, std::milli>(
+        gen_end - gen_start
+    ).count();
+
+LOGI("TIMING,resumeInference,"
+     "prefill_ms=%.2f,"
+     "gen_ms=%.2f,"
+     "prompt_tokens=%d,"
+     "gen_tokens=%d",
+     prefill_ms, gen_ms,
+     n_new, gen_token_count);
 
 LOGI("Resume inference completed successfully");
 

@@ -1,0 +1,274 @@
+<mxfile host="app.diagrams.net" modified="2026-07-12T00:00:00.000Z" agent="AACBridge" version="24.0.0" type="device">
+  <diagram name="CAP-KVC System Architecture" id="arch-main">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- ==================== TITLE ==================== -->
+        <mxCell id="title" value="&lt;b&gt;&lt;font style=&quot;font-size: 22px;&quot;&gt;CAP-KVC System Architecture&lt;/font&gt;&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="310" y="10" width="380" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- ==================== ENVIRONMENTAL SENSING (Green) ==================== -->
+        <mxCell id="env-bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="20" y="60" width="420" height="200" as="geometry"/>
+        </mxCell>
+        <mxCell id="env-title" value="&lt;b&gt;&lt;font style=&quot;font-size: 14px;&quot;&gt;Environmental Sensing&lt;/font&gt;&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=top;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="120" y="65" width="190" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- GPS -->
+        <mxCell id="gps" value="&lt;b&gt;GPS Provider&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px;&quot;&gt;Haversine distance&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="40" y="100" width="140" height="40" as="geometry"/>
+        </mxCell>
+        <!-- BLE -->
+        <mxCell id="ble" value="&lt;b&gt;BLE Scanner&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px;&quot;&gt;3s scan window&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="40" y="150" width="140" height="40" as="geometry"/>
+        </mxCell>
+        <!-- Clock -->
+        <mxCell id="clock" value="&lt;b&gt;System Clock&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px;&quot;&gt;Circular distance&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="40" y="200" width="140" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- SensorSnapshot -->
+        <mxCell id="snapshot" value="&lt;b&gt;SensorSnapshot&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px;&quot;&gt;(immutable data object)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="240" y="140" width="170" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- Arrows: sensors -> snapshot -->
+        <mxCell id="arr-gps-snap" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="gps" target="snapshot" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="arr-ble-snap" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="ble" target="snapshot" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="arr-clock-snap" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="clock" target="snapshot" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ==================== CONTEXT ROUTING & DRIFT (Yellow) ==================== -->
+        <mxCell id="route-bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="470" y="60" width="370" height="200" as="geometry"/>
+        </mxCell>
+        <mxCell id="route-title" value="&lt;b&gt;&lt;font style=&quot;font-size: 14px;&quot;&gt;Context Routing &amp;amp; Drift&lt;/font&gt;&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=top;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="540" y="65" width="210" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- StateRouter -->
+        <mxCell id="router" value="&lt;b&gt;StateRouter&lt;/b&gt;&lt;br&gt;S(c) = αS&lt;sub&gt;time&lt;/sub&gt; + βS&lt;sub&gt;gps&lt;/sub&gt;&lt;br&gt;+ γS&lt;sub&gt;ble&lt;/sub&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px;&quot;&gt;Top-k = 3 contexts selected&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="490" y="100" width="190" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- DriftDetector -->
+        <mxCell id="drift" value="&lt;b&gt;DriftDetector&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px;&quot;&gt;WorkManager&lt;br&gt;15min cycle&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="720" y="100" width="100" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- Drift threshold label -->
+        <mxCell id="drift-label" value="&lt;font style=&quot;font-size: 10px;&quot;&gt;Δ ≥ 0.10&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="690" y="82" width="60" height="20" as="geometry"/>
+        </mxCell>
+
+        <!-- Arrow: snapshot -> router -->
+        <mxCell id="arr-snap-router" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="snapshot" target="router" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Arrow: router <-> drift (bidirectional) -->
+        <mxCell id="arr-router-drift" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="router" target="drift" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Evict+Reload label -->
+        <mxCell id="evict-label" value="&lt;font color=&quot;#cc0000&quot; style=&quot;font-size: 10px;&quot;&gt;&lt;i&gt;Evict +&lt;br&gt;Reload&lt;/i&gt;&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="800" y="180" width="60" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- Drift -> Cache Manager (dashed red) -->
+        <mxCell id="arr-drift-cm" style="edgeStyle=orthogonalEdgeStyle;rounded=0;dashed=1;strokeColor=#cc0000;" edge="1" source="drift" target="cachemgr" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="770" y="200"/>
+              <mxPoint x="770" y="350"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- ==================== BACKGROUND PRIMING (Blue) ==================== -->
+        <mxCell id="prime-bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="20" y="290" width="820" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="prime-title" value="&lt;b&gt;&lt;font style=&quot;font-size: 14px;&quot;&gt;Background Priming (Idle Time)&lt;/font&gt;&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=top;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="300" y="293" width="270" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- prefillOnly -->
+        <mxCell id="prefill" value="&lt;b&gt;prefillOnly(prompt)&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px;&quot;&gt;Tokenize + Forward Pass&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="40" y="330" width="160" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- saveKVCache -->
+        <mxCell id="savekv" value="&lt;b&gt;saveKVCache(path)&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px;&quot;&gt;Serialize KV tensors&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="240" y="330" width="150" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- KV Cache .bin -->
+        <mxCell id="kvbin" value="&lt;b&gt;KV Cache .bin&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px;&quot;&gt;UFS 3.1 Storage&lt;/font&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=8;fillColor=#ffffff;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="430" y="325" width="120" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- Cache Manager -->
+        <mxCell id="cachemgr" value="&lt;b&gt;Cache Manager&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px;&quot;&gt;3-slot LRU, ReentrantLock&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="590" y="330" width="170" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- Arrow: router -> prefill -->
+        <mxCell id="arr-router-prefill" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="router" target="prefill" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="470" y="200"/>
+              <mxPoint x="470" y="280"/>
+              <mxPoint x="120" y="280"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Arrow: prefill -> save -->
+        <mxCell id="arr-prefill-save" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="prefill" target="savekv" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Arrow: save -> kvbin -->
+        <mxCell id="arr-save-kvbin" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="savekv" target="kvbin" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Arrow: kvbin -> cachemgr -->
+        <mxCell id="arr-kvbin-cm" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="kvbin" target="cachemgr" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- "Restore cached state" label on arrow from CM to engine -->
+        <mxCell id="restore-label" value="&lt;font style=&quot;font-size: 10px;&quot;&gt;Restore cached state&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="590" y="395" width="130" height="20" as="geometry"/>
+        </mxCell>
+
+        <!-- Arrow: CM -> loadKVCache (down to inference engine) -->
+        <mxCell id="arr-cm-load" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#0000FF;strokeWidth=2;" edge="1" source="cachemgr" target="loadkv" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ==================== MULTIMODAL INTENT (Purple) ==================== -->
+        <mxCell id="fusion-bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="20" y="440" width="400" height="230" as="geometry"/>
+        </mxCell>
+        <mxCell id="fusion-title" value="&lt;b&gt;&lt;font style=&quot;font-size: 14px;&quot;&gt;Multimodal Intent Pipeline&lt;/font&gt;&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=top;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="100" y="445" width="230" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- sEMG input -->
+        <mxCell id="semg" value="&lt;b&gt;sEMG&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px;&quot;&gt;16-ch&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="490" width="60" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- CNN-LSTM -->
+        <mxCell id="cnnlstm" value="&lt;b&gt;CNN-LSTM&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px;&quot;&gt;64-dim embedding&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="130" y="485" width="120" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- Camera input -->
+        <mxCell id="camera" value="&lt;b&gt;Front Camera&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="580" width="80" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- MediaPipe -->
+        <mxCell id="mediapipe" value="&lt;b&gt;MediaPipe&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px;&quot;&gt;Face Mesh&lt;br&gt;5-dim gaze, 468 landmarks&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="150" y="570" width="140" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- Late Fusion -->
+        <mxCell id="latefusion" value="&lt;b&gt;Late Fusion&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px;&quot;&gt;ONNX Runtime, 45KB model&lt;/font&gt;&lt;br&gt;&lt;br&gt;&lt;b&gt;Intent Class&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px;&quot;&gt;confirm|reject|scroll&lt;br&gt;|select|call-help&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9673a6;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="290" y="510" width="110" height="110" as="geometry"/>
+        </mxCell>
+
+        <!-- Arrows: inputs -> fusion -->
+        <mxCell id="arr-semg-cnn" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="semg" target="cnnlstm" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="arr-cnn-fusion" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="cnnlstm" target="latefusion" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="arr-cam-mp" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="camera" target="mediapipe" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="arr-mp-fusion" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="mediapipe" target="latefusion" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ==================== INFERENCE ENGINE (Orange/Red) ==================== -->
+        <mxCell id="engine-bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2e6;strokeColor=#d79b00;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="450" y="440" width="390" height="170" as="geometry"/>
+        </mxCell>
+        <mxCell id="engine-title" value="&lt;b&gt;&lt;font style=&quot;font-size: 14px;&quot;&gt;Inference Engine&lt;/font&gt;&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=top;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="570" y="445" width="140" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- loadKVCache -->
+        <mxCell id="loadkv" value="&lt;b&gt;loadKVCache()&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px;&quot;&gt;2.74ms&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="480" y="490" width="120" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- resumeInference -->
+        <mxCell id="resume" value="&lt;b&gt;resumeInference&lt;/b&gt;&lt;br&gt;&lt;b&gt;(intent)&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="640" y="490" width="120" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- AAC Response -->
+        <mxCell id="aacresp" value="&lt;b&gt;Generated&lt;br&gt;AAC&lt;br&gt;Response&lt;/b&gt;" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="790" y="475" width="80" height="70" as="geometry"/>
+        </mxCell>
+
+        <!-- Arrow: load -> resume -->
+        <mxCell id="arr-load-resume" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="loadkv" target="resume" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Arrow: resume -> response -->
+        <mxCell id="arr-resume-resp" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="resume" target="aacresp" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- "User intent tokens" label -->
+        <mxCell id="intent-label" value="&lt;font style=&quot;font-size: 10px;&quot;&gt;User intent tokens&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="530" y="545" width="120" height="20" as="geometry"/>
+        </mxCell>
+
+        <!-- Arrow: fusion -> resumeInference (foreground path - green) -->
+        <mxCell id="arr-fusion-resume" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#009900;strokeWidth=2;" edge="1" source="latefusion" target="resume" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="420" y="565"/>
+              <mxPoint x="420" y="560"/>
+              <mxPoint x="700" y="560"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- ==================== JNI BRIDGE BAR (Dark) ==================== -->
+        <mxCell id="jni-bar" value="&lt;font color=&quot;#ffffff&quot;&gt;&lt;b&gt;llama.cpp / JNI Bridge (C++)&lt;/b&gt;&lt;br&gt;Qwen2.5-0.5B-Instruct Q4_K_M&lt;br&gt;9 scalar-only native functions&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#333333;strokeColor=#000000;fontColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="450" y="630" width="390" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- Label markers: A for sEMG, B for Camera -->
+        <mxCell id="label-a" value="&lt;b&gt;&lt;font style=&quot;font-size: 14px;&quot; color=&quot;#9673a6&quot;&gt;A&lt;/font&gt;&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="25" y="495" width="20" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="label-b" value="&lt;b&gt;&lt;font style=&quot;font-size: 14px;&quot; color=&quot;#9673a6&quot;&gt;B&lt;/font&gt;&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="25" y="585" width="20" height="30" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

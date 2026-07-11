@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "AACBridge: Context-Aware Predictive KV-Cache Priming for Mobile AAC"
+type: software
+authors:
+  - given-names: Arjit
+    affiliation: "Independent Researcher"
+repository-code: "https://github.com/omni-ar/AACBridge"
+license: MIT
+keywords:
+  - "augmentative and alternative communication"
+  - "KV cache"
+  - "mobile inference"
+  - "edge AI"
+  - "llama.cpp"
+  - "context prediction"
+preferred-citation:
+  type: article
+  title: "Context-Aware Predictive KV-Cache Priming for Latency-Sensitive Mobile AAC Inference"
+  authors:
+    - given-names: Arjit
+  year: 2026
+  journal: "IEEE Access"
+  status: submitted

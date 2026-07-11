@@ -69,14 +69,7 @@ class KVCacheManagerPrimingTest {
     @Before
     fun setUp() {
         bridge = FakeLlamaBridge()
-        adapter = object : LlamaBridgeAdapter {
-            override fun loadKVCache(filepath: String, seqId: Int) =
-                bridge.loadKVCache(filepath, seqId)
-            override fun saveKVCache(filepath: String, seqId: Int) =
-                bridge.saveKVCache(filepath, seqId)
-            override fun runInference(prompt: String) =
-                bridge.runInference(prompt)
-        }
+        adapter = bridge
         cacheDir = tempDir.newFolder("kv_cache")
         engineLock = ReentrantLock()
     }
@@ -104,8 +97,8 @@ class KVCacheManagerPrimingTest {
 
         // Priming must have been triggered
         assertEquals(
-            "runInference must be called for priming",
-            1, bridge.inferenceCallCount
+            "prefillOnly must be called for priming",
+            1, bridge.prefillCallCount
         )
         assertEquals(
             "saveKVCache must be called to persist",
@@ -195,14 +188,14 @@ class KVCacheManagerPrimingTest {
 
         // First load: primes
         manager.loadTopStates(listOf("A"))
-        assertEquals(1, bridge.inferenceCallCount)
+        assertEquals(1, bridge.prefillCallCount)
         assertTrue(manager.isStateResident("A"))
 
         // Second load: state already resident, skip everything
         manager.loadTopStates(listOf("A"))
         assertEquals(
-            "No second inference for already-resident state",
-            1, bridge.inferenceCallCount
+            "No second prefill for already-resident state",
+            1, bridge.prefillCallCount
         )
         assertEquals(
             "No second save for already-resident state",
@@ -255,6 +248,9 @@ class KVCacheManagerPrimingTest {
                 lockHeldDuringLoad = engineLock.isHeldByCurrentThread
                 return true
             }
+            override fun clearKVCache() {}
+            override fun prefillOnly(prompt: String) = true
+            override fun resumeInference(prompt: String) = ""
             override fun saveKVCache(filepath: String, seqId: Int) = true
             override fun runInference(prompt: String) = "test"
         }
