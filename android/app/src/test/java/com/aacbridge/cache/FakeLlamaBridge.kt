@@ -134,4 +134,10 @@ class FakeLlamaBridge : LlamaBridgeAdapter {
 
         return inferenceResponse
     }
+
+    // Timing getters return zero in test fake
+    override fun getLastPrefillMs(): Double = 0.0
+    override fun getLastGenMs(): Double = 0.0
+    override fun getLastPromptTokens(): Int = 0
+    override fun getLastGenTokens(): Int = 0
 }

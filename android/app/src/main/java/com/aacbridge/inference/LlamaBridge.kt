@@ -65,6 +65,18 @@ object LlamaBridge : LlamaBridgeAdapter { // 1. INHERIT THE ADAPTER HERE
      */
     override external fun resumeInference(prompt: String): String
 
+    // -------------------------------------------------
+    // Native timing/token telemetry getters
+    // -------------------------------------------------
+
+    override external fun getLastPrefillMs(): Double
+
+    override external fun getLastGenMs(): Double
+
+    override external fun getLastPromptTokens(): Int
+
+    override external fun getLastGenTokens(): Int
+
     /**
      * Frees the llama.cpp context, model buffers, and ggml backend.
      */

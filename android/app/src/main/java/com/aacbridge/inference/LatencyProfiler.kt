@@ -2,6 +2,7 @@ package com.aacbridge.inference
 
 import android.util.Log
 import com.aacbridge.cache.StateRepository
+import com.aacbridge.daemon.ContextDaemon
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
@@ -17,18 +18,21 @@ import kotlin.concurrent.withLock
  * for the CAP-KVC latency advantage.
  *
  * MEASUREMENT STRATEGY:
- * The JNI boundary (llama_jni.cpp) encapsulates the full
- * inference loop (tokenize → prefill → generate) in a
- * single runInference() call returning only the completed
- * string. True sub-token TTFT instrumentation is therefore
- * impossible without native modification.
+ * The native JNI layer (llama_jni.cpp) records granular
+ * prefill_ms and gen_ms measurements around the actual
+ * llama_decode() calls. After each runInference() or
+ * resumeInference() call, this profiler reads those
+ * native metrics via getLastPrefillMs() / getLastGenMs()
+ * while still holding the engineLock, ensuring the values
+ * correspond to the call that just completed.
  *
- * Instead, we measure wall-clock latency from Kotlin
- * wrapping System.nanoTime() around the JNI call. Since
- * generation parameters are identical across all three
- * modes (greedy sampling, max 64 tokens), the latency
- * delta between modes isolates the prefill cost — the
- * exact quantity that CAP-KVC is designed to amortize.
+ * This replaces the previous approach of reporting only
+ * a lumped wall-clock inference_ms from System.nanoTime().
+ * Native timing captures the exact prefill and generation
+ * durations without Kotlin/JNI boundary overhead.
+ *
+ * The wall-clock total_ms is still recorded for
+ * sanity-checking against the sum of native sub-phases.
  *
  * INTEGRATION:
  * All dependencies are injected from AppContainer:
@@ -54,7 +58,9 @@ class LatencyProfiler(
     private val bridge: LlamaBridgeAdapter,
     private val engineLock: ReentrantLock,
     private val repository: StateRepository,
-    private val modelReady: AtomicBoolean
+    private val modelReady: AtomicBoolean,
+    private val onProgress: ((String) -> Unit)? = null,
+    private val onTrialCompleted: ((TrialResult) -> Unit)? = null
 ) {
 
     companion object {
@@ -220,9 +226,27 @@ class LatencyProfiler(
         val mode: BenchmarkMode,
         val stateId: String,
         val promptTokenTarget: Int,
-        val inferenceMs: Double,
+        val totalMs: Double,
+        val prefillMs: Double,
+        val genMs: Double,
         val cacheLoadMs: Double,
-        val generatedTokens: Int
+        val promptTokens: Int,
+        val genTokens: Int
+    )
+
+    /**
+     * Internal measurement bundle returned by each
+     * measure* function. Captures all timing and
+     * token data for a single trial.
+     */
+    private data class Measurement(
+        val totalMs: Double,
+        val prefillMs: Double,
+        val genMs: Double,
+        val cacheLoadMs: Double,
+        val promptTokens: Int,
+        val genTokens: Int,
+        val text: String
     )
 
     // -------------------------------------------------
@@ -394,21 +418,46 @@ class LatencyProfiler(
      * Prompt: intent-only, no context prefix.
      * Expected: lowest latency (hardware floor).
      */
-    private fun measureZeroContext(): Pair<Double, Int> {
+    private fun measureZeroContext(): Measurement {
 
         val prompt = MOCK_USER_INTENT
 
         val startNs = System.nanoTime()
 
-        val result = engineLock.withLock {
+        val result: String
+        val prefillMs: Double
+        val genMs: Double
+        val promptTokens: Int
+        val genTokens: Int
+
+        engineLock.withLock {
             bridge.clearKVCache()
-            bridge.runInference(prompt)
+            result = bridge.runInference(prompt)
+
+            /*
+             * Read native metrics under the same lock
+             * acquisition that ran the inference. This
+             * guarantees the values correspond to THIS
+             * call and not a concurrent one.
+             */
+            prefillMs = bridge.getLastPrefillMs()
+            genMs = bridge.getLastGenMs()
+            promptTokens = bridge.getLastPromptTokens()
+            genTokens = bridge.getLastGenTokens()
         }
 
-        val elapsedMs =
+        val totalMs =
             (System.nanoTime() - startNs) / 1_000_000.0
 
-        return Pair(elapsedMs, result.length)
+        return Measurement(
+            totalMs = totalMs,
+            prefillMs = prefillMs,
+            genMs = genMs,
+            cacheLoadMs = 0.0,
+            promptTokens = promptTokens,
+            genTokens = genTokens,
+            text = result
+        )
     }
 
     /**
@@ -421,21 +470,40 @@ class LatencyProfiler(
      */
     private fun measureRagInline(
         contextPrompt: String
-    ): Pair<Double, Int> {
+    ): Measurement {
 
         val fullPrompt = contextPrompt + MOCK_USER_INTENT
 
         val startNs = System.nanoTime()
 
-        val result = engineLock.withLock {
+        val result: String
+        val prefillMs: Double
+        val genMs: Double
+        val promptTokens: Int
+        val genTokens: Int
+
+        engineLock.withLock {
             bridge.clearKVCache()
-            bridge.runInference(fullPrompt)
+            result = bridge.runInference(fullPrompt)
+
+            prefillMs = bridge.getLastPrefillMs()
+            genMs = bridge.getLastGenMs()
+            promptTokens = bridge.getLastPromptTokens()
+            genTokens = bridge.getLastGenTokens()
         }
 
-        val elapsedMs =
+        val totalMs =
             (System.nanoTime() - startNs) / 1_000_000.0
 
-        return Pair(elapsedMs, result.length)
+        return Measurement(
+            totalMs = totalMs,
+            prefillMs = prefillMs,
+            genMs = genMs,
+            cacheLoadMs = 0.0,
+            promptTokens = promptTokens,
+            genTokens = genTokens,
+            text = result
+        )
     }
 
     /**
@@ -458,12 +526,16 @@ class LatencyProfiler(
      */
     private fun measureCapKvc(
         cacheFilePath: String
-    ): Triple<Double, Double, Int> {
+    ): Measurement {
 
         val prompt = MOCK_USER_INTENT
 
-        var cacheLoadMs: Double
-        var result: String
+        var cacheLoadMs = 0.0
+        var result = "CACHE_LOAD_FAILED"
+        var prefillMs = 0.0
+        var genMs = 0.0
+        var promptTokens = 0
+        var genTokens = 0
 
         val totalStartNs = System.nanoTime()
 
@@ -494,7 +566,6 @@ class LatencyProfiler(
                     "FATAL: loadKVCache failed " +
                     "for $cacheFilePath"
                 )
-                result = "CACHE_LOAD_FAILED"
                 return@withLock
             }
 
@@ -508,21 +579,30 @@ class LatencyProfiler(
              * runInference()'s llama_batch_get_one.
              */
             result = bridge.resumeInference(prompt)
+
+            /*
+             * Read native metrics under the same lock.
+             * These correspond to the resumeInference()
+             * call that just completed.
+             */
+            prefillMs = bridge.getLastPrefillMs()
+            genMs = bridge.getLastGenMs()
+            promptTokens = bridge.getLastPromptTokens()
+            genTokens = bridge.getLastGenTokens()
         }
 
         val totalMs =
             (System.nanoTime() - totalStartNs) / 1_000_000.0
 
-        /*
-         * inferenceMs = totalMs - cacheLoadMs
-         *
-         * This isolates the pure inference cost from
-         * the cache restoration overhead, allowing the
-         * paper to report both components.
-         */
-        val inferenceMs = totalMs - cacheLoadMs
-
-        return Triple(cacheLoadMs, inferenceMs, result.length)
+        return Measurement(
+            totalMs = totalMs,
+            prefillMs = prefillMs,
+            genMs = genMs,
+            cacheLoadMs = cacheLoadMs,
+            promptTokens = promptTokens,
+            genTokens = genTokens,
+            text = result
+        )
     }
 
     // -------------------------------------------------
@@ -547,11 +627,34 @@ class LatencyProfiler(
             "${result.mode}," +
             "${result.stateId}," +
             "${result.promptTokenTarget}," +
-            "%.2f,".format(result.inferenceMs) +
+            "%.2f,".format(result.totalMs) +
+            "%.2f,".format(result.prefillMs) +
+            "%.2f,".format(result.genMs) +
             "%.2f,".format(result.cacheLoadMs) +
-            "${result.generatedTokens}"
+            "${result.promptTokens}," +
+            "${result.genTokens}"
 
         Log.i(TAG, line)
+
+        /*
+         * Human-readable structured log for live
+         * monitoring via adb logcat.
+         */
+        Log.i(
+            TAG,
+            "TRIAL_RESULT: " +
+            "mode=${result.mode} " +
+            "target=${result.promptTokenTarget} " +
+            "trial=${result.trial} => " +
+            "total_ms=${"%,.2f".format(result.totalMs)} " +
+            "prefill_ms=${"%,.2f".format(result.prefillMs)} " +
+            "gen_ms=${"%,.2f".format(result.genMs)} " +
+            "cache_load_ms=${"%,.2f".format(result.cacheLoadMs)} " +
+            "prompt_tokens=${result.promptTokens} " +
+            "gen_tokens=${result.genTokens}"
+        )
+
+        onTrialCompleted?.invoke(result)
     }
 
     /**
@@ -567,7 +670,9 @@ class LatencyProfiler(
             TAG,
             "BENCH,trial,mode,stateId," +
             "prompt_token_target," +
-            "inference_ms,cache_load_ms,gen_length"
+            "total_ms,prefill_ms,gen_ms," +
+            "cache_load_ms," +
+            "prompt_tokens,gen_tokens"
         )
     }
 
@@ -617,12 +722,41 @@ class LatencyProfiler(
      *   cache file for CAP_KVC trials. Resolved from
      *   repository.getFilePath(REPRESENTATIVE_STATE).
      */
-    suspend fun runBenchmarkSuite() {
+    suspend fun runBenchmarkSuite(
+        quickMode: Boolean = true
+    ) {
 
         if (!modelReady.get()) {
             Log.e(TAG, "Model not ready. Aborting benchmark.")
             return
         }
+
+        /*
+         * Configure trial counts based on mode.
+         *
+         * Quick mode: 3 measured trials, 1 warmup,
+         *   single prompt target (N=50).
+         *   Completes in ~2-3 minutes.
+         *
+         * Full mode: 30 measured trials, 2 warmup,
+         *   all prompt targets (N=50,100,200,500).
+         *   Completes in ~35 minutes.
+         */
+        val measuredTrials: Int
+        val warmupTrials: Int
+        val targets: List<Int>
+
+        if (quickMode) {
+            measuredTrials = 3
+            warmupTrials = 1
+            targets = listOf(50)
+        } else {
+            measuredTrials = MEASURED_TRIALS
+            warmupTrials = WARMUP_TRIALS
+            targets = promptTokenTargets
+        }
+
+        val totalTrials = measuredTrials + warmupTrials
 
         /*
          * Resolve representative state's prompt and
@@ -655,82 +789,113 @@ class LatencyProfiler(
         Log.i(TAG, "=== BENCHMARK SUITE START ===")
         Log.i(
             TAG,
-            "Config: trials=$MEASURED_TRIALS " +
-            "warmup=$WARMUP_TRIALS " +
+            "Config: quick=$quickMode " +
+            "trials=$measuredTrials " +
+            "warmup=$warmupTrials " +
+            "targets=$targets " +
             "state=$REPRESENTATIVE_STATE"
         )
 
-        emitCsvHeader()
+        /*
+         * Pause ContextDaemon sweeps to prevent
+         * engine lock contention and thermal
+         * interference during benchmarking.
+         */
+        try {
+            ContextDaemon.isSweepPaused.set(true)
+            Log.i(TAG, "ContextDaemon sweeps paused")
 
-        // =============================================
-        // Phase 0: Pre-benchmark validation
-        // =============================================
+            emitCsvHeader()
 
-        val validationPassed = runValidation(
-            basePrompt = basePrompt,
-            cacheFilePath = cacheFilePath
-        )
+            // =============================================
+            // Phase 0: Pre-benchmark validation
+            // =============================================
 
-        if (!validationPassed) {
-            Log.e(
-                TAG,
-                "VALIDATION FAILED. " +
-                "Aborting benchmark suite. " +
-                "Inspect logcat output above."
+            onProgress?.invoke("VALIDATION: Verifying KV Cache...")
+            val validationPassed = runValidation(
+                basePrompt = basePrompt,
+                cacheFilePath = cacheFilePath
             )
-            return
+
+            if (!validationPassed) {
+                Log.e(
+                    TAG,
+                    "VALIDATION FAILED. " +
+                    "Aborting benchmark suite. " +
+                    "Inspect logcat output above."
+                )
+                onProgress?.invoke("VALIDATION FAILED")
+                return
+            }
+
+            // =============================================
+            // Phase 1: ZERO_CONTEXT baseline
+            // =============================================
+
+            onProgress?.invoke("BENCHMARK: ZERO_CONTEXT ($totalTrials trials)...")
+            Log.i(TAG, "--- ZERO_CONTEXT ---")
+
+            runZeroContextTrials(
+                totalTrials = totalTrials,
+                warmupTrials = warmupTrials
+            )
+
+            // =============================================
+            // Phase 2: RAG_INLINE across N-scaling tiers
+            // =============================================
+
+            for (tokenTarget in targets) {
+
+                onProgress?.invoke("BENCHMARK: RAG_INLINE N=$tokenTarget...")
+                Log.i(
+                    TAG,
+                    "--- RAG_INLINE N=$tokenTarget ---"
+                )
+
+                val expandedPrompt = expandPrompt(
+                    basePrompt,
+                    tokenTarget
+                )
+
+                Log.i(
+                    TAG,
+                    "Expanded prompt length: " +
+                    "${expandedPrompt.length} chars " +
+                    "(target ~${tokenTarget} tokens)"
+                )
+
+                runRagInlineTrials(
+                    contextPrompt = expandedPrompt,
+                    tokenTarget = tokenTarget,
+                    totalTrials = totalTrials,
+                    warmupTrials = warmupTrials
+                )
+            }
+
+            // =============================================
+            // Phase 3: CAP_KVC with existing cache files
+            // =============================================
+
+            onProgress?.invoke("BENCHMARK: CAP_KVC (KV reuse)...")
+            Log.i(TAG, "--- CAP_KVC ---")
+
+            runCapKvcTrials(
+                cacheFilePath = cacheFilePath,
+                totalTrials = totalTrials,
+                warmupTrials = warmupTrials
+            )
+
+            // =============================================
+            // Complete
+            // =============================================
+
+            onProgress?.invoke("BENCHMARK: Suite Complete")
+            Log.i(TAG, "=== BENCHMARK SUITE COMPLETE ===")
+
+        } finally {
+            ContextDaemon.isSweepPaused.set(false)
+            Log.i(TAG, "ContextDaemon sweeps resumed")
         }
-
-        // =============================================
-        // Phase 1: ZERO_CONTEXT baseline
-        // =============================================
-
-        Log.i(TAG, "--- ZERO_CONTEXT ---")
-
-        runZeroContextTrials()
-
-        // =============================================
-        // Phase 2: RAG_INLINE across N-scaling tiers
-        // =============================================
-
-        for (tokenTarget in promptTokenTargets) {
-
-            Log.i(
-                TAG,
-                "--- RAG_INLINE N=$tokenTarget ---"
-            )
-
-            val expandedPrompt = expandPrompt(
-                basePrompt,
-                tokenTarget
-            )
-
-            Log.i(
-                TAG,
-                "Expanded prompt length: " +
-                "${expandedPrompt.length} chars " +
-                "(target ~${tokenTarget} tokens)"
-            )
-
-            runRagInlineTrials(
-                contextPrompt = expandedPrompt,
-                tokenTarget = tokenTarget
-            )
-        }
-
-        // =============================================
-        // Phase 3: CAP_KVC with existing cache files
-        // =============================================
-
-        Log.i(TAG, "--- CAP_KVC ---")
-
-        runCapKvcTrials(cacheFilePath)
-
-        // =============================================
-        // Complete
-        // =============================================
-
-        Log.i(TAG, "=== BENCHMARK SUITE COMPLETE ===")
     }
 
     // -------------------------------------------------
@@ -850,19 +1015,22 @@ class LatencyProfiler(
      * state-agnostic and runs only at the base prompt
      * length (intent-only).
      */
-    private fun runZeroContextTrials() {
+    private fun runZeroContextTrials(
+        totalTrials: Int = TOTAL_TRIALS,
+        warmupTrials: Int = WARMUP_TRIALS
+    ) {
 
-        for (i in 1..TOTAL_TRIALS) {
+        for (i in 1..totalTrials) {
 
-            val (inferenceMs, genLen) = measureZeroContext()
+            val m = measureZeroContext()
 
             /*
              * Discard warmup trials.
              * Only emit CSV for measured trials.
              */
-            if (i > WARMUP_TRIALS) {
+            if (i > warmupTrials) {
 
-                val measuredTrial = i - WARMUP_TRIALS
+                val measuredTrial = i - warmupTrials
 
                 emitCsvLine(
                     TrialResult(
@@ -870,9 +1038,12 @@ class LatencyProfiler(
                         mode = BenchmarkMode.ZERO_CONTEXT,
                         stateId = "none",
                         promptTokenTarget = 0,
-                        inferenceMs = inferenceMs,
+                        totalMs = m.totalMs,
+                        prefillMs = m.prefillMs,
+                        genMs = m.genMs,
                         cacheLoadMs = 0.0,
-                        generatedTokens = genLen
+                        promptTokens = m.promptTokens,
+                        genTokens = m.genTokens
                     )
                 )
             }
@@ -890,17 +1061,18 @@ class LatencyProfiler(
      */
     private fun runRagInlineTrials(
         contextPrompt: String,
-        tokenTarget: Int
+        tokenTarget: Int,
+        totalTrials: Int = TOTAL_TRIALS,
+        warmupTrials: Int = WARMUP_TRIALS
     ) {
 
-        for (i in 1..TOTAL_TRIALS) {
+        for (i in 1..totalTrials) {
 
-            val (inferenceMs, genLen) =
-                measureRagInline(contextPrompt)
+            val m = measureRagInline(contextPrompt)
 
-            if (i > WARMUP_TRIALS) {
+            if (i > warmupTrials) {
 
-                val measuredTrial = i - WARMUP_TRIALS
+                val measuredTrial = i - warmupTrials
 
                 emitCsvLine(
                     TrialResult(
@@ -908,9 +1080,12 @@ class LatencyProfiler(
                         mode = BenchmarkMode.RAG_INLINE,
                         stateId = REPRESENTATIVE_STATE,
                         promptTokenTarget = tokenTarget,
-                        inferenceMs = inferenceMs,
+                        totalMs = m.totalMs,
+                        prefillMs = m.prefillMs,
+                        genMs = m.genMs,
                         cacheLoadMs = 0.0,
-                        generatedTokens = genLen
+                        promptTokens = m.promptTokens,
+                        genTokens = m.genTokens
                     )
                 )
             }
@@ -929,17 +1104,18 @@ class LatencyProfiler(
      *   cache file on-device.
      */
     private fun runCapKvcTrials(
-        cacheFilePath: String
+        cacheFilePath: String,
+        totalTrials: Int = TOTAL_TRIALS,
+        warmupTrials: Int = WARMUP_TRIALS
     ) {
 
-        for (i in 1..TOTAL_TRIALS) {
+        for (i in 1..totalTrials) {
 
-            val (cacheMs, inferenceMs, genLen) =
-                measureCapKvc(cacheFilePath)
+            val m = measureCapKvc(cacheFilePath)
 
-            if (i > WARMUP_TRIALS) {
+            if (i > warmupTrials) {
 
-                val measuredTrial = i - WARMUP_TRIALS
+                val measuredTrial = i - warmupTrials
 
                 emitCsvLine(
                     TrialResult(
@@ -947,9 +1123,12 @@ class LatencyProfiler(
                         mode = BenchmarkMode.CAP_KVC,
                         stateId = REPRESENTATIVE_STATE,
                         promptTokenTarget = 50,
-                        inferenceMs = inferenceMs,
-                        cacheLoadMs = cacheMs,
-                        generatedTokens = genLen
+                        totalMs = m.totalMs,
+                        prefillMs = m.prefillMs,
+                        genMs = m.genMs,
+                        cacheLoadMs = m.cacheLoadMs,
+                        promptTokens = m.promptTokens,
+                        genTokens = m.genTokens
                     )
                 )
             }

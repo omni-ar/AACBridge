@@ -101,4 +101,71 @@ interface LlamaBridgeAdapter {
     fun resumeInference(
         prompt: String
     ): String
+
+    // -------------------------------------------------
+    // Native timing/token telemetry
+    // -------------------------------------------------
+
+    /**
+     * Returns the prefill (prompt evaluation) duration
+     * in milliseconds from the most recent
+     * runInference() or resumeInference() call.
+     *
+     * For runInference(): measures the single
+     * llama_decode() call that processes all prompt
+     * tokens through the transformer.
+     *
+     * For resumeInference(): measures the single
+     * llama_decode() call that processes ONLY the
+     * newly appended intent tokens (not the restored
+     * KV cache tokens).
+     *
+     * MUST be called under engineLock immediately
+     * after the inference call that produced the
+     * measurement.
+     */
+    fun getLastPrefillMs(): Double
+
+    /**
+     * Returns the autoregressive generation duration
+     * in milliseconds from the most recent
+     * runInference() or resumeInference() call.
+     *
+     * Measures the time from sampler initialization
+     * through the final generated token (or EOS).
+     * Excludes prefill.
+     *
+     * MUST be called under engineLock immediately
+     * after the inference call.
+     */
+    fun getLastGenMs(): Double
+
+    /**
+     * Returns the number of prompt tokens evaluated
+     * during the prefill phase of the most recent
+     * runInference() or resumeInference() call.
+     *
+     * For runInference(): total prompt token count
+     * (context + intent).
+     *
+     * For resumeInference(): only the newly appended
+     * intent tokens (NOT the restored cache tokens).
+     *
+     * MUST be called under engineLock immediately
+     * after the inference call.
+     */
+    fun getLastPromptTokens(): Int
+
+    /**
+     * Returns the number of tokens actually generated
+     * during the autoregressive loop of the most
+     * recent runInference() or resumeInference() call.
+     *
+     * This is the TRUE generated token count, not
+     * the character length of the output string.
+     *
+     * MUST be called under engineLock immediately
+     * after the inference call.
+     */
+    fun getLastGenTokens(): Int
 }

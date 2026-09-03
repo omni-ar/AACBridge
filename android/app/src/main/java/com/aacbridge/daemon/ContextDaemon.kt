@@ -10,6 +10,7 @@ import android.os.IBinder
 import android.util.Log
 import com.aacbridge.AACBridgeApplication
 import kotlinx.coroutines.*
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Lightweight Android orchestration layer around
@@ -45,6 +46,18 @@ class ContextDaemon : Service() {
         private const val SWEEP_INTERVAL_MS = 60_000L
         private const val NOTIFICATION_ID = 1001
         private const val CHANNEL_ID = "AACBridgeDaemon"
+
+        /**
+         * When true, periodic sweeps are skipped.
+         *
+         * Set by LatencyProfiler during benchmark
+         * execution to prevent engine lock contention
+         * and thermal interference.
+         *
+         * The daemon service remains alive — only
+         * the sweep payload is suppressed.
+         */
+        val isSweepPaused = AtomicBoolean(false)
     }
 
     private val serviceJob = SupervisorJob()
@@ -102,11 +115,15 @@ class ContextDaemon : Service() {
         sweepJob = serviceScope.launch {
             while (isActive) {
                 try {
-                    val app = application as? AACBridgeApplication
-                    if (app != null) {
-                        Log.d(TAG, "Executing periodic context sweep...")
-                        app.appContainer.activeSweep.executeSweep()
-                        Log.d(TAG, "Context sweep completed")
+                    if (isSweepPaused.get()) {
+                        Log.d(TAG, "Sweep paused (benchmark active)")
+                    } else {
+                        val app = application as? AACBridgeApplication
+                        if (app != null) {
+                            Log.d(TAG, "Executing periodic context sweep...")
+                            app.appContainer.activeSweep.executeSweep()
+                            Log.d(TAG, "Context sweep completed")
+                        }
                     }
                 } catch (e: CancellationException) {
                     throw e

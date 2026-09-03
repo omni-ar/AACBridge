@@ -16,6 +16,20 @@ static llama_context * ctx = nullptr;
 
 static std::vector<llama_token> session_tokens;
 
+/*
+ * Most-recent inference timing/token metrics.
+ *
+ * Updated atomically at the end of runInference()
+ * and resumeInference(). Kotlin callers MUST read
+ * these under the engine lock immediately after the
+ * corresponding inference call returns to avoid
+ * stale values from a concurrent call.
+ */
+static double   last_prefill_ms    = 0.0;
+static double   last_gen_ms        = 0.0;
+static int32_t  last_prompt_tokens = 0;
+static int32_t  last_gen_tokens    = 0;
+
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_aacbridge_inference_LlamaBridge_initializeBackend(
@@ -360,6 +374,16 @@ double gen_ms =
     std::chrono::duration<double, std::milli>(
         gen_end - gen_start
     ).count();
+
+/*
+ * Store metrics into static tracking variables
+ * before returning. Kotlin reads these under
+ * engineLock immediately after this call.
+ */
+last_prefill_ms    = prefill_ms;
+last_gen_ms        = gen_ms;
+last_prompt_tokens = n_prompt_tokens;
+last_gen_tokens    = gen_token_count;
 
 LOGI("TIMING,runInference,"
      "prefill_ms=%.2f,"
@@ -758,6 +782,16 @@ double gen_ms =
         gen_end - gen_start
     ).count();
 
+/*
+ * Store metrics into static tracking variables
+ * before returning. Kotlin reads these under
+ * engineLock immediately after this call.
+ */
+last_prefill_ms    = prefill_ms;
+last_gen_ms        = gen_ms;
+last_prompt_tokens = n_new;
+last_gen_tokens    = gen_token_count;
+
 LOGI("TIMING,resumeInference,"
      "prefill_ms=%.2f,"
      "gen_ms=%.2f,"
@@ -773,6 +807,55 @@ return env->NewStringUTF(
 );
 }
 
+
+/*
+ * =====================================================
+ * Native timing getters
+ * =====================================================
+ *
+ * Return the most-recent inference timing and token
+ * metrics. These are set by runInference() and
+ * resumeInference() before they return.
+ *
+ * Thread safety:
+ *   Callers MUST hold the Kotlin engineLock when
+ *   calling these getters AND the preceding inference
+ *   function within the same lock acquisition.
+ *   This guarantees the values correspond to the
+ *   intended inference call and are not overwritten
+ *   by a concurrent call.
+ */
+extern "C"
+JNIEXPORT jdouble JNICALL
+Java_com_aacbridge_inference_LlamaBridge_getLastPrefillMs(
+        JNIEnv *env,
+        jobject thiz) {
+    return (jdouble) last_prefill_ms;
+}
+
+extern "C"
+JNIEXPORT jdouble JNICALL
+Java_com_aacbridge_inference_LlamaBridge_getLastGenMs(
+        JNIEnv *env,
+        jobject thiz) {
+    return (jdouble) last_gen_ms;
+}
+
+extern "C"
+JNIEXPORT jint JNICALL
+Java_com_aacbridge_inference_LlamaBridge_getLastPromptTokens(
+        JNIEnv *env,
+        jobject thiz) {
+    return (jint) last_prompt_tokens;
+}
+
+extern "C"
+JNIEXPORT jint JNICALL
+Java_com_aacbridge_inference_LlamaBridge_getLastGenTokens(
+        JNIEnv *env,
+        jobject thiz) {
+    return (jint) last_gen_tokens;
+}
 
 JNIEXPORT void JNICALL
 Java_com_aacbridge_inference_LlamaBridge_release(

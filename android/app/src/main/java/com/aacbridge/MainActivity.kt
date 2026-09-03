@@ -164,16 +164,100 @@ class MainActivity : AppCompatActivity() {
 
                 // --- Step 6: Launch benchmark suite ---
                 Log.d(TAG, "[INIT] Step 6: Launching LatencyProfiler")
+                val resultsList = java.util.Collections.synchronizedList(
+                    mutableListOf<com.aacbridge.inference.LatencyProfiler.TrialResult>()
+                )
+
                 val profiler = com.aacbridge.inference.LatencyProfiler(
                     bridge = LlamaBridge,
                     engineLock = lock,
                     repository = app.appContainer.repository,
-                    modelReady = app.appContainer.modelReady
+                    modelReady = app.appContainer.modelReady,
+                    onProgress = { statusMsg ->
+                        runOnUiThread {
+                            updateStatus("BENCH: Active")
+                            inferenceTimingText.text = statusMsg
+                            inferenceTimingText.setTextColor(Color.parseColor("#F59E0B"))
+                        }
+                    },
+                    onTrialCompleted = { result ->
+                        resultsList.add(result)
+                        runOnUiThread {
+                            val modeTag = when (result.mode) {
+                                com.aacbridge.inference.LatencyProfiler.BenchmarkMode.ZERO_CONTEXT -> "ZERO"
+                                com.aacbridge.inference.LatencyProfiler.BenchmarkMode.RAG_INLINE -> "RAG"
+                                com.aacbridge.inference.LatencyProfiler.BenchmarkMode.CAP_KVC -> "CAP_KVC"
+                            }
+                            inferenceTimingText.text = String.format(
+                                Locale.US,
+                                "[%s #%d] TTFT: %.0f ms | Gen: %.0f ms | Cache: %.1f ms",
+                                modeTag,
+                                result.trial,
+                                result.prefillMs,
+                                result.genMs,
+                                result.cacheLoadMs
+                            )
+                            val colorHex = when (result.mode) {
+                                com.aacbridge.inference.LatencyProfiler.BenchmarkMode.CAP_KVC -> "#10B981"
+                                com.aacbridge.inference.LatencyProfiler.BenchmarkMode.RAG_INLINE -> "#38BDF8"
+                                com.aacbridge.inference.LatencyProfiler.BenchmarkMode.ZERO_CONTEXT -> "#94A3B8"
+                            }
+                            inferenceTimingText.setTextColor(Color.parseColor(colorHex))
+                            cacheStatusText.text = if (result.mode == com.aacbridge.inference.LatencyProfiler.BenchmarkMode.CAP_KVC) {
+                                "CACHE: Active (%.1fms)".format(Locale.US, result.cacheLoadMs)
+                            } else {
+                                "CACHE: Idle"
+                            }
+                        }
+                    }
                 )
+
+                /*
+                 * Quick mode (default): 3 measured trials, 1 warmup,
+                 *   N=50 only. Completes in ~2-3 minutes.
+                 *
+                 * Full mode: 30 measured trials, 2 warmup,
+                 *   N={50,100,200,500}. Completes in ~35 minutes.
+                 *
+                 * Launch full mode via:
+                 *   adb shell am start -n com.aacbridge/.MainActivity \
+                 *     --ez quick_benchmark false
+                 */
+                val quickBenchmark = intent.getBooleanExtra(
+                    "quick_benchmark", true
+                )
+                Log.d(TAG, "[INIT] Step 6: quickMode=$quickBenchmark")
+
                 kotlinx.coroutines.runBlocking {
-                    profiler.runBenchmarkSuite()
+                    profiler.runBenchmarkSuite(quickMode = quickBenchmark)
                 }
                 Log.d(TAG, "[INIT] Step 6: Benchmark suite finished")
+
+                // Compute overall prefill speedup summary for the UI
+                val ragPrefills = resultsList.filter {
+                    it.mode == com.aacbridge.inference.LatencyProfiler.BenchmarkMode.RAG_INLINE
+                }.map { it.prefillMs }
+                val capPrefills = resultsList.filter {
+                    it.mode == com.aacbridge.inference.LatencyProfiler.BenchmarkMode.CAP_KVC
+                }.map { it.prefillMs }
+                val ragAvg = if (ragPrefills.isNotEmpty()) ragPrefills.average() else 0.0
+                val capAvg = if (capPrefills.isNotEmpty()) capPrefills.average() else 0.0
+                val speedup = if (capAvg > 0.0) ragAvg / capAvg else 1.0
+
+                runOnUiThread {
+                    updateStatus("MODEL: Ready")
+                    cacheStatusText.text = "CACHE: Ready"
+                    if (capAvg > 0.0 && ragAvg > 0.0) {
+                        inferenceTimingText.text = String.format(
+                            Locale.US,
+                            "TTFT: %.0f ms (CAP) vs %.0f ms (RAG) | %.1fx speedup",
+                            capAvg,
+                            ragAvg,
+                            speedup
+                        )
+                        inferenceTimingText.setTextColor(Color.parseColor("#10B981"))
+                    }
+                }
 
             } catch (e: Exception) {
                 Log.e(TAG, "Inference pipeline crashed", e)
