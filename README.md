@@ -1,242 +1,316 @@
-# AACBridge — Context-Aware Predictive KV-Cache Priming for Mobile AAC
+# CAP-KVC
 
-A research prototype for predictive KV cache priming on edge devices,
-evaluated on a OnePlus 11R (Snapdragon 8+ Gen 1) with Qwen2.5-0.5B-Instruct (Q4\_K\_M).
+**Context-Aware Predictive KV-Cache Priming for edge LLM
+inference on Android.**
 
-**Paper:** *Context-Aware Predictive KV-Cache Priming for Latency-Sensitive
-Mobile AAC Inference* (IEEE Access, submitted 2026).
+An LLM-backed augmentative and alternative communication
+(AAC) prototype that moves context prefill off the
+interactive path. Environmental sensors (GPS, BLE
+proximity, time of day) select which semantic context to
+pre-compute; the resulting KV cache tensors are
+serialized to flash during idle periods and restored at
+interaction time, so only the user's short intent tokens
+are prefilled.
+
+Runs fully offline on a single device. No network calls.
 
 ---
 
-## Repository Structure
+## Status
+
+| | |
+|---|---|
+| Build | `./gradlew assembleDebug` — <!-- UPDATE after first green build --> unverified since sequence-slot rework |
+| Unit tests | 41 tests across 11 suites |
+| Target | `arm64-v8a`, Android 8.0+ (API 26) |
+| Benchmark device | OnePlus 11R (Snapdragon 8+ Gen 1, 8 GB LPDDR5X) |
+| Model | Qwen2.5-0.5B-Instruct, Q4\_K\_M GGUF |
+
+**This is a research prototype.** It has not been used by
+AAC users, has no clinical validation, and stores KV
+cache files unencrypted. Do not deploy it.
+
+---
+
+## Results
+
+Measured on a OnePlus 11R, n = 30 trials per condition,
+airplane mode, greedy decoding, max 64 output tokens.
+Native-side `std::chrono` instrumentation separates the
+prefill forward pass from the generation loop.
+
+| Condition | E2E (ms) | Prefill (ms) | Gen (ms) | Tokens |
+|---|---:|---:|---:|---:|
+| ZERO_CONTEXT | 3823.78 | 274.79 | 3544.58 | 9 |
+| RAG @ N≈50 | 6547.13 | 2021.46 | 4508.53 | 52 |
+| RAG @ N≈100 | 7900.92 | 3015.09 | 4877.95 | 89 |
+| RAG @ N≈200 | 12122.30 | 6673.53 | 5439.96 | 206 |
+| RAG @ N≈500 | 19408.89 | 14001.46 | 5390.76 | 439 |
+| CAP_KVC (cache load) | 2.74 | — | — | — |
+| CAP_KVC (total) | 4574.70 | 343.35 | 4226.74 | 9 |
+
+- **40.78×** prefill reduction at N≈500 (343 ms vs 14001 ms)
+- **4.24×** end-to-end reduction (4574 ms vs 19408 ms)
+- **2.74 ms** cache restoration (σ = 1.35)
+
+### What these numbers do and don't show
+
+They measure **cache restoration versus repeated
+prefill**. They do not measure whether the sensor router
+picks the right context — there is no cache hit rate, no
+routing accuracy against ground truth, and no
+static-cache baseline that would separate the value of
+*prediction* from the value of *caching*. Treat the
+speedups as a property of KV state persistence, not
+evidence that sensor-driven prediction works.
+
+The comparison is also asymmetric: CAP_KVC caches were
+primed from ~50-token prompts, so the 40.78× partly
+reflects a 9-vs-439 token count difference rather than
+the caching mechanism alone.
+
+**Memory numbers are currently stale.** The previously
+reported 118.7 MB delta was measured before the
+sequence-slot fix, when `n_seq_max` defaulted to 1 and
+only one slot was addressable. Needs re-measuring.
+
+---
+
+## How it works
 
 ```
-AACBridge/
-├── android/                    # Android application (Kotlin + C++ JNI)
-│   └── app/
-│       ├── src/main/
-│       │   ├── java/com/aacbridge/
-│       │   │   ├── inference/     # LlamaBridge, LatencyProfiler
-│       │   │   ├── cache/         # KVCacheManager, ContextPrimerImpl
-│       │   │   ├── router/        # StateRouter, scorers
-│       │   │   ├── daemon/        # ContextDaemon, DriftDetector, ActiveSweep
-│       │   │   ├── fusion/        # FusionInference (ONNX)
-│       │   │   └── gaze/          # GazeTracker (MediaPipe)
-│       │   └── cpp/               # llama_jni.cpp (JNI bridge)
-│       └── build.gradle
-├── benchmarks/
-│   ├── results/                # Benchmark data (canonical CSV, raw logs)
-│   │   ├── canonical_benchmark.csv  # Single source of truth (180 rows)
-│   │   ├── run4_complete.log        # Raw logcat benchmark dump
-│   │   ├── ttft_clean.csv           # Figure data (derived)
-│   │   ├── ttft_enriched.csv        # Figure data (derived)
-│   │   ├── mem_0states.txt          # Memory profile baseline
-│   │   └── mem_3states.txt          # Memory profile (3 cache states)
-│   ├── regenerate_canonical.py # Raw log → canonical CSV
-│   ├── final_stats.py          # Statistics pipeline → Table II numbers
-│   ├── verify_stats.py         # Verification: computed vs manuscript
-│   ├── extract_enriched.py     # Log → paired CSV extraction
-│   └── create_clean_csv.py     # Canonical → figure CSVs
-├── paper/
-│   ├── final_main.tex          # Main manuscript (self-contained)
-│   ├── generate_paper_figures.py  # Regenerates all data figures
-│   ├── generate_architecture.py  # Regenerates system architecture fig
-│   ├── validate_latex.py         # Structural LaTeX validation
-│   └── figures/                # All paper figures (PNG + PDF)
-├── fusion_model/
-│   ├── fusion/                 # Training code (PyTorch)
-│   └── results/                # Model weights, ablation CSV
-├── emg_pipeline/
-│   ├── src/                    # EMG preprocessing
-│   ├── drift_ablation/         # Drift detection k-ablation
-│   └── results/                # Classification reports
-└── archive/                    # Archived development artifacts
+GPS ─┐
+BLE ─┼─→ SensorSnapshot ─→ StateRouter ─→ top-k contexts
+Time ┘                      (convex scoring)      │
+                                                  ▼
+                          ContextPrimer: prefillOnly() → saveKVCache()
+                                     → atomic rename → {stateId}.bin
+                                                  │
+User intent ─────────────────────────────────────┼─→ loadKVCache(slot)
+                                                  └─→ resumeInference(intent, slot)
+                                                             │
+                                                             ▼
+                                                     generated response → TTS
 ```
 
-## Prerequisites
+**Scoring.** `S(c) = α·S_time + β·S_gps + γ·S_ble`, with
+α+β+γ = 1. Weights come from runtime sensor reliability:
+time holds a fixed baseline of 0.4 (guaranteeing a
+positive denominator when GPS and BLE both fail), GPS
+decays as `exp(−accuracy/50)`, BLE from mean
+sigmoid-transformed RSSI centred at −70 dBm. Temporal
+similarity is a Gaussian over circular 24-hour distance
+(σ = 2.0 h); spatial is `exp(−d_haversine/λ)` with
+λ = 0.1 km, so 100 m scores 0.37.
 
-### Android Build
+**Residency.** Three native sequence slots, LRU eviction,
+reference-counted so a state under active inference can't
+be evicted mid-call. Invariant: `activeStates.size +
+availableSeqIds.size == 3`.
 
-| Component | Version | Source |
-|-----------|---------|--------|
-| Android Studio | Ladybug or later | Required for AGP compatibility |
-| Android SDK | compileSdk 34, minSdk 26 | `build.gradle` L8, L16 |
-| NDK | r27c (27.2.12479018) | `build.gradle` L11 |
-| CMake | 3.22.1 | `build.gradle` L38 |
-| Java | JDK 17 | `build.gradle` L65-66 |
-| Kotlin | 1.9.x | Via Android Gradle Plugin |
-| ABI | arm64-v8a only | `build.gradle` L30 |
+**Drift.** A WorkManager job re-scores every 15 minutes
+against a BLE-blind snapshot. A swap fires only when a
+candidate beats the weakest resident by Δ ≥ 0.10.
 
-### GGUF Model
+---
 
-The benchmark requires a GGUF model file at:
+## Architecture
+
+**JNI boundary.** Ten native functions, all arguments and
+returns are JNI scalars (`jstring`, `jint`, `jboolean`,
+`jdouble`). No Java objects, arrays, or callbacks cross —
+this eliminates GC root pinning and avoids copying
+multi-megabyte tensors across the boundary. KV data stays
+native-side; the JVM orchestrates via file paths and
+integer slot IDs.
+
+| Group | Functions |
+|---|---|
+| Lifecycle | `initializeBackend`, `initializeModel`, `release` |
+| KV cache | `saveKVCache`, `loadKVCache`, `clearKVCache`, `resetSlot` |
+| Inference | `runInference`, `prefillOnly`, `resumeInference` |
+| Telemetry | `getLastPrefillMs`, `getLastGenMs`, `getLastPromptTokens`, `getLastGenTokens` |
+
+`runInference` clears the slot and decodes from position
+zero. `resumeInference` preserves restored history and
+appends at `n_past` without a BOS token. Confusing them
+produces position-ID collisions that corrupt attention.
+
+**Concurrency.** A single `ReentrantLock` (`engineLock`)
+serializes all JNI sequences touching native state. It is
+held across `loadKVCache` → `resumeInference` in one
+acquisition, and across `prefillOnly` → `saveKVCache`
+during priming — releasing between would let another
+thread mutate slot history. Per-state coroutine mutexes
+protect residency metadata separately.
+
+**Packages** (`com.aacbridge`):
+
 ```
-/data/local/tmp/models/qwen2.5-0.5b-instruct-q4_k_m.gguf
+inference/  LlamaBridge, LlamaBridgeAdapter, LatencyProfiler
+cache/      KVCacheManager, ContextPrimerImpl, CacheState, SeededStateRepository
+router/     StateRouter, TimeScorer, GPSScorer, BLEScorer
+daemon/     ContextDaemon, DriftDetector, ActiveSweep, BootReceiver
+gaze/       GazeTracker, CalibrationManager, DwellOverlayView
+fusion/     FusionInference
+fallback/   FallbackRepository, FallbackRouter
 ```
-This path is configured in `MainActivity.kt` L120-122.
 
-**Manual step required:** Download the Qwen2.5-0.5B-Instruct Q4\_K\_M GGUF file
-from Hugging Face and push to device via:
+---
+
+## Build
+
+Requires Android Studio with **NDK 27.2.12479018** and
+**CMake 3.22.1** (SDK Manager → SDK Tools → show package
+details).
+
 ```bash
+cd android
+./gradlew clean assembleDebug testDebugUnitTest
+```
+
+`clean` matters — CMake caches object files and will
+happily link a stale `llama_jni.o` against new Kotlin
+signatures, producing an `UnsatisfiedLinkError` at
+runtime rather than a build error.
+
+### Model deployment
+
+The GGUF is not bundled. Push it once:
+
+```bash
+adb shell mkdir -p /data/local/tmp/models
 adb push qwen2.5-0.5b-instruct-q4_k_m.gguf /data/local/tmp/models/
 ```
 
-### Prebuilt Native Library
+If the file is absent, `initializeModel` returns false
+and the app runs fallback-only.
 
-The build expects a prebuilt `libllama.so` at:
-```
-android/app/src/main/jniLibs/arm64-v8a/libllama.so
-```
-**Manual step required:** Build llama.cpp for Android arm64-v8a or obtain
-a prebuilt shared library. See `CMakeLists.txt` for link configuration.
-
-### Python Environment (statistics and figures)
-
-| Component | Version |
-|-----------|---------|
-| Python | 3.11+ |
-| matplotlib | 3.11+ |
-| numpy | 2.4+ |
-| scipy | 1.17+ |
+### Verifying a build
 
 ```bash
-python -m venv .venv
-.venv\Scripts\activate    # Windows
-pip install matplotlib numpy scipy
+adb logcat -s AACBridgeJNI:V AACBridge:V GazeTracker:V
 ```
 
-### Benchmark Device
+1. `Model initialized: n_ctx=6144 n_seq_max=3 (2048 per slot)`
+   — if it reads 2048, the native rebuild didn't happen.
+2. `KV cache loaded: slot=1` and `slot=2` — multi-slot
+   residency working.
+3. Tap a UI intent; the response must differ from the
+   canned strings in `InMemoryFallbackRepository`.
 
-All paper benchmarks were conducted on:
-- **Device:** OnePlus 11R (CPH2487)
-- **SoC:** Snapdragon 8+ Gen 1
-- **RAM:** 8 GB LPDDR5X
-- **Storage:** UFS 3.1
-- **OS:** Android 14
-- **Configuration:** Airplane mode, 50% brightness, no other foreground apps
+### Gaze calibration
 
-## Reproducing Paper Results
+Gaze requires a one-time neutral baseline. The app
+auto-calibrates on first launch (look at screen centre
+for ~2 s) and exposes a **Recalibrate** button.
 
-### 1. Build and Deploy Android Application
+Nose-to-eye displacement is divided by interocular
+distance and offset by the captured baseline, so
+thresholds are ratios of face width, not raw image
+coordinates. If looking top-left prints a *positive*
+`gx` in logcat, flip `MIRROR_X` in `GazeTracker.kt`.
+
+---
+
+## Known issues
+
+- **Generation is slow.** ~66 ms/token for a 0.5B Q4_K_M
+  on an 8+ Gen 1 is well below what the hardware should
+  do. `n_threads=4` on a 1+3+4 core layout is untuned.
+  Generation dominates end-to-end latency and masks the
+  prefill win.
+- **Fusion model distribution mismatch.** The bundled
+  `gaze_emg_fusion.onnx` was trained on raw-delta gaze
+  features. It now receives baseline-corrected,
+  scale-normalized values. It won't crash; its output is
+  meaningless until retrained.
+- **EMG is mock.** `FloatArray(64)` placeholder pending
+  physical armband integration.
+- **Cross-subject EMG accuracy is 42.4%** (LOSO, NinaPro
+  DB5), with the *reject* class at 0% recall. NinaPro DB5
+  is hand/wrist sEMG, not facial.
+- **Fusion evaluation is synthetic.** 2000 randomly
+  paired EMG–gaze samples. The 0.9963 macro F1 measures
+  architectural capacity, not classification ability. No
+  gaze-only baseline was run.
+- **Cache files are unencrypted.** They encode the
+  semantic content of context prompts and rely on the
+  Android sandbox alone.
+- **Static contexts.** Five hardcoded states in
+  `SeededStateRepository`. `StateRepository` is an
+  interface, so a Room-backed implementation is a
+  one-line swap in `AppContainer`.
+
+### Fixed
+
+- **Sequence-slot aliasing.** Session token history was a
+  single C++ global and batches were built with
+  `llama_batch_get_one()`, which leaves positions
+  unassigned and defaults to sequence 0 — so every
+  resume landed on slot 0 regardless of the slot the
+  cache manager allocated. Compounding it,
+  `n_seq_max` was never set and defaults to 1, so
+  restores into slots 1 and 2 failed outright and were
+  silently returned to the pool. The manager's
+  bookkeeping invariant held the whole time while the
+  resource it described did not exist. Now: explicit
+  `n_seq_max`, per-slot token history, and explicit
+  positions and sequence IDs on every batch.
+- **UI never reached the LLM.** `handleIntent` returned
+  canned strings from `FallbackRouter`; `resumeInference`
+  ran only inside `LatencyProfiler`. Now wired, on
+  `Dispatchers.IO`, with refcount release in `finally`.
+- **Gaze stuck on one target.** Raw `noseTip.y −
+  eyeCenter.y` is always positive (nose sits below the
+  eyes; handheld pitch pushes it further), so
+  `deltaY < −0.01` was unsatisfiable and confirm/reject
+  could never fire. Fixed with baseline calibration and
+  scale normalization. `call-help` also no longer sits in
+  the `else` branch — ambiguous reads now emit nothing
+  rather than a spurious request for assistance.
+- **`release()` missing `extern "C"`**, so the symbol was
+  C++ name-mangled and unresolvable at runtime.
+
+---
+
+## Reproducing the benchmarks
+
+`LatencyProfiler.runBenchmarkSuite()` runs on launch,
+executes six conditions × 32 trials (2 warmup discarded),
+and emits structured CSV via logcat. Takes ~30 minutes.
 
 ```bash
-cd android
-./gradlew assembleDebug
-adb install -r app/build/outputs/apk/debug/app-debug.apk
+adb logcat -d -s LatencyProfiler > run.log
+python regenerate_canonical.py    # → canonical_benchmark.csv
+python final_stats.py             # means, Welch t-tests, Cohen's d
+python verify_stats.py            # verification report
 ```
 
-### 2. Run Benchmark
+The extraction script matches native timing entries to
+Kotlin trial records by strict proximity and aborts on
+any misalignment, guarding against logcat ring-buffer
+drops.
 
-The benchmark runs automatically on app launch via `LatencyProfiler.runBenchmarkSuite()`
-(triggered in `MainActivity.kt` after model initialization).
+---
 
-**Manual step required:** Monitor completion via logcat:
-```bash
-adb logcat -s LatencyProfiler AACBridgeJNI | tee run_output.log
+## Citation
+
+Preprint in preparation. Until then:
+
+```bibtex
+@misc{aacbridge2026,
+  title  = {Predictive KV Cache Amortization for Edge
+            Language Model Inference on Mobile Devices},
+  author = {Tripathi, Arjit and Shah, Heer and
+            Sriram, Medha and Shalini, L},
+  year   = {2026},
+  note   = {Vellore Institute of Technology},
+  url    = {https://github.com/omni-ar/AACBridge}
+}
 ```
-Wait for `=== BENCHMARK SUITE COMPLETE ===` (approximately 30 minutes).
-
-### 3. Extract Benchmark Data
-
-```bash
-# Regenerate canonical dataset from raw log
-python benchmarks/regenerate_canonical.py
-
-# Generate figure-specific CSVs from canonical dataset
-python benchmarks/create_clean_csv.py
-```
-
-The canonical dataset (`canonical_benchmark.csv`) is the single source
-of truth for all statistics and figures.
-
-### 4. Generate Statistics (Table II)
-
-```bash
-python benchmarks/final_stats.py
-```
-
-Outputs E2E means, Welch t-tests, Cohen's d, prefill decomposition.
-All values should match Table II in the manuscript.
-
-### 5. Generate Figures
-
-```bash
-# Data figures (5 plots)
-python paper/generate_paper_figures.py
-
-# Architecture diagram
-python paper/generate_architecture.py
-```
-
-Generates all figures in `paper/figures/`:
-`latency_comparison.png`, `latency_breakdown.png`,
-`memory_budget.png`, `drift_k_ablation.png`, `fusion_ablation.png`,
-`system_architecture.png`.
-
-### 6. Compile Manuscript
-
-```bash
-cd paper
-pdflatex final_main.tex
-pdflatex final_main.tex   # Second pass for references
-```
-
-**Requires:** LaTeX distribution with `IEEEtran.cls` installed system-wide.
-
-## Data Provenance
-
-| Paper Artifact | Source File | Produced By |
-|---------------|------------|-------------|
-| Table II (latency) | `benchmarks/results/canonical_benchmark.csv` | `final_stats.py` |
-| Table III (memory) | `benchmarks/results/mem_0states.txt`, `mem_3states.txt` | `adb shell dumpsys meminfo` |
-| Table IV (fusion) | `fusion_model/results/fusion_ablation.csv` | `fusion/ablation.py` |
-| Table V (EMG) | `emg_pipeline/results/` | `emg_pipeline/src/` |
-| Fig. 1 (architecture) | Programmatic | `generate_architecture.py` |
-| Fig. 2 (latency comparison) | `benchmarks/results/ttft_clean.csv` | `generate_paper_figures.py` |
-| Fig. 3 (latency breakdown) | `benchmarks/results/ttft_enriched.csv` | `generate_paper_figures.py` |
-| Fig. 4 (memory budget) | `benchmarks/results/mem_*.txt` | `generate_paper_figures.py` |
-| Fig. 5 (fusion ablation) | `fusion_model/results/fusion_ablation.csv` | `generate_paper_figures.py` |
-| Fig. 6 (training curves) | `emg_pipeline/results/` | Training script |
-| Fig. 7 (EMG confusion) | `emg_pipeline/results/` | Training script |
-| Fig. 8 (drift ablation) | `emg_pipeline/drift_ablation/results/` | `generate_paper_figures.py` |
-
-## Data Pipeline
-
-```
-run4_complete.log (raw logcat, 85 KB)
-       │
-       └─ regenerate_canonical.py
-              │
-              ▼
-   canonical_benchmark.csv (180 rows, single source of truth)
-       │
-       ├─ final_stats.py ──────────────────────→ Table II numbers
-       │
-       ├─ verify_stats.py ─────────────────────→ Verification report
-       │
-       └─ create_clean_csv.py
-              │
-              ├─→ ttft_clean.csv ──────────────→ Fig. 2 (latency comparison)
-              │
-              └─→ ttft_enriched.csv ───────────→ Fig. 3 (latency breakdown)
-
-mem_0states.txt + mem_3states.txt ─────────────→ Fig. 4 (memory budget)
-fusion_ablation.csv ───────────────────────────→ Fig. 5 (fusion ablation)
-k_ablation_results.csv ────────────────────────→ Fig. 8 (drift ablation)
-
-All figures ──→ paper/figures/ ──→ final_main.tex ──→ pdflatex ──→ PDF
-```
-
-## Unit Tests
-
-```bash
-cd android
-./gradlew test
-```
-
-Test suites: `StateRouterTest`, `SeededStateRepositoryContractTest`,
-`KVCacheManagerTest`, `KVCacheManagerPrimingTest`, `ContextPrimerImplTest`.
 
 ## License
 
-MIT License. See [LICENSE](LICENSE) for details.
+<!-- ADD ONE. Note that llama.cpp is MIT and
+     Qwen2.5-0.5B-Instruct is Apache 2.0. -->
