@@ -42,7 +42,6 @@ class KVCacheManager(
     private val contextPrimer: ContextPrimerImpl? = null,
     private val engineLock: ReentrantLock? = null
 ) {
-
     companion object {
 
         /**
@@ -260,8 +259,20 @@ class KVCacheManager(
             }
 
             /*
-             * Return native slot back to pool.
+             * Drop native KV entries for this slot before
+             * reuse. Without this the next occupant inherits
+             * stale positions from the evicted state, and
+             * llama_decode fails with "could not find a KV
+             * slot" once positions overlap.
              */
+            if (engineLock != null) {
+                engineLock.lockWithLock {
+                    jniBridge.resetSlot(victim.seqId)
+                }
+            } else {
+                jniBridge.resetSlot(victim.seqId)
+            }
+
             availableSeqIds.add(victim.seqId)
 
             /*
@@ -313,6 +324,25 @@ class KVCacheManager(
 
             state
         }
+    }
+
+    /**
+     * Acquires the most recently used resident state for
+     * inference without naming it.
+     *
+     * Used by the interactive path, where the caller wants
+     * "whatever context is currently primed" rather than a
+     * specific stateId.
+     */
+    suspend fun acquireBestResident(): CacheState? {
+
+        val candidate =
+            activeStates.values
+                .filter { it.isActive }
+                .maxByOrNull { it.lastAccessed.get() }
+                ?: return null
+
+        return acquireStateForInference(candidate.stateId)
     }
 
     /**

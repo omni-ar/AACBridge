@@ -90,7 +90,12 @@ class KVCacheManagerTest {
                     bridge.loadKVCache(filepath, seqId)
                 override fun clearKVCache() {}
                 override fun prefillOnly(prompt: String) = true
-                override fun resumeInference(prompt: String) = ""
+                override fun resumeInference(prompt: String, seqId: Int) = ""
+                override fun resetSlot(seqId: Int) {}
+                override fun getLastPrefillMs() = 0.0
+                override fun getLastGenMs() = 0.0
+                override fun getLastPromptTokens() = 0
+                override fun getLastGenTokens() = 0
                 override fun saveKVCache(filepath: String, seqId: Int) =
                     bridge.saveKVCache(filepath, seqId)
                 override fun runInference(prompt: String) =
@@ -157,7 +162,12 @@ fun `failed JNI load returns seqId to pool`() =
                     }
                     override fun clearKVCache() {}
                     override fun prefillOnly(prompt: String) = true
-                    override fun resumeInference(prompt: String) = ""
+                    override fun resumeInference(prompt: String, seqId: Int) = ""
+                    override fun resetSlot(seqId: Int) {}
+                    override fun getLastPrefillMs() = 0.0
+                    override fun getLastGenMs() = 0.0
+                    override fun getLastPromptTokens() = 0
+                    override fun getLastGenTokens() = 0
                     override fun saveKVCache(filepath: String, seqId: Int) =
                         bridge.saveKVCache(filepath, seqId)
                     override fun runInference(prompt: String) =
@@ -224,7 +234,12 @@ fun `resident state is not redundantly reloaded`() =
                     }
                     override fun clearKVCache() {}
                     override fun prefillOnly(prompt: String) = true
-                    override fun resumeInference(prompt: String) = ""
+                    override fun resumeInference(prompt: String, seqId: Int) = ""
+                    override fun resetSlot(seqId: Int) {}
+                    override fun getLastPrefillMs() = 0.0
+                    override fun getLastGenMs() = 0.0
+                    override fun getLastPromptTokens() = 0
+                    override fun getLastGenTokens() = 0
                     override fun saveKVCache(filepath: String, seqId: Int) =
                         bridge.saveKVCache(filepath, seqId)
                     override fun runInference(prompt: String) =
@@ -291,7 +306,12 @@ fun `state loads successfully into available seqId`() =
                     }
                     override fun clearKVCache() {}
                     override fun prefillOnly(prompt: String) = true
-                    override fun resumeInference(prompt: String) = ""
+                    override fun resumeInference(prompt: String, seqId: Int) = ""
+                    override fun resetSlot(seqId: Int) {}
+                    override fun getLastPrefillMs() = 0.0
+                    override fun getLastGenMs() = 0.0
+                    override fun getLastPromptTokens() = 0
+                    override fun getLastGenTokens() = 0
                     override fun saveKVCache(filepath: String, seqId: Int) =
                         bridge.saveKVCache(filepath, seqId)
                     override fun runInference(prompt: String) =

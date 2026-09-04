@@ -99,8 +99,16 @@ interface LlamaBridgeAdapter {
      * @return Generated text response.
      */
     fun resumeInference(
-        prompt: String
+        prompt: String,
+        seqId: Int
     ): String
+
+    /**
+     * Drops KV entries and token history for one slot.
+     * Called on eviction so a reused slot never inherits
+     * stale positions from its previous occupant.
+     */
+    fun resetSlot(seqId: Int)
 
     // -------------------------------------------------
     // Native timing/token telemetry
@@ -168,4 +176,4 @@ interface LlamaBridgeAdapter {
      * after the inference call.
      */
     fun getLastGenTokens(): Int
-}
+}

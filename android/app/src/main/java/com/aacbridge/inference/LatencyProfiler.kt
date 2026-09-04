@@ -578,7 +578,7 @@ class LatencyProfiler(
              * the position collision that occurs with
              * runInference()'s llama_batch_get_one.
              */
-            result = bridge.resumeInference(prompt)
+            result = bridge.resumeInference(prompt, BENCH_SEQ_ID)
 
             /*
              * Read native metrics under the same lock.
@@ -977,7 +977,7 @@ class LatencyProfiler(
                 return@withLock null
             }
 
-            bridge.resumeInference(VALIDATION_PROMPT)
+            bridge.resumeInference(VALIDATION_PROMPT, BENCH_SEQ_ID)
         }
 
         if (capResult == null) {

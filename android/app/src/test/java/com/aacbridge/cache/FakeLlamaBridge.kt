@@ -129,10 +129,15 @@ class FakeLlamaBridge : LlamaBridgeAdapter {
     }
 
     override fun resumeInference(
-        prompt: String
+        prompt: String,
+        seqId: Int
     ): String {
 
         return inferenceResponse
+    }
+
+    override fun resetSlot(seqId: Int) {
+        // No-op for tests
     }
 
     // Timing getters return zero in test fake

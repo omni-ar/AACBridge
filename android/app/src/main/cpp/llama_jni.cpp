@@ -14,390 +14,495 @@
 static llama_model * model = nullptr;
 static llama_context * ctx = nullptr;
 
-static std::vector<llama_token> session_tokens;
+/*
+ * =====================================================
+ * Per-slot session state
+ * =====================================================
+ *
+ * MUST match HardwareConfig.MAX_ACTIVE_KV_STATES on the
+ * Kotlin side.
+ *
+ * Previously this was a single global session_tokens
+ * vector. That made it impossible to resume inference
+ * from any slot other than the most recently loaded one:
+ * KVCacheManager hands out seqId 0/1/2, but every
+ * resumeInference() read the same shared history.
+ *
+ * Each native sequence slot now owns its own token
+ * history, so slot N can be resumed independently.
+ */
+static constexpr int MAX_SLOTS = 3;
+
+/* Per-sequence context window. Total n_ctx is
+ * PER_SEQ_CTX * MAX_SLOTS, because llama.cpp divides
+ * the context window across sequences. */
+static constexpr int PER_SEQ_CTX = 2048;
+
+static std::vector<llama_token> slot_tokens[MAX_SLOTS];
+
+static inline bool valid_slot(int s) {
+    return s >= 0 && s < MAX_SLOTS;
+}
 
 /*
  * Most-recent inference timing/token metrics.
  *
- * Updated atomically at the end of runInference()
- * and resumeInference(). Kotlin callers MUST read
- * these under the engine lock immediately after the
- * corresponding inference call returns to avoid
- * stale values from a concurrent call.
+ * Updated at the end of runInference() and
+ * resumeInference(). Kotlin callers MUST read these
+ * under the engine lock immediately after the
+ * corresponding inference call returns to avoid stale
+ * values from a concurrent call.
  */
 static double   last_prefill_ms    = 0.0;
 static double   last_gen_ms        = 0.0;
 static int32_t  last_prompt_tokens = 0;
 static int32_t  last_gen_tokens    = 0;
 
+/*
+ * =====================================================
+ * decode_into_seq()
+ * =====================================================
+ *
+ * Decodes n tokens into an EXPLICIT sequence slot at
+ * EXPLICIT positions.
+ *
+ * This replaces llama_batch_get_one(), which leaves
+ * pos == NULL and seq_id unset. llama.cpp then defaults
+ * the batch to sequence 0 and auto-assigns positions
+ * from sequence 0's memory state. That is why every
+ * resume landed on slot 0 regardless of the seqId the
+ * cache manager selected.
+ *
+ * Logits are requested only for the final token, which
+ * is all llama_sampler_sample(smpl, ctx, -1) needs.
+ */
+static bool decode_into_seq(
+        const llama_token * tokens,
+        int n,
+        int pos_start,
+        int seq_id) {
+
+    if (n <= 0) {
+        return false;
+    }
+
+    llama_batch batch = llama_batch_init(n, 0, 1);
+
+    for (int i = 0; i < n; i++) {
+        batch.token[i]     = tokens[i];
+        batch.pos[i]       = (llama_pos) (pos_start + i);
+        batch.n_seq_id[i]  = 1;
+        batch.seq_id[i][0] = (llama_seq_id) seq_id;
+        batch.logits[i]    = (int8_t) (i == n - 1);
+    }
+
+    batch.n_tokens = n;
+
+    const int rc = llama_decode(ctx, batch);
+
+    llama_batch_free(batch);
+
+    if (rc != 0) {
+        LOGE("decode_into_seq: llama_decode returned %d "
+             "(n=%d pos_start=%d seq=%d)",
+             rc, n, pos_start, seq_id);
+        return false;
+    }
+
+    return true;
+}
+
+/*
+ * Tokenizes text into out. add_bos controls whether a
+ * BOS token is prepended.
+ *
+ * llama_tokenize returns a NEGATIVE count when the
+ * output buffer is too small; the magnitude is the
+ * required size. The two-pass call below relies on that.
+ */
+static bool tokenize_text(
+        const std::string & text,
+        bool add_bos,
+        std::vector<llama_token> & out) {
+
+    const llama_vocab * vocab = llama_model_get_vocab(model);
+
+    int n = llama_tokenize(
+            vocab,
+            text.c_str(),
+            text.length(),
+            nullptr,
+            0,
+            add_bos,
+            true
+    );
+
+    out.resize(n < 0 ? -n : n);
+
+    int written = llama_tokenize(
+            vocab,
+            text.c_str(),
+            text.length(),
+            out.data(),
+            (int32_t) out.size(),
+            add_bos,
+            true
+    );
+
+    if (written < 0) {
+        LOGE("tokenize_text: failed (%d)", written);
+        return false;
+    }
+
+    out.resize(written);
+
+    return !out.empty();
+}
+
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_aacbridge_inference_LlamaBridge_initializeBackend(
         JNIEnv *env,
-jobject thiz) {
+        jobject thiz) {
 
-llama_backend_init();
+    llama_backend_init();
 
-LOGI("Llama backend initialized");
+    LOGI("Llama backend initialized");
 }
 
 extern "C"
 JNIEXPORT jboolean JNICALL
-        Java_com_aacbridge_inference_LlamaBridge_initializeModel(
+Java_com_aacbridge_inference_LlamaBridge_initializeModel(
         JNIEnv *env,
         jobject thiz,
-jstring model_path) {
+        jstring model_path) {
 
-const char * path = env->GetStringUTFChars(model_path, nullptr);
+    const char * path = env->GetStringUTFChars(model_path, nullptr);
 
-LOGI("Initializing model from path: %s", path);
+    LOGI("Initializing model from path: %s", path);
 
-llama_model_params model_params =
-        llama_model_default_params();
+    llama_model_params model_params =
+            llama_model_default_params();
 
-model = llama_model_load_from_file(
-        path,
-        model_params
-);
+    model = llama_model_load_from_file(path, model_params);
 
-env->ReleaseStringUTFChars(model_path, path);
+    env->ReleaseStringUTFChars(model_path, path);
 
-if (model == nullptr) {
-LOGE("Failed to load model");
-return JNI_FALSE;
+    if (model == nullptr) {
+        LOGE("Failed to load model");
+        return JNI_FALSE;
+    }
+
+    llama_context_params ctx_params =
+            llama_context_default_params();
+
+    /*
+     * n_seq_max MUST be set explicitly.
+     *
+     * It defaults to 1. With the default, sequence slots
+     * 1 and 2 do not exist, so every
+     * llama_state_seq_load_file() into slot 1 or 2 fails
+     * and KVCacheManager silently returns the slot to the
+     * pool -- meaning only ONE state was ever really
+     * resident despite the 3-slot bookkeeping.
+     *
+     * n_ctx is the TOTAL context across all sequences,
+     * so it must be scaled by MAX_SLOTS to preserve
+     * PER_SEQ_CTX tokens per slot.
+     */
+    ctx_params.n_seq_max = MAX_SLOTS;
+    ctx_params.n_ctx     = PER_SEQ_CTX * MAX_SLOTS;
+    ctx_params.n_batch   = 512;
+    ctx_params.n_threads = 4;
+
+    ctx = llama_init_from_model(model, ctx_params);
+
+    if (ctx == nullptr) {
+        LOGE("Failed to create context");
+        return JNI_FALSE;
+    }
+
+    for (int s = 0; s < MAX_SLOTS; s++) {
+        slot_tokens[s].clear();
+    }
+
+    LOGI("Model initialized: n_ctx=%d n_seq_max=%d (%d per slot)",
+         PER_SEQ_CTX * MAX_SLOTS, MAX_SLOTS, PER_SEQ_CTX);
+
+    return JNI_TRUE;
 }
-
-llama_context_params ctx_params =
-        llama_context_default_params();
-
-ctx_params.n_ctx = 2048;
-ctx_params.n_batch = 512;
-ctx_params.n_threads = 4;
-
-ctx = llama_init_from_model(
-        model,
-        ctx_params
-);
-
-if (ctx == nullptr) {
-LOGE("Failed to create context");
-return JNI_FALSE;
-}
-
-LOGI("Model initialized successfully");
-
-return JNI_TRUE;
-}
-
-extern "C"
-JNIEXPORT jboolean JNICALL
-        Java_com_aacbridge_inference_LlamaBridge_saveKVCache(
-        JNIEnv *env,
-        jobject thiz,
-jstring filepath,
-        jint seq_id) {
-
-if (ctx == nullptr) {
-LOGE("Context is null");
-return JNI_FALSE;
-}
-
-const char * path =
-        env->GetStringUTFChars(filepath, nullptr);
-
-size_t result =
-        llama_state_seq_save_file(
-                ctx,
-                path,
-                (llama_seq_id) seq_id,
-                session_tokens.data(),
-                session_tokens.size()
-        );
-
-env->ReleaseStringUTFChars(filepath, path);
-
-if (result == 0) {
-LOGE("Failed to save KV cache");
-return JNI_FALSE;
-}
-
-LOGI("KV cache saved successfully");
-
-return JNI_TRUE;
-}
-
-extern "C"
-JNIEXPORT jboolean JNICALL
-        Java_com_aacbridge_inference_LlamaBridge_loadKVCache(
-        JNIEnv *env,
-        jobject thiz,
-jstring filepath,
-        jint seq_id) {
-
-if (ctx == nullptr) {
-LOGE("Context is null");
-return JNI_FALSE;
-}
-
-const char * path =
-        env->GetStringUTFChars(filepath, nullptr);
-
-const size_t max_tokens = 4096;
-
-size_t token_count = 0;
 
 /*
- * Clear any existing KV entries for the target
- * sequence before restoring from disk.
+ * =====================================================
+ * saveKVCache()
+ * =====================================================
  *
- * Without this, stale entries from a previous
- * runInference() call remain at positions beyond
- * the loaded range. When resumeInference() later
- * tries to decode at those positions, llama_decode
- * fails with error 1 ("could not find a KV slot")
- * because the positions are already occupied.
- *
- * llama_memory_seq_rm with p0=-1, p1=-1 removes
- * ALL positions for the given seq_id.
+ * Serializes the KV tensors of seq_id together with that
+ * slot's token history.
  */
-llama_memory_seq_rm(
-    llama_get_memory(ctx),
-    (llama_seq_id) seq_id,
-    -1,
-    -1
-);
+extern "C"
+JNIEXPORT jboolean JNICALL
+Java_com_aacbridge_inference_LlamaBridge_saveKVCache(
+        JNIEnv *env,
+        jobject thiz,
+        jstring filepath,
+        jint seq_id) {
 
-session_tokens.resize(max_tokens);
+    if (ctx == nullptr) {
+        LOGE("saveKVCache: context is null");
+        return JNI_FALSE;
+    }
 
-size_t result =
-        llama_state_seq_load_file(
-                ctx,
-                path,
-                (llama_seq_id) seq_id,
-                session_tokens.data(),
-                max_tokens,
-                &token_count
-        );
+    if (!valid_slot(seq_id)) {
+        LOGE("saveKVCache: invalid seq_id %d", (int) seq_id);
+        return JNI_FALSE;
+    }
 
-env->ReleaseStringUTFChars(filepath, path);
+    std::vector<llama_token> & tokens = slot_tokens[seq_id];
 
-if (result == 0) {
-LOGE("Failed to load KV cache");
-return JNI_FALSE;
+    if (tokens.empty()) {
+        LOGE("saveKVCache: slot %d has no token history; "
+             "call prefillOnly() first", (int) seq_id);
+        return JNI_FALSE;
+    }
+
+    const char * path = env->GetStringUTFChars(filepath, nullptr);
+
+    size_t result =
+            llama_state_seq_save_file(
+                    ctx,
+                    path,
+                    (llama_seq_id) seq_id,
+                    tokens.data(),
+                    tokens.size()
+            );
+
+    env->ReleaseStringUTFChars(filepath, path);
+
+    if (result == 0) {
+        LOGE("Failed to save KV cache for slot %d", (int) seq_id);
+        return JNI_FALSE;
+    }
+
+    LOGI("KV cache saved: slot=%d tokens=%d",
+         (int) seq_id, (int) tokens.size());
+
+    return JNI_TRUE;
 }
 
-session_tokens.resize(token_count);
+/*
+ * =====================================================
+ * loadKVCache()
+ * =====================================================
+ *
+ * Restores serialized KV tensors into seq_id and
+ * repopulates that slot's token history.
+ *
+ * llama_state_seq_load_file returns the token history
+ * that was saved alongside the tensors, so the slot's
+ * n_past is recovered from the file rather than tracked
+ * separately.
+ */
+extern "C"
+JNIEXPORT jboolean JNICALL
+Java_com_aacbridge_inference_LlamaBridge_loadKVCache(
+        JNIEnv *env,
+        jobject thiz,
+        jstring filepath,
+        jint seq_id) {
 
-LOGI("KV cache loaded successfully");
+    if (ctx == nullptr) {
+        LOGE("loadKVCache: context is null");
+        return JNI_FALSE;
+    }
 
-return JNI_TRUE;
+    if (!valid_slot(seq_id)) {
+        LOGE("loadKVCache: invalid seq_id %d", (int) seq_id);
+        return JNI_FALSE;
+    }
+
+    const char * path = env->GetStringUTFChars(filepath, nullptr);
+
+    /*
+     * Clear existing KV entries for the target sequence
+     * before restoring.
+     *
+     * Without this, stale entries from a previous
+     * inference remain at positions beyond the loaded
+     * range. A later decode at those positions fails with
+     * "could not find a KV slot" because the positions are
+     * already occupied.
+     */
+    llama_memory_seq_rm(
+            llama_get_memory(ctx),
+            (llama_seq_id) seq_id,
+            -1,
+            -1
+    );
+
+    std::vector<llama_token> restored(PER_SEQ_CTX);
+
+    size_t token_count = 0;
+
+    size_t result =
+            llama_state_seq_load_file(
+                    ctx,
+                    path,
+                    (llama_seq_id) seq_id,
+                    restored.data(),
+                    restored.size(),
+                    &token_count
+            );
+
+    env->ReleaseStringUTFChars(filepath, path);
+
+    if (result == 0) {
+        LOGE("Failed to load KV cache into slot %d", (int) seq_id);
+        slot_tokens[seq_id].clear();
+        return JNI_FALSE;
+    }
+
+    restored.resize(token_count);
+    slot_tokens[seq_id] = std::move(restored);
+
+    LOGI("KV cache loaded: slot=%d tokens=%d",
+         (int) seq_id, (int) token_count);
+
+    return JNI_TRUE;
 }
 
+/*
+ * =====================================================
+ * runInference()
+ * =====================================================
+ *
+ * Full RAG-style inference from position zero.
+ * Always operates on slot 0 and destroys whatever was
+ * resident there.
+ */
 extern "C"
 JNIEXPORT jstring JNICALL
-        Java_com_aacbridge_inference_LlamaBridge_runInference(
+Java_com_aacbridge_inference_LlamaBridge_runInference(
         JNIEnv *env,
         jobject thiz,
-jstring prompt) {
+        jstring prompt) {
 
-if (ctx == nullptr || model == nullptr) {
-LOGE("Model or context not initialized");
-return env->NewStringUTF(
-"Model not initialized"
-);
-}
+    if (ctx == nullptr || model == nullptr) {
+        LOGE("Model or context not initialized");
+        return env->NewStringUTF("Model not initialized");
+    }
 
-const char * prompt_chars =
-        env->GetStringUTFChars(prompt, nullptr);
+    const char * prompt_chars = env->GetStringUTFChars(prompt, nullptr);
+    std::string input_text(prompt_chars);
+    env->ReleaseStringUTFChars(prompt, prompt_chars);
 
-std::string input_text(prompt_chars);
+    const int slot = 0;
 
-env->ReleaseStringUTFChars(prompt, prompt_chars);
+    llama_memory_seq_rm(
+            llama_get_memory(ctx),
+            (llama_seq_id) slot,
+            -1,
+            -1
+    );
 
-session_tokens.clear();
+    slot_tokens[slot].clear();
 
-const llama_vocab * vocab =
-        llama_model_get_vocab(model);
+    if (!tokenize_text(input_text, true, slot_tokens[slot])) {
+        return env->NewStringUTF("Tokenization failed");
+    }
 
-int token_count =
-        llama_tokenize(
-                vocab,
-                input_text.c_str(),
-                input_text.length(),
-                nullptr,
-                0,
-                true,
-                true
-        );
+    const llama_vocab * vocab = llama_model_get_vocab(model);
 
-if (token_count < 0) {
-    int required = -token_count;
-    session_tokens.resize(required);
-} else {
-    session_tokens.resize(token_count);
-}
+    int n_prompt_tokens = (int) slot_tokens[slot].size();
 
-llama_tokenize(
-        vocab,
-        input_text.c_str(),
-        input_text.length(),
-        session_tokens.data(),
-        session_tokens.size(),
-true,
-true
-);
+    auto prefill_start = std::chrono::high_resolution_clock::now();
 
-llama_batch batch =
-        llama_batch_get_one(
-                session_tokens.data(),
-                session_tokens.size()
-        );
+    bool ok = decode_into_seq(
+            slot_tokens[slot].data(),
+            n_prompt_tokens,
+            0,
+            slot
+    );
 
-auto prefill_start =
-    std::chrono::high_resolution_clock::now();
+    auto prefill_end = std::chrono::high_resolution_clock::now();
 
-int decode_result =
-        llama_decode(ctx, batch);
+    double prefill_ms =
+            std::chrono::duration<double, std::milli>(
+                    prefill_end - prefill_start
+            ).count();
 
-auto prefill_end =
-    std::chrono::high_resolution_clock::now();
+    if (!ok) {
+        LOGE("Initial decode failed");
+        return env->NewStringUTF("Inference failed");
+    }
 
-double prefill_ms =
-    std::chrono::duration<double, std::milli>(
-        prefill_end - prefill_start
-    ).count();
+    llama_sampler * smpl =
+            llama_sampler_chain_init(
+                    llama_sampler_chain_default_params()
+            );
 
-int n_prompt_tokens = (int) session_tokens.size();
+    llama_sampler_chain_add(smpl, llama_sampler_init_greedy());
 
-if (decode_result != 0) {
-LOGE("Initial decode failed");
+    std::string generated_text;
 
-return env->NewStringUTF(
-"Inference failed"
-);
-}
+    const int max_generation_tokens = 64;
 
-llama_sampler * smpl =
-        llama_sampler_chain_init(
-                llama_sampler_chain_default_params()
-        );
+    int pos = n_prompt_tokens;
+    int gen_token_count = 0;
 
-llama_sampler_chain_add(
-        smpl,
-        llama_sampler_init_greedy()
-);
+    auto gen_start = std::chrono::high_resolution_clock::now();
 
-std::string generated_text;
+    for (int i = 0; i < max_generation_tokens; i++) {
 
-const int max_generation_tokens = 64;
+        llama_token new_token = llama_sampler_sample(smpl, ctx, -1);
 
-auto gen_start =
-    std::chrono::high_resolution_clock::now();
+        if (llama_vocab_is_eog(vocab, new_token)) {
+            LOGI("EOS token reached");
+            break;
+        }
 
-int gen_token_count = 0;
+        char piece[256];
 
-for (int i = 0;
-i < max_generation_tokens;
-i++) {
+        int piece_length =
+                llama_token_to_piece(
+                        vocab, new_token, piece, sizeof(piece), 0, true
+                );
 
-llama_token new_token =
-        llama_sampler_sample(
-                smpl,
-                ctx,
-                -1
-        );
+        if (piece_length > 0) {
+            generated_text.append(piece, piece_length);
+        }
 
-if (llama_vocab_is_eog(
-        vocab,
-        new_token
-)) {
+        if (!decode_into_seq(&new_token, 1, pos, slot)) {
+            LOGE("Decode failed during generation loop");
+            llama_sampler_free(smpl);
+            return env->NewStringUTF("Generation failed");
+        }
 
-LOGI("EOS token reached");
+        slot_tokens[slot].push_back(new_token);
+        pos++;
+        gen_token_count++;
+    }
 
-break;
-}
+    llama_sampler_free(smpl);
 
-session_tokens.push_back(new_token);
-gen_token_count++;
+    auto gen_end = std::chrono::high_resolution_clock::now();
 
-char piece[256];
+    double gen_ms =
+            std::chrono::duration<double, std::milli>(
+                    gen_end - gen_start
+            ).count();
 
-int piece_length =
-        llama_token_to_piece(
-                vocab,
-                new_token,
-                piece,
-                sizeof(piece),
-                0,
-                true
-        );
+    last_prefill_ms    = prefill_ms;
+    last_gen_ms        = gen_ms;
+    last_prompt_tokens = n_prompt_tokens;
+    last_gen_tokens    = gen_token_count;
 
-if (piece_length > 0) {
-generated_text.append(
-        piece,
-        piece_length
-);
-}
+    LOGI("TIMING,runInference,"
+         "prefill_ms=%.2f,gen_ms=%.2f,"
+         "prompt_tokens=%d,gen_tokens=%d",
+         prefill_ms, gen_ms, n_prompt_tokens, gen_token_count);
 
-llama_batch next_batch =
-        llama_batch_get_one(
-                &new_token,
-                1
-        );
-
-int next_decode =
-        llama_decode(
-                ctx,
-                next_batch
-        );
-
-if (next_decode != 0) {
-
-LOGE(
-        "Decode failed during generation loop"
-);
-
-llama_sampler_free(smpl);
-
-return env->NewStringUTF(
-"Generation failed"
-);
-}
-}
-
-llama_sampler_free(smpl);
-
-auto gen_end =
-    std::chrono::high_resolution_clock::now();
-
-double gen_ms =
-    std::chrono::duration<double, std::milli>(
-        gen_end - gen_start
-    ).count();
-
-/*
- * Store metrics into static tracking variables
- * before returning. Kotlin reads these under
- * engineLock immediately after this call.
- */
-last_prefill_ms    = prefill_ms;
-last_gen_ms        = gen_ms;
-last_prompt_tokens = n_prompt_tokens;
-last_gen_tokens    = gen_token_count;
-
-LOGI("TIMING,runInference,"
-     "prefill_ms=%.2f,"
-     "gen_ms=%.2f,"
-     "prompt_tokens=%d,"
-     "gen_tokens=%d",
-     prefill_ms, gen_ms,
-     n_prompt_tokens, gen_token_count);
-
-LOGI("Inference completed successfully");
-
-return env->NewStringUTF(
-        generated_text.c_str()
-);
+    return env->NewStringUTF(generated_text.c_str());
 }
 
 /*
@@ -405,9 +510,9 @@ return env->NewStringUTF(
  * clearKVCache()
  * =====================================================
  *
- * Clears all entries from the KV cache and resets
- * session_tokens. Must be called between independent
- * inference trials to prevent context exhaustion.
+ * Clears ALL sequence slots and their token histories.
+ * Called between independent benchmark trials to prevent
+ * context exhaustion.
  */
 extern "C"
 JNIEXPORT void JNICALL
@@ -415,19 +520,18 @@ Java_com_aacbridge_inference_LlamaBridge_clearKVCache(
         JNIEnv *env,
         jobject thiz) {
 
-if (ctx == nullptr) {
-LOGE("Context is null");
-return;
-}
+    if (ctx == nullptr) {
+        LOGE("clearKVCache: context is null");
+        return;
+    }
 
-llama_memory_clear(
-    llama_get_memory(ctx),
-    true
-);
+    llama_memory_clear(llama_get_memory(ctx), true);
 
-session_tokens.clear();
+    for (int s = 0; s < MAX_SLOTS; s++) {
+        slot_tokens[s].clear();
+    }
 
-LOGI("KV cache cleared");
+    LOGI("KV cache cleared (all %d slots)", MAX_SLOTS);
 }
 
 /*
@@ -435,23 +539,14 @@ LOGI("KV cache cleared");
  * prefillOnly()
  * =====================================================
  *
- * Tokenizes and decodes the prompt WITHOUT entering
- * the generation loop.
+ * Tokenizes and decodes the prompt WITHOUT entering the
+ * generation loop, populating slot 0 with context-only
+ * attention tensors.
  *
- * Purpose:
- *   Populate the KV cache with context-only attention
- *   tensors so that saveKVCache() serializes a clean
- *   state without stale generation tokens.
- *
- * This replaces the previous priming flow which used
- * runInference() (generating 64 unwanted tokens)
- * followed by saveKVCache().
- *
- * After this call:
- *   - session_tokens contains the prompt tokens
- *   - KV cache contains attention tensors for the
- *     prompt tokens ONLY
- *   - No generation output is produced
+ * Slot 0 is cleared first. Priming and inference both
+ * touch slot 0, so ContextPrimerImpl must hold the engine
+ * lock across prefillOnly() -> saveKVCache(), which it
+ * already does.
  */
 extern "C"
 JNIEXPORT jboolean JNICALL
@@ -460,69 +555,46 @@ Java_com_aacbridge_inference_LlamaBridge_prefillOnly(
         jobject thiz,
         jstring prompt) {
 
-if (ctx == nullptr || model == nullptr) {
-LOGE("Model or context not initialized");
-return JNI_FALSE;
-}
+    if (ctx == nullptr || model == nullptr) {
+        LOGE("Model or context not initialized");
+        return JNI_FALSE;
+    }
 
-const char * prompt_chars =
-        env->GetStringUTFChars(prompt, nullptr);
+    const char * prompt_chars = env->GetStringUTFChars(prompt, nullptr);
+    std::string input_text(prompt_chars);
+    env->ReleaseStringUTFChars(prompt, prompt_chars);
 
-std::string input_text(prompt_chars);
+    const int slot = 0;
 
-env->ReleaseStringUTFChars(prompt, prompt_chars);
+    llama_memory_seq_rm(
+            llama_get_memory(ctx),
+            (llama_seq_id) slot,
+            -1,
+            -1
+    );
 
-session_tokens.clear();
+    slot_tokens[slot].clear();
 
-const llama_vocab * vocab =
-        llama_model_get_vocab(model);
+    if (!tokenize_text(input_text, true, slot_tokens[slot])) {
+        LOGE("prefillOnly: tokenization failed");
+        return JNI_FALSE;
+    }
 
-int token_count =
-        llama_tokenize(
-                vocab,
-                input_text.c_str(),
-                input_text.length(),
-                nullptr,
-                0,
-                true,
-                true
-        );
+    if (!decode_into_seq(
+            slot_tokens[slot].data(),
+            (int) slot_tokens[slot].size(),
+            0,
+            slot)) {
 
-if (token_count < 0) {
-    int required = -token_count;
-    session_tokens.resize(required);
-} else {
-    session_tokens.resize(token_count);
-}
+        LOGE("Prefill decode failed");
+        slot_tokens[slot].clear();
+        return JNI_FALSE;
+    }
 
-llama_tokenize(
-        vocab,
-        input_text.c_str(),
-        input_text.length(),
-        session_tokens.data(),
-        session_tokens.size(),
-        true,
-        true
-);
+    LOGI("Prefill completed: %d tokens into slot %d",
+         (int) slot_tokens[slot].size(), slot);
 
-llama_batch batch =
-        llama_batch_get_one(
-                session_tokens.data(),
-                session_tokens.size()
-        );
-
-int decode_result =
-        llama_decode(ctx, batch);
-
-if (decode_result != 0) {
-LOGE("Prefill decode failed");
-return JNI_FALSE;
-}
-
-LOGI("Prefill completed: %d tokens",
-     (int)session_tokens.size());
-
-return JNI_TRUE;
+    return JNI_TRUE;
 }
 
 /*
@@ -530,355 +602,263 @@ return JNI_TRUE;
  * resumeInference()
  * =====================================================
  *
- * Continues generation from a previously loaded KV
- * cache state.
+ * Continues generation from a KV cache previously
+ * restored into seqId.
  *
  * Precondition:
- *   loadKVCache() must have been called successfully.
- *   session_tokens must contain the token history
- *   restored by loadKVCache().
+ *   loadKVCache(path, seqId) must have succeeded, so
+ *   slot_tokens[seqId] holds the restored history.
  *
  * Differences from runInference():
- *   1. Does NOT clear session_tokens
+ *   1. Does NOT clear the slot
  *   2. Tokenizes intent WITHOUT BOS (add_special=false)
- *   3. Creates batch with EXPLICIT positions starting
- *      at n_past = session_tokens.size()
- *   4. Uses explicit positions in generation loop
- *
- * This avoids the position collision that occurs when
- * llama_batch_get_one(pos=NULL) auto-assigns positions
- * starting from 0, overwriting loaded KV entries.
+ *   3. Decodes at EXPLICIT positions starting at
+ *      n_past = slot_tokens[seqId].size(), into the
+ *      EXPLICIT sequence seqId
  */
 extern "C"
 JNIEXPORT jstring JNICALL
 Java_com_aacbridge_inference_LlamaBridge_resumeInference(
         JNIEnv *env,
         jobject thiz,
-        jstring prompt) {
+        jstring prompt,
+        jint seqId) {
 
-if (ctx == nullptr || model == nullptr) {
-LOGE("Model or context not initialized");
-return env->NewStringUTF(
-        "Model not initialized"
-);
-}
-
-int n_past = (int) session_tokens.size();
-
-if (n_past == 0) {
-LOGE("resumeInference: session_tokens is empty. "
-     "Call loadKVCache() first.");
-return env->NewStringUTF(
-        "No KV cache loaded"
-);
-}
-
-LOGI("resumeInference: n_past = %d", n_past);
-
-const char * prompt_chars =
-        env->GetStringUTFChars(prompt, nullptr);
-
-std::string input_text(prompt_chars);
-
-env->ReleaseStringUTFChars(prompt, prompt_chars);
-
-const llama_vocab * vocab =
-        llama_model_get_vocab(model);
-
-/*
- * Tokenize the intent prompt.
- *
- * add_special = false:
- *   The original context already includes BOS at
- *   position 0 (from prefillOnly). Adding a second
- *   BOS here would corrupt the token stream.
- *
- * parse_special = true:
- *   Allow special token parsing in case the prompt
- *   contains control tokens.
- */
-int token_count =
-        llama_tokenize(
-                vocab,
-                input_text.c_str(),
-                input_text.length(),
-                nullptr,
-                0,
-                false,
-                true
-        );
-
-std::vector<llama_token> new_tokens;
-
-if (token_count < 0) {
-    new_tokens.resize(-token_count);
-} else {
-    new_tokens.resize(token_count);
-}
-
-llama_tokenize(
-        vocab,
-        input_text.c_str(),
-        input_text.length(),
-        new_tokens.data(),
-        new_tokens.size(),
-        false,
-        true
-);
-
-int n_new = (int) new_tokens.size();
-
-LOGI("resumeInference: appending %d intent tokens "
-     "at pos %d",
-     n_new, n_past);
-
-/*
- * Use llama_batch_get_one for auto-tracked positions.
- *
- * llama_state_seq_load_file updates the internal
- * position tracker. llama_batch_get_one relies on
- * this tracker to assign the correct positions
- * starting after the loaded KV cache entries.
- */
-llama_batch batch =
-        llama_batch_get_one(
-                new_tokens.data(),
-                n_new
-        );
-
-auto prefill_start =
-    std::chrono::high_resolution_clock::now();
-
-int decode_result =
-        llama_decode(ctx, batch);
-
-auto prefill_end =
-    std::chrono::high_resolution_clock::now();
-
-double prefill_ms =
-    std::chrono::duration<double, std::milli>(
-        prefill_end - prefill_start
-    ).count();
-
-if (decode_result != 0) {
-LOGE("Resume prefill decode failed");
-return env->NewStringUTF(
-        "Inference failed"
-);
-}
-
-/*
- * Append the intent tokens to session_tokens
- * so the token history remains consistent.
- */
-for (int i = 0; i < n_new; i++) {
-    session_tokens.push_back(new_tokens[i]);
-}
-
-/*
- * Generation loop with auto-tracked positions.
- *
- * Since we use llama_batch_get_one for the prefill,
- * the internal position tracker is already set to
- * n_past + n_new. Each generation step appends one
- * token and the tracker advances automatically.
- */
-llama_sampler * smpl =
-        llama_sampler_chain_init(
-                llama_sampler_chain_default_params()
-        );
-
-llama_sampler_chain_add(
-        smpl,
-        llama_sampler_init_greedy()
-);
-
-std::string generated_text;
-
-const int max_generation_tokens = 64;
-
-auto gen_start =
-    std::chrono::high_resolution_clock::now();
-
-int gen_token_count = 0;
-
-for (int i = 0;
-     i < max_generation_tokens;
-     i++) {
-
-    llama_token new_token =
-            llama_sampler_sample(
-                    smpl,
-                    ctx,
-                    -1
-            );
-
-    if (llama_vocab_is_eog(
-            vocab,
-            new_token
-    )) {
-
-        LOGI("EOS token reached");
-
-        break;
+    if (ctx == nullptr || model == nullptr) {
+        LOGE("Model or context not initialized");
+        return env->NewStringUTF("Model not initialized");
     }
 
-    session_tokens.push_back(new_token);
-    gen_token_count++;
-
-    char piece[256];
-
-    int piece_length =
-            llama_token_to_piece(
-                    vocab,
-                    new_token,
-                    piece,
-                    sizeof(piece),
-                    0,
-                    true
-            );
-
-    if (piece_length > 0) {
-        generated_text.append(
-                piece,
-                piece_length
-        );
+    if (!valid_slot(seqId)) {
+        LOGE("resumeInference: invalid seqId %d", (int) seqId);
+        return env->NewStringUTF("Invalid cache slot");
     }
 
-    llama_batch gen_batch =
-            llama_batch_get_one(
-                    &new_token,
-                    1
-            );
+    std::vector<llama_token> & tokens = slot_tokens[seqId];
 
-    int next_decode =
-            llama_decode(
-                    ctx,
-                    gen_batch
-            );
+    int n_past = (int) tokens.size();
 
-    if (next_decode != 0) {
-
-        LOGE(
-          "Decode failed during generation loop"
-        );
-
-        llama_sampler_free(smpl);
-
-        return env->NewStringUTF(
-                "Generation failed"
-        );
+    if (n_past == 0) {
+        LOGE("resumeInference: slot %d is empty. "
+             "Call loadKVCache() first.", (int) seqId);
+        return env->NewStringUTF("No KV cache loaded");
     }
 
+    const char * prompt_chars = env->GetStringUTFChars(prompt, nullptr);
+    std::string input_text(prompt_chars);
+    env->ReleaseStringUTFChars(prompt, prompt_chars);
+
+    const llama_vocab * vocab = llama_model_get_vocab(model);
+
+    /*
+     * add_special = false:
+     *   The cached context already includes BOS at
+     *   position 0 (from prefillOnly). A second BOS here
+     *   would corrupt the restored attention pattern.
+     */
+    std::vector<llama_token> new_tokens;
+
+    if (!tokenize_text(input_text, false, new_tokens)) {
+        return env->NewStringUTF("Tokenization failed");
+    }
+
+    int n_new = (int) new_tokens.size();
+
+    if (n_past + n_new + 64 > PER_SEQ_CTX) {
+        LOGE("resumeInference: slot %d would overflow "
+             "(n_past=%d n_new=%d cap=%d)",
+             (int) seqId, n_past, n_new, PER_SEQ_CTX);
+        return env->NewStringUTF("Context window exhausted");
+    }
+
+    LOGI("resumeInference: slot=%d appending %d intent "
+         "tokens at pos %d",
+         (int) seqId, n_new, n_past);
+
+    auto prefill_start = std::chrono::high_resolution_clock::now();
+
+    bool ok = decode_into_seq(
+            new_tokens.data(),
+            n_new,
+            n_past,
+            seqId
+    );
+
+    auto prefill_end = std::chrono::high_resolution_clock::now();
+
+    double prefill_ms =
+            std::chrono::duration<double, std::milli>(
+                    prefill_end - prefill_start
+            ).count();
+
+    if (!ok) {
+        LOGE("Resume prefill decode failed");
+        return env->NewStringUTF("Inference failed");
+    }
+
+    tokens.insert(tokens.end(), new_tokens.begin(), new_tokens.end());
+
+    int pos = (int) tokens.size();
+
+    llama_sampler * smpl =
+            llama_sampler_chain_init(
+                    llama_sampler_chain_default_params()
+            );
+
+    llama_sampler_chain_add(smpl, llama_sampler_init_greedy());
+
+    std::string generated_text;
+
+    const int max_generation_tokens = 64;
+
+    int gen_token_count = 0;
+
+    auto gen_start = std::chrono::high_resolution_clock::now();
+
+    for (int i = 0; i < max_generation_tokens; i++) {
+
+        llama_token new_token = llama_sampler_sample(smpl, ctx, -1);
+
+        if (llama_vocab_is_eog(vocab, new_token)) {
+            LOGI("EOS token reached");
+            break;
+        }
+
+        char piece[256];
+
+        int piece_length =
+                llama_token_to_piece(
+                        vocab, new_token, piece, sizeof(piece), 0, true
+                );
+
+        if (piece_length > 0) {
+            generated_text.append(piece, piece_length);
+        }
+
+        if (!decode_into_seq(&new_token, 1, pos, seqId)) {
+            LOGE("Decode failed during generation loop");
+            llama_sampler_free(smpl);
+            return env->NewStringUTF("Generation failed");
+        }
+
+        tokens.push_back(new_token);
+        pos++;
+        gen_token_count++;
+    }
+
+    llama_sampler_free(smpl);
+
+    auto gen_end = std::chrono::high_resolution_clock::now();
+
+    double gen_ms =
+            std::chrono::duration<double, std::milli>(
+                    gen_end - gen_start
+            ).count();
+
+    last_prefill_ms    = prefill_ms;
+    last_gen_ms        = gen_ms;
+    last_prompt_tokens = n_new;
+    last_gen_tokens    = gen_token_count;
+
+    LOGI("TIMING,resumeInference,"
+         "prefill_ms=%.2f,gen_ms=%.2f,"
+         "prompt_tokens=%d,gen_tokens=%d,seq=%d",
+         prefill_ms, gen_ms, n_new, gen_token_count, (int) seqId);
+
+    return env->NewStringUTF(generated_text.c_str());
 }
-
-llama_sampler_free(smpl);
-
-auto gen_end =
-    std::chrono::high_resolution_clock::now();
-
-double gen_ms =
-    std::chrono::duration<double, std::milli>(
-        gen_end - gen_start
-    ).count();
 
 /*
- * Store metrics into static tracking variables
- * before returning. Kotlin reads these under
- * engineLock immediately after this call.
+ * =====================================================
+ * resetSlot()
+ * =====================================================
+ *
+ * Drops the KV entries and token history for a single
+ * sequence slot. Called by KVCacheManager during
+ * eviction so a reused slot never inherits stale
+ * positions from its previous occupant.
  */
-last_prefill_ms    = prefill_ms;
-last_gen_ms        = gen_ms;
-last_prompt_tokens = n_new;
-last_gen_tokens    = gen_token_count;
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_aacbridge_inference_LlamaBridge_resetSlot(
+        JNIEnv *env,
+        jobject thiz,
+        jint seqId) {
 
-LOGI("TIMING,resumeInference,"
-     "prefill_ms=%.2f,"
-     "gen_ms=%.2f,"
-     "prompt_tokens=%d,"
-     "gen_tokens=%d",
-     prefill_ms, gen_ms,
-     n_new, gen_token_count);
+    if (ctx == nullptr || !valid_slot(seqId)) {
+        return;
+    }
 
-LOGI("Resume inference completed successfully");
+    llama_memory_seq_rm(
+            llama_get_memory(ctx),
+            (llama_seq_id) seqId,
+            -1,
+            -1
+    );
 
-return env->NewStringUTF(
-        generated_text.c_str()
-);
+    slot_tokens[seqId].clear();
+
+    LOGI("Slot %d reset", (int) seqId);
 }
-
 
 /*
  * =====================================================
  * Native timing getters
  * =====================================================
  *
- * Return the most-recent inference timing and token
- * metrics. These are set by runInference() and
- * resumeInference() before they return.
- *
- * Thread safety:
- *   Callers MUST hold the Kotlin engineLock when
- *   calling these getters AND the preceding inference
- *   function within the same lock acquisition.
- *   This guarantees the values correspond to the
- *   intended inference call and are not overwritten
- *   by a concurrent call.
+ * Callers MUST hold the Kotlin engineLock across the
+ * inference call AND these getters within a single
+ * acquisition.
  */
 extern "C"
 JNIEXPORT jdouble JNICALL
 Java_com_aacbridge_inference_LlamaBridge_getLastPrefillMs(
-        JNIEnv *env,
-        jobject thiz) {
+        JNIEnv *env, jobject thiz) {
     return (jdouble) last_prefill_ms;
 }
 
 extern "C"
 JNIEXPORT jdouble JNICALL
 Java_com_aacbridge_inference_LlamaBridge_getLastGenMs(
-        JNIEnv *env,
-        jobject thiz) {
+        JNIEnv *env, jobject thiz) {
     return (jdouble) last_gen_ms;
 }
 
 extern "C"
 JNIEXPORT jint JNICALL
 Java_com_aacbridge_inference_LlamaBridge_getLastPromptTokens(
-        JNIEnv *env,
-        jobject thiz) {
+        JNIEnv *env, jobject thiz) {
     return (jint) last_prompt_tokens;
 }
 
 extern "C"
 JNIEXPORT jint JNICALL
 Java_com_aacbridge_inference_LlamaBridge_getLastGenTokens(
-        JNIEnv *env,
-        jobject thiz) {
+        JNIEnv *env, jobject thiz) {
     return (jint) last_gen_tokens;
 }
 
+extern "C"
 JNIEXPORT void JNICALL
 Java_com_aacbridge_inference_LlamaBridge_release(
         JNIEnv *env,
-jobject thiz) {
+        jobject thiz) {
 
-if (ctx != nullptr) {
+    if (ctx != nullptr) {
+        llama_free(ctx);
+        ctx = nullptr;
+    }
 
-llama_free(ctx);
+    if (model != nullptr) {
+        llama_model_free(model);
+        model = nullptr;
+    }
 
-ctx = nullptr;
-}
+    for (int s = 0; s < MAX_SLOTS; s++) {
+        slot_tokens[s].clear();
+    }
 
-if (model != nullptr) {
+    llama_backend_free();
 
-llama_model_free(model);
-
-model = nullptr;
-}
-
-session_tokens.clear();
-
-llama_backend_free();
-
-LOGI("Resources released");
+    LOGI("Resources released");
 }

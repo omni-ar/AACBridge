@@ -54,6 +54,7 @@ class MainActivity : AppCompatActivity() {
             Manifest.permission.BLUETOOTH_CONNECT,
             Manifest.permission.CAMERA
         )
+        private const val CALIB_MIN_SAMPLES = 25
     }
 
     private val activityScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
@@ -61,6 +62,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var fallbackRouter: FallbackRouter
     private lateinit var speechManager: SpeechOutputManager
     private var gazeTracker: GazeTracker? = null
+    private var calibrationManager: CalibrationManager? = null
 
     // UI elements
     private lateinit var statusText: TextView
@@ -280,7 +282,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun initGazeTracker() {
         val app = application as AACBridgeApplication
-        val calibrationManager = CalibrationManager(this)
+        val calib = CalibrationManager(this)
+        calibrationManager = calib
         
         val dwellOverlay = DwellOverlayView(this).apply {
             layoutParams = FrameLayout.LayoutParams(120, 120).apply {
@@ -321,9 +324,40 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             },
-            calibrationManager = calibrationManager
+            calibrationManager = calib,
+            onCalibrationNeeded = {
+                runOnUiThread { updateStatus("GAZE: Tap Calibrate, then look at centre") }
+            }
         )
         startCameraAnalysis()
+
+        // Auto-calibrate on first launch so gaze is testable
+        // immediately — user just needs to look at the phone
+        runCalibration()
+    }
+
+    private fun runCalibration() {
+        val calib = calibrationManager ?: return
+        calib.beginCalibration()
+        updateStatus("CALIBRATING: look at the centre of the screen")
+
+        activityScope.launch {
+            // Wait for the camera pipeline to actually deliver
+            // frames. startCameraAnalysis() returns before the
+            // provider has bound, so a fixed delay here samples
+            // nothing on a cold start.
+            val deadline = System.currentTimeMillis() + 15_000
+            while (calib.sampleCount < CALIB_MIN_SAMPLES &&
+                   System.currentTimeMillis() < deadline) {
+                delay(200)
+            }
+
+            val ok = calib.finishCalibration()
+            updateStatus(
+                if (ok) "GAZE: Calibrated"
+                else "GAZE: Calibration failed — tap Calibrate and hold still"
+            )
+        }
     }
 
     private fun startCameraAnalysis() {
@@ -351,20 +385,78 @@ class MainActivity : AppCompatActivity() {
         }, ContextCompat.getMainExecutor(this))
     }
 
-    /**
-     * Handles an AAC intent from any source:
-     * gaze tracking, manual button press, or mock generator.
-     */
+    private val inferenceBusy = java.util.concurrent.atomic.AtomicBoolean(false)
+
     private fun handleIntent(intentLabel: String) {
-        intentLogText.text = "Intent: ${intentLabel.uppercase(Locale.ROOT)} @ ${System.currentTimeMillis()}"
+        intentLogText.text =
+            "Intent: ${intentLabel.uppercase(Locale.ROOT)} @ ${System.currentTimeMillis()}"
 
         activityScope.launch {
-            val response = fallbackRouter.resolveResponse(intentLabel)
-            responseText.text = response
-            speechManager.speak(response)
+            // Tier 1: immediate canned response, always shown.
+            val canned = fallbackRouter.resolveResponse(intentLabel)
+            responseText.text = canned
 
-            Log.d(TAG, "Intent: $intentLabel -> Response: $response")
+            if (!inferenceBusy.compareAndSet(false, true)) {
+                speechManager.speak(canned)
+                return@launch
+            }
+
+            try {
+                val app = application as AACBridgeApplication
+                val container = app.appContainer
+
+                if (!container.modelReady.get()) {
+                    speechManager.speak(canned)
+                    return@launch
+                }
+
+                val state = container.kvCacheManager.acquireBestResident()
+                if (state == null) {
+                    speechManager.speak(canned)
+                    return@launch
+                }
+
+                val reply = try {
+                    withContext(Dispatchers.IO) {
+                        container.engineLock.withLock {
+                            if (!LlamaBridge.loadKVCache(state.kvFilePath, state.seqId)) {
+                                null
+                            } else {
+                                LlamaBridge.resumeInference(
+                                    promptForIntent(intentLabel),
+                                    state.seqId
+                                )
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Contextual inference failed", e)
+                    null
+                } finally {
+                    container.kvCacheManager.releaseState(state.stateId)
+                }
+
+                if (!reply.isNullOrBlank() && !reply.startsWith("No KV cache") &&
+                    !reply.startsWith("Inference failed") &&
+                    !reply.startsWith("Generation failed")) {
+                    responseText.text = reply
+                    speechManager.speak(reply)
+                } else {
+                    speechManager.speak(canned)
+                }
+            } finally {
+                inferenceBusy.set(false)
+            }
         }
+    }
+
+    private fun promptForIntent(label: String): String = when (label) {
+        "confirm"   -> "User: yes\nAssistant:"
+        "reject"    -> "User: no\nAssistant:"
+        "select"    -> "User: I need water\nAssistant:"
+        "scroll"    -> "User: show me more options\nAssistant:"
+        "call-help" -> "User: I need help\nAssistant:"
+        else        -> "User: $label\nAssistant:"
     }
 
     private fun updateStatus(status: String) {
@@ -466,6 +558,23 @@ class MainActivity : AppCompatActivity() {
             grid.addView(btn, params)
         }
         content.addView(grid)
+
+        val recalibrateBtn = Button(this).apply {
+            text = "RECALIBRATE GAZE"
+            setTextColor(Color.WHITE)
+            textSize = 13f
+            setTypeface(null, Typeface.BOLD)
+            val bg = GradientDrawable().apply {
+                setColor(Color.parseColor("#334155"))
+                cornerRadius = 12f
+                setStroke(1, Color.parseColor("#64748B"))
+            }
+            background = bg
+            setOnClickListener { runCalibration() }
+            isAllCaps = false
+        }
+        content.addView(recalibrateBtn)
+        content.addView(spacer())
 
         // Section: Intent Log
         content.addView(makeSectionLabel("INTENT EVENT LOG"))

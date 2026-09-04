@@ -116,7 +116,12 @@ class ContextPrimerImplTest {
                     callOrder.add("prefillOnly")
                     return true
                 }
-                override fun resumeInference(prompt: String) = ""
+                override fun resumeInference(prompt: String, seqId: Int) = ""
+                override fun resetSlot(seqId: Int) {}
+                override fun getLastPrefillMs() = 0.0
+                override fun getLastGenMs() = 0.0
+                override fun getLastPromptTokens() = 0
+                override fun getLastGenTokens() = 0
                 override fun saveKVCache(filepath: String, seqId: Int): Boolean {
                     callOrder.add("saveKVCache")
                     java.io.File(filepath).apply {
@@ -216,7 +221,12 @@ class ContextPrimerImplTest {
                     lockHeldDuringPrefill = engineLock.isHeldByCurrentThread
                     return true
                 }
-                override fun resumeInference(prompt: String) = ""
+                override fun resumeInference(prompt: String, seqId: Int) = ""
+                override fun resetSlot(seqId: Int) {}
+                override fun getLastPrefillMs() = 0.0
+                override fun getLastGenMs() = 0.0
+                override fun getLastPromptTokens() = 0
+                override fun getLastGenTokens() = 0
                 override fun saveKVCache(filepath: String, seqId: Int): Boolean {
                     lockHeldDuringSave = engineLock.isHeldByCurrentThread
                     java.io.File(filepath).apply {
