@@ -1,0 +1,101 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\citation{dettmers2022}
+\citation{frantar2022}
+\citation{llamacpp}
+\citation{vaswani2017}
+\citation{beukelman2020}
+\citation{sglang}
+\citation{vllm}
+\citation{cachegen}
+\citation{llamacpp}
+\citation{scissorhands}
+\citation{h2o}
+\citation{snapkv}
+\citation{streamingllm}
+\citation{kvquant}
+\citation{sglang}
+\citation{vllm}
+\citation{promptcache}
+\citation{cacheblend}
+\citation{cachegen}
+\citation{infinigen}
+\citation{dettmers2022}
+\citation{frantar2022}
+\citation{mobilellm}
+\citation{llamacpp}
+\citation{mlcllm}
+\citation{powerinfer2}
+\citation{llminaflash}
+\@writefile{toc}{\contentsline {section}{\numberline {I}Introduction}{1}{section.1}\protected@file@percent }
+\newlabel{sec:introduction}{{I}{1}{Introduction}{section.1}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {II}Related Work}{1}{section.2}\protected@file@percent }
+\newlabel{sec:related}{{II}{1}{Related Work}{section.2}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {III}System Design}{1}{section.3}\protected@file@percent }
+\newlabel{sec:methodology}{{III}{1}{System Design}{section.3}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces CAP-KVC system architecture. Environmental sensors (blue) feed a scoring function selecting contexts for background priming (green). At inference time (orange), the pre-computed KV cache is restored and only intent tokens are processed by the llama.cpp/JNI backend. A drift detector re-evaluates context relevance with hysteresis gating ($\Delta \geq 0.10$).}}{2}{figure.1}\protected@file@percent }
+\newlabel{fig:architecture}{{1}{2}{CAP-KVC system architecture. Environmental sensors (blue) feed a scoring function selecting contexts for background priming (green). At inference time (orange), the pre-computed KV cache is restored and only intent tokens are processed by the llama.cpp/JNI backend. A drift detector re-evaluates context relevance with hysteresis gating ($\Delta \geq 0.10$)}{figure.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-A}}Problem Formulation}{2}{subsection.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-B}}Execution Pipeline}{2}{subsection.3.2}\protected@file@percent }
+\citation{llamacpp}
+\citation{qwen25}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-C}}Context Scoring}{3}{subsection.3.3}\protected@file@percent }
+\newlabel{sec:scoring}{{\mbox  {III-C}}{3}{Context Scoring}{subsection.3.3}{}}
+\newlabel{eq:scoring}{{1}{3}{Context Scoring}{equation.1}{}}
+\newlabel{eq:time_score}{{2}{3}{Context Scoring}{equation.2}{}}
+\newlabel{eq:gps_score}{{3}{3}{Context Scoring}{equation.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-D}}KV Cache Residency}{3}{subsection.3.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {IV}Implementation}{3}{section.4}\protected@file@percent }
+\newlabel{sec:implementation}{{IV}{3}{Implementation}{section.4}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {V}Evaluation}{3}{section.5}\protected@file@percent }
+\newlabel{sec:experiments}{{V}{3}{Evaluation}{section.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-A}}Setup}{3}{subsection.5.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-B}}Measurement Methodology}{4}{subsection.5.2}\protected@file@percent }
+\newlabel{sec:measurement}{{\mbox  {V-B}}{4}{Measurement Methodology}{subsection.5.2}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {VI}Results}{4}{section.6}\protected@file@percent }
+\newlabel{sec:results}{{VI}{4}{Results}{section.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-A}}Inference Latency}{4}{subsection.6.1}\protected@file@percent }
+\newlabel{sec:results_latency}{{\mbox  {VI-A}}{4}{Inference Latency}{subsection.6.1}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {I}{\ignorespaces Latency decomposition (ms). Prefill isolates the \texttt  {llama\_decode()} forward pass; generation covers autoregressive sampling. Both measured via native \texttt  {std::chrono}. OnePlus~11R, Qwen2.5-0.5B-Instruct Q4\_K\_M, greedy sampling, max 64~output tokens, $n = 30$.}}{4}{table.1}\protected@file@percent }
+\newlabel{tab:latency}{{I}{4}{Latency decomposition (ms). Prefill isolates the \texttt {llama\_decode()} forward pass; generation covers autoregressive sampling. Both measured via native \texttt {std::chrono}. OnePlus~11R, Qwen2.5-0.5B-Instruct Q4\_K\_M, greedy sampling, max 64~output tokens, $n = 30$}{table.1}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Latency decomposition across conditions. RAG\_INLINE prefill scales linearly (274~ms at $N\!=\!9$ to 14001~ms at $N\!=\!439$ tokens); CAP\_KVC prefill is 343~ms regardless of cached context size, yielding a 40.78$\times $ prefill speedup. Error bars: $\pm 1\sigma $, $n = 30$.}}{4}{figure.2}\protected@file@percent }
+\newlabel{fig:latency_breakdown}{{2}{4}{Latency decomposition across conditions. RAG\_INLINE prefill scales linearly (274~ms at $N\!=\!9$ to 14001~ms at $N\!=\!439$ tokens); CAP\_KVC prefill is 343~ms regardless of cached context size, yielding a 40.78$\times $ prefill speedup. Error bars: $\pm 1\sigma $, $n = 30$}{figure.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-B}}Memory Budget}{4}{subsection.6.2}\protected@file@percent }
+\newlabel{sec:results_memory}{{\mbox  {VI-B}}{4}{Memory Budget}{subsection.6.2}{}}
+\citation{ninapro}
+\citation{dailydialog}
+\bibcite{beukelman2020}{1}
+\bibcite{llamacpp}{2}
+\bibcite{qwen25}{3}
+\bibcite{dettmers2022}{4}
+\bibcite{frantar2022}{5}
+\bibcite{scissorhands}{6}
+\bibcite{h2o}{7}
+\bibcite{streamingllm}{8}
+\bibcite{sglang}{9}
+\bibcite{vllm}{10}
+\bibcite{infinigen}{11}
+\bibcite{cachegen}{12}
+\bibcite{ninapro}{13}
+\bibcite{snapkv}{14}
+\bibcite{promptcache}{15}
+\bibcite{cacheblend}{16}
+\bibcite{powerinfer2}{17}
+\bibcite{kvquant}{18}
+\bibcite{mobilellm}{19}
+\bibcite{mlcllm}{20}
+\bibcite{llminaflash}{21}
+\bibcite{vaswani2017}{22}
+\bibcite{dailydialog}{23}
+\@writefile{lot}{\contentsline {table}{\numberline {II}{\ignorespaces Native heap memory (KB) via \texttt  {dumpsys meminfo}. Delta represents the marginal cost of loading three KV cache states.}}{5}{table.2}\protected@file@percent }
+\newlabel{tab:memory}{{II}{5}{Native heap memory (KB) via \texttt {dumpsys meminfo}. Delta represents the marginal cost of loading three KV cache states}{table.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-C}}Multimodal Fusion (Proof-of-Concept)}{5}{subsection.6.3}\protected@file@percent }
+\newlabel{sec:results_fusion}{{\mbox  {VI-C}}{5}{Multimodal Fusion (Proof-of-Concept)}{subsection.6.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-D}}Drift Detection}{5}{subsection.6.4}\protected@file@percent }
+\newlabel{sec:results_drift}{{\mbox  {VI-D}}{5}{Drift Detection}{subsection.6.4}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {VII}Conclusion}{5}{section.7}\protected@file@percent }
+\newlabel{sec:conclusion}{{VII}{5}{Conclusion}{section.7}{}}
+\@writefile{toc}{\contentsline {section}{References}{5}{section*.1}\protected@file@percent }
+\gdef \@abspage@last{5}
