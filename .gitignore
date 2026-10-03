@@ -29,3 +29,7 @@ archive/
 # ===== OS =====
 .DS_Store
 Thumbs.db
+
+# ===== Sensitive / Dossier =====
+AACBridge_Applied_Scientist_Master_Dossier.pdf
+
