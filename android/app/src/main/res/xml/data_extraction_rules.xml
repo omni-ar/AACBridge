@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Data extraction rules for Android 12+ (API 31+).
+
+    Excludes serialized KV cache tensors from:
+    - cloud backup
+    - device-to-device transfer
+
+    KV cache files contain pre-computed attention patterns
+    derived from contextual system prompts. While not
+    directly human-readable, they encode semantic content
+    that should not be transferred to uncontrolled storage.
+
+    Path: files/kv_cache/
+    Contents: {stateId}.bin binary files
+-->
+<data-extraction-rules>
+
+    <!-- Cloud backup exclusions -->
+    <cloud-backup>
+        <exclude domain="file" path="kv_cache/" />
+    </cloud-backup>
+
+    <!-- Device-to-device transfer exclusions -->
+    <device-transfer>
+        <exclude domain="file" path="kv_cache/" />
+    </device-transfer>
+
+</data-extraction-rules>

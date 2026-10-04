@@ -1,0 +1,26 @@
+# Prediction Ablation Results (Corrected)
+# Date: 2026-10-04
+# Seed: 42
+# Episodes: 100
+# Interactions per episode: 64
+# Total interactions: 6400
+# k_cache = 3 (MAX_ACTIVE_KV_STATES)
+# M = 5 (total contexts)
+# Hit@3 = ground truth RESIDENT in cache (not top-3 ranking)
+# Wrong Context = top1 != ground_truth AND ground_truth IN resident_set
+# Cold Miss = ground_truth NOT IN resident_set
+# TRUE ablations use timeBaselineWeightOverride = 0.001
+# GPS_WITH_TIME / BLE_WITH_TIME retain production wt = 0.4
+# Traces are controlled/synthetic, NOT real-world recordings
+# Ground truth schedule shares the same timing assumptions as the time scorer (see prediction_debug_report.md)
+config,total_interactions,hit1,hit3_residency,cold_miss,wrong_context,switches_per_day
+RANDOM,6400,0.194375,0.597656,0.402344,0.000000,0.00
+TIME_ONLY,6400,0.923906,1.000000,0.000000,0.076094,5.94
+GPS_ONLY,6400,0.881406,1.000000,0.000000,0.118594,12.53
+GPS_WITH_TIME,6400,0.959688,1.000000,0.000000,0.040313,6.02
+BLE_ONLY,6400,0.927969,1.000000,0.000000,0.066563,10.10
+BLE_WITH_TIME,6400,0.981406,1.000000,0.000000,0.018594,4.92
+FULL_FUSION,6400,0.987656,1.000000,0.000000,0.012344,4.72
+FULL_HIGH_NOISE,6400,0.893281,1.000000,0.000000,0.106719,11.75
+GPS_SPOOFED,6400,0.677344,0.999531,0.000469,0.322188,16.97
+STALE_GPS,6400,0.983750,1.000000,0.000000,0.016250,4.86

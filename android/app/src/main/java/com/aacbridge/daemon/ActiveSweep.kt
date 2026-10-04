@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
-import android.location.Location
 import android.location.LocationManager
 import com.aacbridge.cache.KVCacheManager
 import com.aacbridge.cache.StateRepository
@@ -19,7 +18,8 @@ class ActiveSweep(
     private val bluetoothAdapter: BluetoothAdapter?,
     private val stateRouter: StateRouter,
     private val cacheManager: KVCacheManager,
-    private val repository: StateRepository
+    private val repository: StateRepository,
+    private val locationValidator: LocationValidator = LocationValidator()
 ) {
 
     companion object {
@@ -81,7 +81,7 @@ class ActiveSweep(
             val providers =
                 locationManager.getProviders(true)
 
-            var bestLocation: Location? = null
+            var bestLocation: android.location.Location? = null
 
             for (provider in providers) {
 
@@ -98,14 +98,7 @@ class ActiveSweep(
                 }
             }
 
-            bestLocation?.let {
-
-                GpsLocation(
-                    lat = it.latitude,
-                    lng = it.longitude,
-                    accuracyMeters = it.accuracy
-                )
-            }
+            bestLocation?.let { locationValidator.validate(it) }
 
         } catch (e: Exception) {
             null

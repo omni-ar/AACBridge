@@ -12,6 +12,7 @@ import androidx.work.WorkerParameters
 import com.aacbridge.AACBridgeApplication
 import com.aacbridge.router.GpsLocation
 import com.aacbridge.router.HardwareConfig
+import com.aacbridge.router.LocationValidator
 import com.aacbridge.router.SensorSnapshot
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -212,6 +213,8 @@ class DriftDetector(
         }
     }
 
+    private val locationValidator = LocationValidator()
+
     @SuppressLint("MissingPermission")
     private fun fetchLastKnownLocation(
         locationManager: LocationManager
@@ -240,14 +243,7 @@ class DriftDetector(
                 }
             }
 
-            bestLocation?.let {
-
-                GpsLocation(
-                    lat = it.latitude,
-                    lng = it.longitude,
-                    accuracyMeters = it.accuracy
-                )
-            }
+            bestLocation?.let { locationValidator.validate(it) }
 
         } catch (_: Exception) {
 

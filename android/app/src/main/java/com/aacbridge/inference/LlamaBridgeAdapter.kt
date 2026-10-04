@@ -124,7 +124,7 @@ interface LlamaBridgeAdapter {
      * after the inference call that produced the
      * measurement.
      */
-    fun getLastPrefillMs(): Double
+    fun getLastPrefillMs(): Double = 0.0
 
     /**
      * Returns the autoregressive generation duration
@@ -138,7 +138,7 @@ interface LlamaBridgeAdapter {
      * MUST be called under engineLock immediately
      * after the inference call.
      */
-    fun getLastGenMs(): Double
+    fun getLastGenMs(): Double = 0.0
 
     /**
      * Returns the number of prompt tokens evaluated
@@ -154,7 +154,7 @@ interface LlamaBridgeAdapter {
      * MUST be called under engineLock immediately
      * after the inference call.
      */
-    fun getLastPromptTokens(): Int
+    fun getLastPromptTokens(): Int = 0
 
     /**
      * Returns the number of tokens actually generated
@@ -167,5 +167,5 @@ interface LlamaBridgeAdapter {
      * MUST be called under engineLock immediately
      * after the inference call.
      */
-    fun getLastGenTokens(): Int
+    fun getLastGenTokens(): Int = 0
 }

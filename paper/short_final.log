@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.7.12)  9 SEP 2026 18:01
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.7.12)  4 OCT 2026 07:16
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -474,336 +474,477 @@ jit/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/base/8r.enc}
 
 
 ]
-Underfull \hbox (badness 6842) in paragraph at lines 105--106
-\OT1/ptm/m/n/10 u-la-tively prefetches KV en-tries for pre-dicted to-kens.
+Underfull \hbox (badness 1852) in paragraph at lines 81--82
+\OT1/ptm/m/n/10 an An-droid im-ple-men-ta-tion fea-tur-ing a scalar-only
  []
 
-<figures/system_architecture_new.png, id=276, 5270.69125pt x 4240.84375pt>
+[2]
+<figures/system_architecture_new.png, id=304, 5270.69125pt x 4240.84375pt>
 File: figures/system_architecture_new.png Graphic file (type png)
 <use figures/system_architecture_new.png>
 Package pdftex.def Info: figures/system_architecture_new.png  used on input lin
-e 132.
+e 138.
 (pdftex.def)             Requested size: 516.0pt x 415.17924pt.
-[2]
-Underfull \hbox (badness 1609) in paragraph at lines 167--168
+
+Underfull \hbox (badness 1609) in paragraph at lines 173--174
 \OT1/ptm/m/n/10 se-quen-tial Conv1d--BatchNorm--ReLU--MaxPool lay-ers for
  []
 
-[3 <./figures/system_architecture_new.png (PNG copy)>] [4]
-Underfull \hbox (badness 1803) in paragraph at lines 258--259
+[3] [4 <./figures/system_architecture_new.png (PNG copy)>]
+Underfull \hbox (badness 4940) in paragraph at lines 237--238
+[]\OT1/ptm/m/n/10 The sys-tem con-fig-ures a fi-nite set of $\OML/cmm/m/it/10 M
+ \OT1/cmr/m/n/10 = 5$
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 237--238
+\OT1/ptm/m/n/10 pre-configured se-man-tic con-texts rep-re-sent-ing typ-i-cal
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 237--238
+\OT1/ptm/m/n/10 daily AAC liv-ing en-vi-ron-ments: \OT1/pcr/m/n/10 home_morning
+\OT1/ptm/m/n/10 ,
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 237--238
+\OT1/pcr/m/n/10 home_evening\OT1/ptm/m/n/10 , \OT1/pcr/m/n/10 hospital_ward\OT1
+/ptm/m/n/10 , \OT1/pcr/m/n/10 therapy_room\OT1/ptm/m/n/10 ,
+ []
+
+
+Underfull \hbox (badness 1803) in paragraph at lines 266--267
 []\OT1/ptm/m/n/10 AACBridge tar-gets \OT1/pcr/m/n/10 arm64-v8a \OT1/ptm/m/n/10 
 de-vices run-ning An-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 265--266
-[]\OT1/ptm/m/n/10 The func-tions fall into three groups: \OT1/ptm/m/it/10 life-
-cy-cle
+Underfull \hbox (badness 10000) in paragraph at lines 271--272
+\OT1/ptm/m/n/10 into two tiers: (1) nine core op-er-a-tional func-tions
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 265--266
-\OT1/ptm/m/n/10 (\OT1/pcr/m/n/10 initializeBackend\OT1/ptm/m/n/10 , \OT1/pcr/m/
-n/10 initializeModel\OT1/ptm/m/n/10 ,
+Underfull \hbox (badness 3954) in paragraph at lines 271--272
+\OT1/ptm/m/n/10 com-pris-ing eight application-facing prim-i-tives plus one
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 265--266
+Underfull \hbox (badness 10000) in paragraph at lines 271--272
+\OT1/pcr/m/n/10 getLastPromptTokens\OT1/ptm/m/n/10 , \OT1/pcr/m/n/10 getLastGen
+Tokens\OT1/ptm/m/n/10 )
+ []
+
+[5]
+Underfull \hbox (badness 10000) in paragraph at lines 273--274
+[]\OT1/ptm/m/n/10 The op-er-a-tional func-tions fall into three groups:
+ []
+
+
+Underfull \hbox (badness 5403) in paragraph at lines 273--274
+\OT1/ptm/m/it/10 life-cy-cle \OT1/ptm/m/n/10 (\OT1/pcr/m/n/10 initializeBackend
+\OT1/ptm/m/n/10 , \OT1/pcr/m/n/10 initializeModel\OT1/ptm/m/n/10 ,
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 273--274
 \OT1/pcr/m/n/10 release\OT1/ptm/m/n/10 ); \OT1/ptm/m/it/10 KV cache op-er-a-tio
 ns \OT1/ptm/m/n/10 (\OT1/pcr/m/n/10 saveKVCache\OT1/ptm/m/n/10 ,
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 265--266
+Underfull \hbox (badness 10000) in paragraph at lines 273--274
 \OT1/pcr/m/n/10 loadKVCache\OT1/ptm/m/n/10 , \OT1/pcr/m/n/10 clearKVCache\OT1/p
 tm/m/n/10 ); and \OT1/ptm/m/it/10 in-fer-ence
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 265--266
+Underfull \hbox (badness 10000) in paragraph at lines 273--274
 \OT1/ptm/m/n/10 The dis-tinc-tion be-tween \OT1/pcr/m/n/10 runInference \OT1/pt
 m/m/n/10 and
  []
 
 
-Underfull \hbox (badness 3769) in paragraph at lines 270--271
+Underfull \hbox (badness 3769) in paragraph at lines 278--279
 []\OT1/ptm/m/n/10 The C++ back-end main-tains shared global state: a
  []
 
 
-Underfull \hbox (badness 6063) in paragraph at lines 275--276
+Underfull \hbox (badness 6063) in paragraph at lines 283--284
 []\OT1/ptm/m/n/10 Context prim-ing ex-e-cutes three phases per se-man-
  []
 
 
-Underfull \hbox (badness 2707) in paragraph at lines 275--276
+Underfull \hbox (badness 2707) in paragraph at lines 283--284
 \OT1/ptm/m/n/10 tic state: (1) \OT1/ptm/m/it/10 pre-fill\OT1/ptm/m/n/10 ---the 
 en-gine lock is ac-quired and
  []
 
 
-Underfull \hbox (badness 7012) in paragraph at lines 275--276
+Underfull \hbox (badness 7012) in paragraph at lines 283--284
 \OT1/ptm/m/n/10 with-out en-ter-ing the gen-er-a-tion loop; (2) \OT1/ptm/m/it/1
 0 se-ri-al-ize\OT1/ptm/m/n/10 ---
  []
 
 
-Underfull \hbox (badness 2229) in paragraph at lines 275--276
+Underfull \hbox (badness 2229) in paragraph at lines 283--284
 \OT1/pcr/m/n/10 0) \OT1/ptm/m/n/10 writes KV ten-sors to a tem-po-rary file (sl
 ot 0 is
  []
 
-[5]
-Underfull \hbox (badness 5519) in paragraph at lines 317--318
+
+Underfull \hbox (badness 10000) in paragraph at lines 293--294
+[]\OT1/ptm/m/n/10 Two co-op-er-at-ing com-po-nents han-dle back-ground
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 293--294
+\OT1/ptm/m/n/10 sens-ing. \OT1/ptm/b/n/10 Ac-tiveSweep \OT1/ptm/m/n/10 is a cor
+outine-based col-lec-tor
+ []
+
+
+Underfull \hbox (badness 6300) in paragraph at lines 293--294
+\OT1/ptm/m/n/10 (3000ms \OT1/pcr/m/n/10 BluetoothLeScanner \OT1/ptm/m/n/10 win-
+dow), com-bin-ing
+ []
+
+
+Underfull \hbox (badness 2753) in paragraph at lines 295--296
+\OT1/ptm/m/n/10 fixes pass through a ded-i-cated \OT1/pcr/m/n/10 LocationValida
+tor
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 295--296
+\OT1/ptm/m/n/10 be-fore en-ter-ing the rout-ing pipeline. The val-ida-tor
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 295--296
+\OT1/ptm/m/n/10 en-forces three re-jec-tion cri-te-ria: (1) \OT1/ptm/m/it/10 Mo
+ck-location
+ []
+
+
+Underfull \hbox (badness 2065) in paragraph at lines 295--296
+\OT1/ptm/m/it/10 re-jec-tion\OT1/ptm/m/n/10 : checks \OT1/pcr/m/n/10 Location.i
+sMock() \OT1/ptm/m/n/10 (API 31+) or
+ []
+
+
+Underfull \hbox (badness 1496) in paragraph at lines 295--296
+\OT1/ptm/m/n/10 co-or-di-nates; (2) \OT1/ptm/m/it/10 Fix stal-e-ness\OT1/ptm/m/
+n/10 : dis-cards fixes older than
+ []
+
+
+Underfull \hbox (badness 2229) in paragraph at lines 295--296
+\OT1/ptm/m/n/10 sus-pi-cious super-precision ($\OML/cmm/m/it/10 < \OT1/cmr/m/n/
+10 2\OML/cmm/m/it/10 :\OT1/cmr/m/n/10 0$ \OT1/ptm/m/n/10 m, typ-i-cal of mock
+ []
+
+[6]
+Underfull \hbox (badness 5519) in paragraph at lines 345--346
 []\OT1/ptm/m/n/10 The lan-guage model used through-out eval-u-a-tion is
  []
 
 
-Underfull \hbox (badness 1997) in paragraph at lines 317--318
+Underfull \hbox (badness 1997) in paragraph at lines 345--346
 \OT1/ptm/m/n/10 Qwen2.5-0.5B-Instruct [[]], quan-tized to Q4[]K[]M (4-bit
  []
 
 
-Underfull \hbox (badness 1762) in paragraph at lines 317--318
+Underfull \hbox (badness 1762) in paragraph at lines 345--346
 \OT1/ptm/m/n/10 cess-ing size), and \OT1/pcr/m/n/10 n_threads $\OT1/cmr/m/n/10 
 = 4$ \OT1/ptm/m/n/10 (in-fer-ence thread
  []
 
 LaTeX Font Info:    Trying to load font information for OMS+pcr on input line 3
-56.
+84.
 (C:\Users\arjit\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\omspcr.fd
 File: omspcr.fd 
 )
 LaTeX Font Info:    Font shape `OMS/pcr/m/n' in size <10> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 356.
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 384.
 
-Underfull \hbox (badness 3364) in paragraph at lines 356--357
+Underfull \hbox (badness 3364) in paragraph at lines 384--385
 []\OT1/ptm/b/n/10 ZERO[]CONTEXT\OT1/ptm/m/n/10 : The lan-guage model re-ceives
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 356--357
+Underfull \hbox (badness 10000) in paragraph at lines 384--385
 \OT1/ptm/m/n/10 only the user in-tent to-kens (``\OT1/pcr/m/n/10 User: I need
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 356--357
+Underfull \hbox (badness 10000) in paragraph at lines 384--385
 \OT1/pcr/m/n/10 water\OMS/cmsy/m/n/10 n\OT1/pcr/m/n/10 nAssistant:\OT1/ptm/m/n/
 10 '') with no en-vi-ron-men-tal
  []
 
 
-Underfull \hbox (badness 5331) in paragraph at lines 356--357
+Underfull \hbox (badness 5331) in paragraph at lines 384--385
 \OT1/ptm/m/n/10 con-text. This es-tab-lishes the hard-ware floor for
  []
 
-[6]
-Underfull \hbox (badness 10000) in paragraph at lines 372--373
+[7]
+Underfull \hbox (badness 10000) in paragraph at lines 400--401
 []\OT1/ptm/b/n/10 Prefill iso-la-tion via na-tive in-stru-men-ta-tion. \OT1/ptm
 /m/n/10 To
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 372--373
+Underfull \hbox (badness 10000) in paragraph at lines 400--401
 \OT1/ptm/m/n/10 de-com-pose end-to-end la-tency into its con-stituent
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 372--373
+Underfull \hbox (badness 10000) in paragraph at lines 400--401
 \OT1/ptm/m/n/10 phases, \OT1/pcr/m/n/10 std::chrono::high_resolution_clock
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 372--373
+Underfull \hbox (badness 10000) in paragraph at lines 400--401
 \OT1/ptm/m/n/10 to-kens through the transformer---from the sub-se-quent
  []
 
 
-Underfull \hbox (badness 1997) in paragraph at lines 372--373
+Underfull \hbox (badness 1997) in paragraph at lines 400--401
 \OT1/ptm/m/n/10 au-tore-gres-sive gen-er-a-tion loop. The in-stru-men-ta-tion a
 lso
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 372--373
+Underfull \hbox (badness 10000) in paragraph at lines 400--401
 \OT1/ptm/m/n/10 records the generation-phase du-ra-tion (from sam-pler
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 374--375
+Underfull \hbox (badness 10000) in paragraph at lines 402--403
 []\OT1/ptm/m/n/10 On the An-droid NDK libc++ run-time,
  []
 
 
-Underfull \hbox (badness 2503) in paragraph at lines 374--375
+Underfull \hbox (badness 2503) in paragraph at lines 402--403
 \OT1/pcr/m/n/10 std::chrono::high_resolution_clock \OT1/ptm/m/n/10 maps di-
  []
 
 
-Underfull \hbox (badness 2970) in paragraph at lines 374--375
+Underfull \hbox (badness 2970) in paragraph at lines 402--403
 \OT1/ptm/m/n/10 which is backed by the ker-nel's \OT1/pcr/m/n/10 CLOCK_MONOTONI
 C
  []
 
 
-Underfull \hbox (badness 2529) in paragraph at lines 376--377
+Underfull \hbox (badness 2529) in paragraph at lines 404--405
 []\OT1/ptm/m/n/10 For the CAP[]KVC con-di-tion, the bench-mark in-stru-
  []
 
 
-Underfull \hbox (badness 4279) in paragraph at lines 376--377
+Underfull \hbox (badness 4279) in paragraph at lines 404--405
 \OT1/pcr/m/n/10 prefill_ms \OT1/ptm/m/n/10 (the intent-only \OT1/pcr/m/n/10 lla
 ma_decode \OT1/ptm/m/n/10 within
  []
 
 
-Underfull \hbox (badness 1688) in paragraph at lines 383--384
+Underfull \hbox (badness 1688) in paragraph at lines 411--412
 \OT1/ptm/m/n/10 i-da-tion pass con-firms that the three pipeline con-fig-u-ra-
  []
 
 
-Underfull \hbox (badness 2600) in paragraph at lines 383--384
+Underfull \hbox (badness 2600) in paragraph at lines 411--412
 \OT1/ptm/m/n/10 tions pro-duce qual-i-ta-tively dis-tinct out-puts. A di-ag-nos
 -
  []
 
 
-Underfull \hbox (badness 6300) in paragraph at lines 387--388
+Underfull \hbox (badness 6300) in paragraph at lines 415--416
 []\OT1/ptm/m/n/10 RAG[]INLINE pro-duces a re-sponse re-flect-ing the
  []
 
-[7]
-<figures/latency_comparison_new.png, id=367, 383.7537pt x 218.7372pt>
+[8]
+Underfull \hbox (badness 5985) in paragraph at lines 457--458
+\OT1/ptm/m/n/10 (13:00--15:30), \OT1/pcr/m/n/10 caregiver_visit \OT1/ptm/m/n/10
+ (15:30--18:00), and
+ []
+
+<figures/latency_comparison_new.png, id=386, 383.7537pt x 218.7372pt>
 File: figures/latency_comparison_new.png Graphic file (type png)
 <use figures/latency_comparison_new.png>
 Package pdftex.def Info: figures/latency_comparison_new.png  used on input line
- 464.
+ 511.
 (pdftex.def)             Requested size: 252.0pt x 143.63937pt.
-<figures/latency_breakdown_new.png, id=369, 384.4764pt x 218.7372pt>
+<figures/latency_breakdown_new.png, id=388, 384.4764pt x 218.7372pt>
 File: figures/latency_breakdown_new.png Graphic file (type png)
 <use figures/latency_breakdown_new.png>
 Package pdftex.def Info: figures/latency_breakdown_new.png  used on input line 
-471.
+518.
 (pdftex.def)             Requested size: 252.0pt x 143.36902pt.
 
-Underfull \hbox (badness 3792) in paragraph at lines 472--472
+Underfull \hbox (badness 3792) in paragraph at lines 519--519
 \OT1/ptm/m/n/8 Fig. 3.  []Latency break-down across pipeline con-di-tions. Nati
 ve-side
  []
 
 
-Underfull \hbox (badness 2781) in paragraph at lines 478--479
+Underfull \hbox (badness 2781) in paragraph at lines 525--526
 []\OT1/ptm/b/n/10 CAP[]KVC avoids context-proportional pre-fill. \OT1/ptm/m/n/1
 0 The
  []
 
-
-Underfull \hbox (badness 10000) in paragraph at lines 480--481
+[9]
+Underfull \hbox (badness 10000) in paragraph at lines 527--528
 []\OT1/ptm/b/n/10 Speedup rel-a-tive to RAG[]INLINE. \OT1/ptm/m/n/10 End-to-end
 ,
  []
 
 
-Underfull \hbox (badness 1910) in paragraph at lines 480--481
+Underfull \hbox (badness 1910) in paragraph at lines 527--528
 \OT1/ptm/m/n/10 that the end-to-end speedup is heav-ily masked by the
  []
 
-[8 <./figures/latency_comparison_new.png> <./figures/latency_breakdown_new.png>
-]
-Underfull \hbox (badness 3977) in paragraph at lines 488--489
+
+Underfull \hbox (badness 3977) in paragraph at lines 535--536
 \OT1/ptm/m/n/10 (58 to-kens), RAG[]INLINE@50 4508 ms (64 to-kens),
  []
 
-<figures/fusion_ablation_new.png, id=384, 290.7663pt x 189.8292pt>
+[10 <./figures/latency_comparison_new.png> <./figures/latency_breakdown_new.png
+>]
+Underfull \hbox (badness 6220) in paragraph at lines 577--578
+\OT1/cmr/m/n/10 19\OML/cmm/m/it/10 :\OT1/cmr/m/n/10 44%$ \OT1/ptm/m/n/10 Hit@1 
+(match-ing an-a-lyt-i-cal $\OT1/cmr/m/n/10 1\OML/cmm/m/it/10 =M \OT1/cmr/m/n/10
+ = 0\OML/cmm/m/it/10 :\OT1/cmr/m/n/10 20$\OT1/ptm/m/n/10 )
+ []
+
+
+Underfull \hbox (badness 7558) in paragraph at lines 577--578
+\OT1/ptm/m/n/10 and in-curs a $\OT1/cmr/m/n/10 40\OML/cmm/m/it/10 :\OT1/cmr/m/n
+/10 23%$ \OT1/ptm/m/n/10 cold miss rate. True single-
+ []
+
+
+Underfull \hbox (badness 3088) in paragraph at lines 577--578
+\OT1/ptm/m/n/10 modality ab-la-tions ($\OML/cmm/m/it/10 w[] \OMS/cmsy/m/n/10 ^^
+Y \OT1/cmr/m/n/10 0$\OT1/ptm/m/n/10 ) re-veal in-for-ma-tive per-
+ []
+
+
+Underfull \hbox (badness 1430) in paragraph at lines 577--578
+\OT1/ptm/m/n/10 for-mance dif-fer-ences: GPS-only achieves $\OT1/cmr/m/n/10 88\
+OML/cmm/m/it/10 :\OT1/cmr/m/n/10 14%$ \OT1/ptm/m/n/10 Hit@1
+ []
+
+
+Underfull \hbox (badness 2376) in paragraph at lines 577--578
+\OT1/ptm/m/n/10 with $\OT1/cmr/m/n/10 11\OML/cmm/m/it/10 :\OT1/cmr/m/n/10 86%$ 
+\OT1/ptm/m/n/10 wrong-context rate, re-flect-ing its in-abil-ity
+ []
+
+<figures/fusion_ablation_new.png, id=413, 290.7663pt x 189.8292pt>
 File: figures/fusion_ablation_new.png Graphic file (type png)
 <use figures/fusion_ablation_new.png>
-Package pdftex.def Info: figures/fusion_ablation_new.png  used on input line 51
-3.
+Package pdftex.def Info: figures/fusion_ablation_new.png  used on input line 60
+4.
 (pdftex.def)             Requested size: 252.0pt x 164.5273pt.
-<figures/training_curves.png, id=389, 722.7pt x 361.35pt>
+[11]
+<figures/training_curves.png, id=427, 722.7pt x 361.35pt>
 File: figures/training_curves.png Graphic file (type png)
 <use figures/training_curves.png>
-Package pdftex.def Info: figures/training_curves.png  used on input line 548.
+Package pdftex.def Info: figures/training_curves.png  used on input line 639.
 (pdftex.def)             Requested size: 252.0pt x 126.00021pt.
-<figures/emg_confusion_matrix.png, id=390, 505.89pt x 433.62pt>
+<figures/emg_confusion_matrix.png, id=428, 505.89pt x 433.62pt>
 File: figures/emg_confusion_matrix.png Graphic file (type png)
 <use figures/emg_confusion_matrix.png>
-Package pdftex.def Info: figures/emg_confusion_matrix.png  used on input line 5
-55.
+Package pdftex.def Info: figures/emg_confusion_matrix.png  used on input line 6
+46.
 (pdftex.def)             Requested size: 252.0pt x 216.00224pt.
-[9 <./figures/fusion_ablation_new.png>]
-<figures/memory_budget_new.png, id=404, 248.8497pt x 204.5241pt>
+
+Underfull \vbox (badness 1360) has occurred while \output is active []
+
+<figures/memory_budget_new.png, id=432, 248.8497pt x 204.5241pt>
 File: figures/memory_budget_new.png Graphic file (type png)
 <use figures/memory_budget_new.png>
-Package pdftex.def Info: figures/memory_budget_new.png  used on input line 587.
+Package pdftex.def Info: figures/memory_budget_new.png  used on input line 678.
 
 (pdftex.def)             Requested size: 252.0pt x 207.11694pt.
- [10 <./figures/training_curves.png> <./figures/emg_confusion_matrix.png> <./fi
-gures/memory_budget_new.png>]
-Underfull \hbox (badness 2970) in paragraph at lines 616--617
+ [12 <./figures/fusion_ablation_new.png> <./figures/training_curves.png> <./fig
+ures/emg_confusion_matrix.png>]
+Underfull \hbox (badness 2970) in paragraph at lines 707--708
 []\OT1/ptm/b/n/10 Deployment ra-tio-nale for $\OML/cmm/m/it/10 k \OT1/cmr/m/n/1
 0 = 3$\OT1/ptm/b/n/10 . \OT1/ptm/m/n/10 The de-ployed
  []
 
-<figures/drift_k_ablation_new.png, id=419, 276.7941pt x 189.8292pt>
+<figures/drift_k_ablation_new.png, id=449, 276.7941pt x 189.8292pt>
 File: figures/drift_k_ablation_new.png Graphic file (type png)
 <use figures/drift_k_ablation_new.png>
-Package pdftex.def Info: figures/drift_k_ablation_new.png  used on input line 6
-20.
+Package pdftex.def Info: figures/drift_k_ablation_new.png  used on input line 7
+13.
 (pdftex.def)             Requested size: 252.0pt x 172.83173pt.
-[11 <./figures/drift_k_ablation_new.png>]
-Underfull \hbox (badness 10000) in paragraph at lines 679--680
+[13 <./figures/memory_budget_new.png> <./figures/drift_k_ablation_new.png>]
+Underfull \hbox (badness 10000) in paragraph at lines 773--774
+[]\OT1/ptm/b/n/10 Residual se-cu-rity risks. \OT1/ptm/m/n/10 While
+ []
+
+
+Underfull \hbox (badness 1478) in paragraph at lines 773--774
+\OT1/ptm/m/n/10 at-ten-tion ten-sors could be ex-tracted. Cryp-to-graphic
+ []
+
+[14]
+Underfull \hbox (badness 10000) in paragraph at lines 775--776
 []\OT1/ptm/b/n/10 Battery im-pact not char-ac-ter-ized. \OT1/ptm/m/n/10 The
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 679--680
+Underfull \hbox (badness 10000) in paragraph at lines 775--776
 \OT1/pcr/m/n/10 ContextDaemon \OT1/ptm/m/n/10 fore-ground ser-vice (60-second
  []
 
-[12] [13
-
-] (short_final.aux)
+[15] (short_final.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2025-12-24>
  ***********
 Package rerunfilecheck Info: File `short_final.out' has not changed.
-(rerunfilecheck)             Checksum: E717231980F9D687D4EE6B61F1A2AD87;8751.
+(rerunfilecheck)             Checksum: 2C5B33A90534F82F732A99136BE97A37;9864.
  ) 
 Here is how much of TeX's memory you used:
- 11116 strings out of 467871
- 175434 string characters out of 5418376
- 603300 words of memory out of 5000000
- 39700 multiletter control sequences out of 15000+600000
+ 11147 strings out of 467871
+ 175829 string characters out of 5418376
+ 613198 words of memory out of 5000000
+ 39711 multiletter control sequences out of 15000+600000
  678284 words of font info for 139 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 75i,13n,79p,1571b,578s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 75i,13n,79p,1905b,578s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <C:/Users/arjit/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/
 cmbx10.pfb><C:/Users/arjit/AppData/Local/Programs/MiKTeX/fonts/type1/public/ams
 fonts/cm/cmex10.pfb><C:/Users/arjit/AppData/Local/Programs/MiKTeX/fonts/type1/p
 ublic/amsfonts/cm/cmmi10.pfb><C:/Users/arjit/AppData/Local/Programs/MiKTeX/font
-s/type1/public/amsfonts/cm/cmmi7.pfb><C:/Users/arjit/AppData/Local/Programs/MiK
-TeX/fonts/type1/public/amsfonts/cm/cmmi8.pfb><C:/Users/arjit/AppData/Local/Prog
-rams/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/arjit/AppData/Lo
-cal/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr6.pfb><C:/Users/arjit/App
-Data/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr7.pfb><C:/Users/ar
-jit/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr8.pfb><C:/U
-sers/arjit/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.
+s/type1/public/amsfonts/cm/cmmi6.pfb><C:/Users/arjit/AppData/Local/Programs/MiK
+TeX/fonts/type1/public/amsfonts/cm/cmmi7.pfb><C:/Users/arjit/AppData/Local/Prog
+rams/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi8.pfb><C:/Users/arjit/AppData/Lo
+cal/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi9.pfb><C:/Users/arjit/Ap
+pData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/
+arjit/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr6.pfb><C:
+/Users/arjit/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr7.
 pfb><C:/Users/arjit/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/c
-m/cmsy7.pfb><C:/Users/arjit/AppData/Local/Programs/MiKTeX/fonts/type1/public/am
-sfonts/cm/cmsy8.pfb><C:/Users/arjit/AppData/Local/Programs/MiKTeX/fonts/type1/p
-ublic/amsfonts/cm/cmsy9.pfb><C:/Users/arjit/AppData/Local/Programs/MiKTeX/fonts
-/type1/public/amsfonts/symbols/msbm10.pfb><C:/Users/arjit/AppData/Local/Program
-s/MiKTeX/fonts/type1/urw/courier/ucrb8a.pfb><C:/Users/arjit/AppData/Local/Progr
-ams/MiKTeX/fonts/type1/urw/courier/ucrr8a.pfb><C:/Users/arjit/AppData/Local/Pro
-grams/MiKTeX/fonts/type1/urw/times/utmb8a.pfb><C:/Users/arjit/AppData/Local/Pro
-grams/MiKTeX/fonts/type1/urw/times/utmbi8a.pfb><C:/Users/arjit/AppData/Local/Pr
-ograms/MiKTeX/fonts/type1/urw/times/utmr8a.pfb><C:/Users/arjit/AppData/Local/Pr
-ograms/MiKTeX/fonts/type1/urw/times/utmri8a.pfb>
-Output written on short_final.pdf (13 pages, 2438840 bytes).
+m/cmr8.pfb><C:/Users/arjit/AppData/Local/Programs/MiKTeX/fonts/type1/public/ams
+fonts/cm/cmr9.pfb><C:/Users/arjit/AppData/Local/Programs/MiKTeX/fonts/type1/pub
+lic/amsfonts/cm/cmsy10.pfb><C:/Users/arjit/AppData/Local/Programs/MiKTeX/fonts/
+type1/public/amsfonts/cm/cmsy7.pfb><C:/Users/arjit/AppData/Local/Programs/MiKTe
+X/fonts/type1/public/amsfonts/cm/cmsy8.pfb><C:/Users/arjit/AppData/Local/Progra
+ms/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy9.pfb><C:/Users/arjit/AppData/Loca
+l/Programs/MiKTeX/fonts/type1/public/amsfonts/symbols/msbm10.pfb><C:/Users/arji
+t/AppData/Local/Programs/MiKTeX/fonts/type1/urw/courier/ucrb8a.pfb><C:/Users/ar
+jit/AppData/Local/Programs/MiKTeX/fonts/type1/urw/courier/ucrr8a.pfb><C:/Users/
+arjit/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmb8a.pfb><C:/Users/
+arjit/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmbi8a.pfb><C:/Users
+/arjit/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmr8a.pfb><C:/Users
+/arjit/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmri8a.pfb>
+Output written on short_final.pdf (15 pages, 2489209 bytes).
 PDF statistics:
- 573 PDF objects out of 1000 (max. 8388607)
- 143 named destinations out of 1000 (max. 500000)
- 457 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 627 PDF objects out of 1000 (max. 8388607)
+ 163 named destinations out of 1000 (max. 500000)
+ 481 words of extra memory for PDF output out of 10000 (max. 10000000)
 

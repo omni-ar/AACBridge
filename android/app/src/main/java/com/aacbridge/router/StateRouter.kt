@@ -28,7 +28,14 @@ package com.aacbridge.router
 class StateRouter(
     private val timeScorer: TimeScorer,
     private val gpsScorer: GPSScorer,
-    private val bleScorer: BLEScorer
+    private val bleScorer: BLEScorer,
+    /**
+     * Optional override for TIME_BASELINE_WEIGHT.
+     * Used only in ablation testing to isolate
+     * individual sensor modalities.
+     * Null = use HardwareConfig.TIME_BASELINE_WEIGHT (production).
+     */
+    private val timeBaselineWeightOverride: Double? = null
 ) {
 
     companion object {
@@ -144,7 +151,7 @@ class StateRouter(
         // 1. Temporal scoring
         // -----------------------------------------
 
-        val wt = HardwareConfig.TIME_BASELINE_WEIGHT
+        val wt = timeBaselineWeightOverride ?: HardwareConfig.TIME_BASELINE_WEIGHT
 
         val sTime = timeScorer.score(
             currentHourDecimal = snapshot.currentHourDecimal,
