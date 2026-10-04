@@ -1,0 +1,7 @@
+comparison,context_matched,ratio_of_means,ratio_of_medians,welch_t,welch_df,welch_p,mannwhitney_U,mannwhitney_p,cohens_d_pooled
+RAG@50 vs CAP_KVC,True,7.133,7.389,22.235,31.0,1.273e-20,900.0,3.020e-11,5.741
+RAG@100 vs CAP_KVC,False,11.342,12.422,21.906,29.7,7.128e-20,900.0,3.020e-11,5.656
+RAG@200 vs CAP_KVC,False,20.705,21.351,17.927,29.1,2.823e-17,900.0,3.020e-11,4.629
+RAG@500 vs CAP_KVC,False,40.508,42.321,44.664,29.2,1.989e-28,900.0,3.020e-11,11.532
+
+rag_prefill_ols_ms_per_token,29.895,intercept_ms,1126.4,r2,0.9084

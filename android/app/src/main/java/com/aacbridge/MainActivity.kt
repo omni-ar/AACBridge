@@ -451,6 +451,13 @@ class MainActivity : AppCompatActivity() {
                 return@launch
             }
 
+            if (com.aacbridge.inference.LatencyProfiler.isBenchmarkActive.get()) {
+                // Keep the engine free for benchmark trials.
+                speechManager.speak(canned)
+                logInteraction("FALLBACK_BENCHMARK_ACTIVE", "", 0.0, tier1Ms)
+                return@launch
+            }
+
             if (!inferenceBusy.compareAndSet(false, true)) {
                 speechManager.speak(canned)
                 logInteraction("FALLBACK_BUSY", "", 0.0, tier1Ms)

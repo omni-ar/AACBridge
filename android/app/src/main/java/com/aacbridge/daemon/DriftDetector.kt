@@ -94,6 +94,11 @@ class DriftDetector(
                         as? AACBridgeApplication
                     ?: return@withContext Result.failure()
 
+            // Do not touch the engine during benchmark trials.
+            if (com.aacbridge.inference.LatencyProfiler.isBenchmarkActive.get()) {
+                return@withContext Result.success()
+            }
+
             val container =
                 app.appContainer
 

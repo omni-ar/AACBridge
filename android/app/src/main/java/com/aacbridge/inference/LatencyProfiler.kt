@@ -68,6 +68,19 @@ class LatencyProfiler(
         private const val TAG = "LatencyProfiler"
 
         /**
+         * True while runBenchmarkSuite() executes.
+         *
+         * MainActivity (gaze/button intents) and
+         * DriftDetector check this and skip native work,
+         * so nothing else holds the engine lock between
+         * trials. In the 2026-10-04 run, gaze-triggered
+         * interaction inference held the lock during RAG
+         * trials and inflated their total_ms.
+         */
+        val isBenchmarkActive =
+            java.util.concurrent.atomic.AtomicBoolean(false)
+
+        /**
          * Number of measured trials per configuration.
          *
          * 30 trials satisfies Central Limit Theorem
@@ -421,7 +434,12 @@ class LatencyProfiler(
 
         val prompt = MOCK_USER_INTENT
 
-        val startNs = System.nanoTime()
+        /*
+         * Started after the engine lock is acquired so
+         * time spent waiting for another lock holder is
+         * not counted as inference latency.
+         */
+        var startNs = 0L
 
         val result: String
         val prefillMs: Double
@@ -430,6 +448,7 @@ class LatencyProfiler(
         val genTokens: Int
 
         engineLock.withLock {
+            startNs = System.nanoTime()
             bridge.clearKVCache()
             result = bridge.runInference(prompt)
 
@@ -473,7 +492,12 @@ class LatencyProfiler(
 
         val fullPrompt = contextPrompt + MOCK_USER_INTENT
 
-        val startNs = System.nanoTime()
+        /*
+         * Started after the engine lock is acquired so
+         * time spent waiting for another lock holder is
+         * not counted as inference latency.
+         */
+        var startNs = 0L
 
         val result: String
         val prefillMs: Double
@@ -482,6 +506,7 @@ class LatencyProfiler(
         val genTokens: Int
 
         engineLock.withLock {
+            startNs = System.nanoTime()
             bridge.clearKVCache()
             result = bridge.runInference(fullPrompt)
 
@@ -536,9 +561,12 @@ class LatencyProfiler(
         var promptTokens = 0
         var genTokens = 0
 
-        val totalStartNs = System.nanoTime()
+        // Started after lock acquisition (see measureZeroContext).
+        var totalStartNs = 0L
 
         engineLock.withLock {
+
+            totalStartNs = System.nanoTime()
 
             /*
              * Phase 1: Restore KV cache from disk.
@@ -802,6 +830,7 @@ class LatencyProfiler(
          */
         try {
             ContextDaemon.isSweepPaused.set(true)
+            isBenchmarkActive.set(true)
             Log.i(TAG, "ContextDaemon sweeps paused")
 
             emitCsvHeader()
@@ -893,6 +922,7 @@ class LatencyProfiler(
 
         } finally {
             ContextDaemon.isSweepPaused.set(false)
+            isBenchmarkActive.set(false)
             Log.i(TAG, "ContextDaemon sweeps resumed")
         }
     }

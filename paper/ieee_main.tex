@@ -4,10 +4,32 @@
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{multirow}
+\usepackage{iftex}
+\ifXeTeX
+  % Tectonic/XeTeX: Times-compatible fonts (pdfLaTeX path unchanged).
+  \usepackage{fontspec}
+  \setmainfont{texgyretermes}[Extension=.otf, UprightFont=*-regular,
+    BoldFont=*-bold, ItalicFont=*-italic, BoldItalicFont=*-bolditalic]
+  \setmonofont{texgyrecursor}[Extension=.otf, UprightFont=*-regular,
+    BoldFont=*-bold, ItalicFont=*-italic, BoldItalicFont=*-bolditalic]
+\else
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+\fi
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, fit, backgrounds, shapes.geometric, calc}
 \usepackage{hyperref}
-\usepackage[utf8]{inputenc}
 
 \graphicspath{{figures/}}
+
+% ---------------------------------------------------------------------------
+% Every number below is taken from a file in the repository:
+%   latency  -> evaluation/latency/prefill_results.csv, prefill_tests.csv
+%               (python evaluation/latency/prefill_analysis.py)
+%   routing  -> evaluation/prediction/tables/prediction_eval.csv,
+%               hysteresis_eval.csv (PredictionEvaluationTest)
+%   figures  -> python paper/make_figures.py
+% ---------------------------------------------------------------------------
 
 \begin{document}
 
@@ -37,355 +59,375 @@
 \maketitle
 
 % ===========================================================================
-% ABSTRACT
-% ===========================================================================
 \begin{abstract}
-On-device language models prepend environmental context prompts before generating responses, but this prefill phase scales as $O(N)$ with prompt length and dominates latency on mobile hardware. We present Context-Aware Predictive KV-Cache Priming (CAP-KVC), which uses environmental sensor signals---GPS, BLE proximity, and time of day---to predict the needed context and pre-compute key-value cache tensors during idle periods. At inference time, the cached state is restored in 2.74~ms, bypassing the context prefill entirely. On a OnePlus~11R with Qwen2.5-0.5B-Instruct (Q4\_K\_M), native-side \texttt{std::chrono} instrumentation confirms a \textbf{40.78$\times$ prefill-specific speedup} (343~ms vs.\ 14001~ms at $N \approx 500$ tokens) and a 4.24$\times$ end-to-end reduction (4574~ms vs.\ 19408~ms). The system is implemented as an Android application with a C++/JNI inference backend based on \texttt{llama.cpp}, a bounded LRU cache manager supporting three simultaneous KV states within 118.7~MB native heap, and sensor-driven context routing with hysteresis-gated drift detection. A proof-of-concept multimodal intent layer (sEMG + gaze, late fusion) is evaluated on synthetic data and does not constitute clinical validation.
+A language model running on a phone often needs a description of the user's situation (where they are, who is with them, what time of day it is) before it can answer usefully. Feeding that description in with every request is expensive: on our test phone, the prefill step for a 439-token prompt took 14.2~s. Server systems avoid repeated prefill by reusing cached key-value (KV) state across requests, but that depends on many users sending overlapping prompts. A single phone has no such request stream. It does, however, have sensors. We present CAP-KVC, which uses GPS, Bluetooth Low Energy (BLE) proximity and time of day to rank a small set of pre-written contexts, prefills the likely ones while the device is idle, and keeps at most three of them resident as llama.cpp KV state. At interaction time only the user's intent tokens are decoded. On a OnePlus~11R running Qwen2.5-0.5B-Instruct (Q4\_K\_M), resuming a restored 44-token context took 351~ms of prefill versus 2507~ms for decoding the same context inline (7.1$\times$, $n=30$ each); restoring the state took 2.4~ms. Over 100 synthetic days of sensor traces with five contexts, the deployed routing and residency rules used the correct context for 98.5\% of 6,400 interactions, against 92.2\% for a request-driven cache without sensing, which misses on every first visit. We also report what this costs: 1.5\% of interactions used the wrong context, and an attacker who can forge GPS without detection raised that to 38.9\%. The evaluation covers one device, one model, five contexts and synthetic traces.
 \end{abstract}
 
 \begin{IEEEkeywords}
-Key-value cache, edge inference, predictive caching, large language model, mobile systems, Android.
+Key-value cache, edge inference, predictive caching, language models, mobile systems, sensor-driven context.
 \end{IEEEkeywords}
 
-% ===========================================================================
-% I. INTRODUCTION
 % ===========================================================================
 \section{Introduction}
 \label{sec:introduction}
 
-Quantized sub-billion-parameter language models now run on mobile SoCs~\cite{dettmers2022,frantar2022,llamacpp}, but context-aware inference---where an environmental system prompt is prepended to the user's input---introduces an $O(N)$ prefill cost that can dominate latency for prompts of several hundred tokens~\cite{vaswani2017}. Applications requiring low-latency contextual responses, such as augmentative communication (AAC) devices~\cite{beukelman2020}, cannot tolerate this overhead.
+Small instruction-tuned models now run entirely on phones once quantized to 4~bits~\cite{dettmers2022,frantar2022,llamacpp}. For many assistive uses the model is not useful on the user's words alone. An augmentative and alternative communication (AAC) app~\cite{beukelman2020}, for instance, receives a short intent such as ``I need water'' and is expected to expand it into something that fits the setting: a hospital ward at 11~a.m. is different from home in the evening with a caregiver present. The usual way to provide this is to put a context description in front of the intent and let the model read both.
 
-Server-side KV cache reuse techniques---prefix sharing~\cite{sglang}, paged attention~\cite{vllm}, prompt caching~\cite{cachegen}---exploit multi-tenant request streams unavailable on single-user edge devices, where each request typically reprocesses the full context.
+Reading the context is the prefill step: one forward pass over all prompt tokens before the first output token appears. Its cost grows with prompt length. On the phone used in this paper, prefill took 2.5~s for a 52-token prompt and 14.2~s for 439 tokens (Section~\ref{sec:eval_latency}), roughly 30~ms per token. For a user who communicates through the device, that delay sits in the middle of every turn.
 
-We present \textbf{Context-Aware Predictive KV-Cache Priming (CAP-KVC)}, which decouples the prefill from the inference path on mobile hardware. CAP-KVC uses GPS, BLE proximity, and time-of-day signals to predict the needed semantic context, executes the prefill during idle periods, serializes the resulting KV cache to persistent storage, and restores it in under 3~ms at inference time. The system is implemented as a complete Android application with a C++/JNI backend based on \texttt{llama.cpp}~\cite{llamacpp}, Kotlin orchestration for cache residency and sensor routing, and a proof-of-concept multimodal intent layer. The contributions are:
+Datacenter serving systems handle the same problem by not recomputing prefixes they have already seen. SGLang keeps prompt prefixes in a radix tree~\cite{sglang}, vLLM shares KV blocks between requests~\cite{vllm}, Prompt Cache stores attention states for reusable prompt modules~\cite{promptcache}, and RAGCache caches the KV state of retrieved documents across requests~\cite{ragcache}. All of these are request-driven: the cache is filled when a request containing the prefix arrives, and it pays off when later requests share that prefix. That works on a server handling many users. On a phone used by one person, the request that would populate the cache is the user's own first turn in a new setting, and that turn pays the full prefill cost.
 
+A phone does have information a server lacks: its sensors usually reveal the setting before the user says anything. CAP-KVC (Context-Aware Predictive KV-Cache priming) uses this. A small set of contexts is written in advance. A background sweep scores them against GPS position, nearby BLE devices and time of day, prefills the highest-ranked ones while the device is idle, and keeps their KV state resident. When the user acts, the app resumes from the best resident context and decodes only the intent. The hypothesis we test is that sensor readings predict the needed context often enough for this to beat request-driven reuse, at an acceptable rate of wrong-context answers.
+
+This paper makes three contributions:
 \begin{enumerate}
-    \item A predictive KV cache architecture achieving a 40.78$\times$ prefill-specific speedup and 4.24$\times$ end-to-end speedup on a OnePlus~11R (Qwen2.5-0.5B-Instruct Q4\_K\_M, 343~ms vs.\ 14001~ms prefill, 4574~ms vs.\ 19408~ms end-to-end), with 2.74~ms cache restoration.
-
-    \item An edge-native Android implementation with a scalar-only JNI boundary (9 native functions), reentrant-lock concurrency, and an LRU cache manager bounded to 3 KV states within 118.7~MB native heap.
-
-    \item A deterministic sensor-driven context routing engine with reliability-adaptive weighting and hysteresis-gated drift detection.
+\item A sensor-driven predictive KV caching design for a single user: deterministic context scoring, a bounded resident set with hysteresis-gated replacement, and a two-tier fallback when no relevant state is resident.
+\item An Android implementation on llama.cpp with per-slot KV residency, rollback of each interaction so a resident state is reused unchanged, crash-safe cache persistence, and location input validation.
+\item An evaluation that separates the restore benefit (matched-context latency) from prediction quality (trace-driven comparison against oracle, request-driven, random and single-sensor baselines) and from adversarial sensor input.
 \end{enumerate}
 
-% ===========================================================================
-% II. RELATED WORK
 % ===========================================================================
 \section{Related Work}
 \label{sec:related}
 
-\textbf{KV cache optimization.}
-Token-level compression methods---Scissorhands~\cite{scissorhands}, H$_2$O~\cite{h2o}, SnapKV~\cite{snapkv}, StreamingLLM~\cite{streamingllm}, KVQuant~\cite{kvquant}---reduce within-sequence memory but operate within a single sequence. Server-side prefix reuse systems (SGLang RadixAttention~\cite{sglang}, PagedAttention~\cite{vllm}, Prompt Cache~\cite{promptcache}, CacheBlend~\cite{cacheblend}) and cross-session streaming (CacheGen~\cite{cachegen}, InfiniGen~\cite{infinigen}) target cloud serving with shared request streams. CAP-KVC differs by using environmental sensor signals for cache state selection on a single edge device, where no shared request stream is available.
+\textbf{Reusing KV state across requests.}
+RadixAttention in SGLang~\cite{sglang} matches incoming prompts against a radix tree of cached prefixes and evicts by LRU. PagedAttention~\cite{vllm} lets requests share KV blocks. Prompt Cache~\cite{promptcache} precomputes attention states for prompt modules that applications reuse, and CacheBlend~\cite{cacheblend} combines cached chunks that are not prefixes. RAGCache~\cite{ragcache} caches the KV state of retrieved documents in a GPU/host hierarchy and replaces entries with a policy that accounts for retrieval patterns and recomputation cost, outperforming LRU. CacheGen~\cite{cachegen} compresses KV state for network transfer. These systems decide what to keep after seeing requests. CAP-KVC decides what to compute before the request exists, from sensor evidence, which is the only signal available ahead of the first request on a single-user device (Table~\ref{tab:positioning}). We do not run SGLang or RAGCache themselves; they target GPU servers. Section~\ref{sec:eval_prediction} instead simulates their request-driven policy (LRU over contexts identified at request time) on the same traces.
 
-\textbf{Edge LLM deployment.}
-Post-training quantization~\cite{dettmers2022,frantar2022}, architecture-aware design~\cite{mobilellm}, and inference frameworks~\cite{llamacpp,mlcllm} enable on-device execution. PowerInfer-2~\cite{powerinfer2} extends to 47B parameters via heterogeneous NPU/CPU scheduling. Alizadeh et~al.~\cite{llminaflash} use flash memory for models exceeding DRAM capacity. Despite these runtime improvements, the $O(N)$ prefill remains a latency bottleneck when contextual prompts span hundreds of tokens.
+\begin{table}[t]
+\centering
+\caption{Where CAP-KVC differs from request-driven KV reuse.}
+\label{tab:positioning}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}p{0.27\columnwidth}p{0.32\columnwidth}p{0.33\columnwidth}@{}}
+\toprule
+ & Request-driven reuse & CAP-KVC \\
+\midrule
+Setting & Multi-user server & One user, one phone \\
+Cache filled & When a request arrives & Before it, while idle \\
+Selection signal & Prompt prefix / document & GPS, BLE, time \\
+First request in a context & Full prefill & Restore if predicted \\
+Failure mode & Cold miss & Wrong context or cold miss \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-% ===========================================================================
-% III. SYSTEM DESIGN
+\textbf{Shrinking the KV cache.} H$_2$O~\cite{h2o}, Scissorhands~\cite{scissorhands}, SnapKV~\cite{snapkv}, StreamingLLM~\cite{streamingllm} and KVQuant~\cite{kvquant} reduce KV memory within a sequence. They are complementary: a compressed state can still be primed and restored.
+
+\textbf{On-device inference.} Quantization~\cite{dettmers2022,frantar2022}, small-model design~\cite{mobilellm}, mobile runtimes~\cite{llamacpp,mlcllm}, flash offloading~\cite{llminaflash} and heterogeneous NPU/CPU execution~\cite{powerinfer2} make phone inference feasible. They lower the cost of each token but do not remove the prefill of a long context from the interaction path.
+
 % ===========================================================================
 \section{System Design}
-\label{sec:methodology}
+\label{sec:design}
 
-CAP-KVC amortizes contextual prompt ingestion by executing it as a background process prior to user interaction. Fig.~\ref{fig:architecture} presents the system architecture.
+Fig.~\ref{fig:architecture} shows the components. A background sweep reads sensors, ranks contexts, and updates the resident set. The interaction path picks a resident state and decodes the intent.
 
 \begin{figure*}[t]
 \centering
-\includegraphics[width=\textwidth]{system_architecture_new.png}
-\caption{CAP-KVC system architecture. Environmental sensors (blue) feed a scoring function selecting contexts for background priming (green). At inference time (orange), the pre-computed KV cache is restored and only intent tokens are processed by the llama.cpp/JNI backend. A drift detector re-evaluates context relevance with hysteresis gating ($\Delta \geq 0.10$).}
+\begin{tikzpicture}[
+  font=\footnotesize,
+  box/.style={draw, rounded corners=2pt, align=center, minimum height=1.25cm,
+              inner sep=3pt, fill=white},
+  slot/.style={draw, align=center, minimum width=1.55cm, minimum height=0.75cm,
+               inner sep=2pt},
+  arr/.style={-{Stealth[length=2mm]}, thick},
+  lane/.style={draw=gray!60, rounded corners=4pt, inner sep=6pt},
+  lbl/.style={font=\scriptsize\itshape, align=center},
+]
+% ---------------- background lane ----------------
+\node[box, text width=2.6cm] (sens) at (1.6,0)
+  {\textbf{Sensor sweep}\\ GPS fix (validated)\\ BLE scan, 3\,s\\ clock};
+\node[box, text width=3.0cm] (router) at (5.5,0)
+  {\textbf{Context scoring}\\ $\alpha S_{\mathrm{time}}+\beta S_{\mathrm{gps}}+\gamma S_{\mathrm{ble}}$\\ ranks 5 contexts};
+\node[box, text width=3.0cm] (policy) at (9.6,0)
+  {\textbf{Residency policy}\\ at most 3 resident;\\ replace only if score\\ gain exceeds $\Delta=0.10$};
+\node[box, text width=3.2cm] (prime) at (14.0,0)
+  {\textbf{Priming (idle)}\\ prefill context into slot,\\ save KV, atomic rename};
+
+\draw[arr] (sens) -- (router);
+\draw[arr] (router) -- node[above, lbl] {ranking} (policy);
+\draw[arr] (policy) -- node[above, lbl] {load} (prime);
+
+% ---------------- native state ----------------
+\node[slot, fill=blue!10] (s0) at (9.2,-2.45) {slot 0\\ \scriptsize resident};
+\node[slot, fill=blue!10] (s1) at (10.95,-2.45) {slot 1\\ \scriptsize resident};
+\node[slot, fill=blue!10] (s2) at (12.7,-2.45) {slot 2\\ \scriptsize resident};
+\node[slot, fill=gray!15] (s3) at (14.75,-2.45) {slot 3\\ \scriptsize scratch};
+\node[draw, rounded corners=3pt, fit=(s0)(s3), inner sep=5pt] (llama) {};
+\node[lbl, anchor=south west] at ([xshift=2pt]llama.north west) {llama.cpp context, 4 sequences};
+
+\node[draw, cylinder, shape border rotate=90, aspect=0.2, align=center,
+      minimum width=2.4cm, minimum height=1.1cm, fill=white] (disk) at (4.4,-2.45)
+  {\scriptsize KV files\\ \scriptsize (excluded from backup)};
+
+\draw[arr] ([xshift=-0.7cm]prime.south) -- ([xshift=-0.7cm]prime.south |- llama.north);
+\draw[arr] ([xshift=0.9cm]prime.south) -- ++(0,-0.5) -| node[pos=0.2, above, lbl] {save} ([xshift=0.6cm]disk.north);
+\draw[arr, dashed] (disk.east) -- node[below, lbl] {restore on load} (llama.west);
+
+% ---------------- interaction lane ----------------
+\node[box, text width=2.6cm] (intent) at (1.6,-4.9)
+  {\textbf{Intent}\\ buttons or gaze dwell};
+\node[box, text width=2.6cm] (tier1) at (5.0,-4.9)
+  {\textbf{Tier 1}\\ canned reply\\ shown at once};
+\node[box, text width=3.0cm] (select) at (8.6,-4.9)
+  {\textbf{Select}\\ highest-ranked resident\\ context (latest sweep)};
+\node[box, text width=3.0cm] (resume) at (12.4,-4.9)
+  {\textbf{Resume slot}\\ decode intent only,\\ roll slot back};
+\node[box, text width=1.5cm] (out) at (15.9,-4.9) {\textbf{Reply}\\ text, TTS};
+\node[lbl, draw, dashed, rounded corners=2pt, inner sep=3pt, fill=white] (tier2) at (8.6,-6.35)
+  {cold miss $\rightarrow$ Tier 2: start priming current top contexts};
+
+\draw[arr] (intent) -- (tier1);
+\draw[arr] (tier1) -- (select);
+\draw[arr] (select) -- node[above, lbl] {hit} (resume);
+\draw[arr] (resume) -- (out);
+\draw[arr, dashed] (select) -- (tier2);
+\draw[arr, {Stealth[length=2mm]}-{Stealth[length=2mm]}] (resume.north) -- node[right, lbl] {resident KV} (resume.north |- llama.south);
+
+% ---------------- lanes ----------------
+\begin{scope}[on background layer]
+  \node[lane, fill=green!5, fit=(sens)(prime),
+        label={[lbl, anchor=south west]north west:Background: sweep every 60\,s; BLE-free check every 15\,min}] {};
+  \node[lane, fill=orange!6, fit=(intent)(out)(tier2),
+        label={[lbl, anchor=south west]north west:Interaction}] {};
+\end{scope}
+\end{tikzpicture}
+\caption{CAP-KVC architecture. A background sweep scores five pre-written contexts from GPS, BLE and time, keeps up to three of them as primed KV state in llama.cpp sequence slots, and saves each state to disk. An interaction shows a canned reply, then resumes the highest-ranked resident context and decodes only the intent; if none is resident, priming starts in the background. Slot~3 serves inline inference without disturbing resident states.}
 \label{fig:architecture}
 \end{figure*}
 
-\subsection{Problem Formulation}
-
-Let $C = \{c_1, \ldots, c_M\}$ be a set of pre-configured semantic contexts, each associated with a system prompt $p_i$ of $N_i$ tokens. In standard retrieval-augmented generation, $p_i$ is concatenated with the user's intent tokens at inference time, incurring an $O(N_i)$ prefill cost. CAP-KVC reformulates this as a scheduling problem: predict the most likely context $\hat{c}$ from environmental signals, execute the prefill of $p_{\hat{c}}$ during idle periods, and persist the resulting KV cache tensors. At inference time, the system restores the pre-computed cache and appends only the user's intent tokens, reducing the inference-time cost from a prompt-length-dependent prefill to a cache restoration operation whose cost is independent of the original prompt length.
-
-\subsection{Execution Pipeline}
-
-The system operates in five stages. The first three run asynchronously during idle periods: (1)~\emph{sensor acquisition} polls GPS, BLE, and the system clock to construct an immutable \texttt{SensorSnapshot}; (2)~\emph{context routing} evaluates all registered contexts via a convex scoring function (Section~\ref{sec:scoring}) and selects the top-$k$ for cache residency; (3)~\emph{background priming} executes the prefill for each selected context, serializes the KV tensors, and registers the context as resident. At interaction time: (4)~\emph{resident inference} restores the pre-computed cache and appends only the intent tokens; (5)~\emph{drift correction} periodically re-evaluates scores and triggers cache replacement when a candidate exceeds the weakest resident state's score by at least $\Delta = 0.10$, preventing cache thrashing under noisy sensor conditions.
+\subsection{Problem}
+Let $C=\{c_1,\dots,c_M\}$ be pre-written contexts with prompts $p_i$ of $N_i$ tokens. Inline (retrieval-augmented style) inference decodes $p_i$ followed by the intent $q$ on every request, so prefill costs grow with $N_i+|q|$. CAP-KVC moves the prefill of $p_i$ to idle time and stores its KV state; at interaction time it restores the state and decodes only $q$. The open question is which $p_i$ to prepare, since memory allows only $K<M$ resident states. The prototype has $M=5$ contexts (home morning, home evening, hospital ward, therapy room, caregiver visit) and $K=3$.
 
 \subsection{Context Scoring}
 \label{sec:scoring}
-
-A context $c_i$ is scored as a convex combination of environmental similarity:
+Each context $c_i$ has an expected hour $t_i$, an anchor location $\ell_i$ and a set of BLE anchors $A_i$ with weights $w_{ij}$. For a sensor snapshot the score is
 \begin{equation}
-S(c_i) = \alpha \cdot S_{\text{time}} + \beta \cdot S_{\text{gps}} + \gamma \cdot S_{\text{ble}}
-\label{eq:scoring}
+S(c_i)=\alpha S_{\mathrm{time}}+\beta S_{\mathrm{gps}}+\gamma S_{\mathrm{ble}},\qquad \alpha+\beta+\gamma=1,
+\label{eq:score}
 \end{equation}
-where $\alpha + \beta + \gamma = 1$. Temporal similarity applies a Gaussian kernel ($\sigma = 2.0$~h) over circular time distance:
-\begin{equation}
-S_{\text{time}} = \exp\!\left(-\frac{d_{\text{circ}}(t, t_i)^2}{2\sigma^2}\right)
-\label{eq:time_score}
-\end{equation}
-Spatial similarity uses exponential decay over Haversine distance ($\lambda = 0.1$~km):
-\begin{equation}
-S_{\text{gps}} = \exp(-\lambda \cdot d_{\text{haversine}})
-\label{eq:gps_score}
-\end{equation}
-BLE similarity evaluates device-topology overlap with sigmoid-mapped RSSI values. Weights are computed dynamically from sensor reliability: time maintains a fixed baseline $w_t = 0.4$, guaranteeing a positive normalization denominator even when both GPS and BLE are unavailable. GPS reliability decays exponentially with reported accuracy ($w_g = \exp(-a/50.0)$); BLE reliability derives from mean sigmoid-transformed RSSI centered at $-70$~dBm. Missing sensors receive zero weight and remaining weights are renormalized to preserve $\alpha + \beta + \gamma = 1$. Contexts scoring below 0.01 are excluded.
+with
+\begin{align}
+S_{\mathrm{time}}&=\exp\!\bigl(-d_{\mathrm{circ}}(t,t_i)^2/2\sigma^2\bigr),\quad \sigma=2~\mathrm{h},\\
+S_{\mathrm{gps}}&=\exp\!\bigl(-d_{\mathrm{hav}}(\ell,\ell_i)/\lambda\bigr),\quad \lambda=0.1~\mathrm{km},\\
+S_{\mathrm{ble}}&=\textstyle\sum_{j\in A_i} w_{ij}\,\mathbb{1}[j\ \mathrm{seen}] \big/ \sum_{j\in A_i} w_{ij}.
+\end{align}
+$d_{\mathrm{circ}}$ wraps around midnight, so $S_{\mathrm{gps}}$ falls to 0.37 at 100~m. The weights come from per-sensor reliability, normalized to sum to one: time has a fixed weight $w_t=0.4$; GPS has $w_g=\exp(-a/50~\mathrm{m})$ for reported accuracy $a$, or 0 without a fix; BLE has $w_b$ equal to the mean of $1/(1+e^{-0.1(r+70)})$ over observed RSSI values $r$, or 0 if nothing is seen. Contexts scoring below 0.01 are dropped. The scorer has no learned parameters; ``predictive'' refers to preparing a context before the request, not to a trained model.
 
-\subsection{KV Cache Residency}
+\subsection{Residency and Hysteresis}
+\label{sec:residency}
+The resident set holds at most $K=3$ KV states. After each sweep, candidates are taken in rank order. A candidate already resident is kept; otherwise it takes a free slot, or replaces the weakest resident state if its score exceeds that state's score by more than $\Delta$. $\Delta$ is a hysteresis margin on scores. It is unrelated to $K$; the submitted version of this paper conflated the two and justified $\Delta$ with an unrelated text-similarity experiment, which we drop. The deployed value is $\Delta=0.10$; Section~\ref{sec:eval_hysteresis} measures its effect. The same rule runs in the 60-second sweep and in a 15-minute background check that sees no BLE data and may only add the top-ranked context.
 
-The system maintains at most $k = 3$ KV cache states simultaneously resident in native memory, mapped to native sequence slots managed by the inference engine. When all slots are occupied, the LRU state is evicted. Eviction is protected by reference counting: a state under active inference holds a reference blocking eviction until inference completes. The eviction sequence marks the victim inactive, polls until its reference count drains to zero, and returns the native slot to the available pool.
+\subsection{Interaction and Fallback}
+At interaction time the app uses the highest-ranked context that is resident. If none is, the interaction is a cold miss: a canned response is shown immediately (Tier~1) and priming of the current top contexts starts in the background (Tier~2). A wrong-context answer happens when a resident context is used but is not the true one.
 
-% ===========================================================================
-% IV. IMPLEMENTATION
 % ===========================================================================
 \section{Implementation}
 \label{sec:implementation}
 
-The system targets \texttt{arm64-v8a} devices running Android~12+, with \texttt{llama.cpp}~\cite{llamacpp} as the inference backend and Qwen2.5-0.5B-Instruct~\cite{qwen25} (Q4\_K\_M) as the evaluation model. Pre-compiled native libraries are bundled in the APK. All dependency injection is manual to minimize startup latency.
+AACBridge is an Android app (Kotlin, API~26+, \texttt{arm64-v8a}) using llama.cpp~\cite{llamacpp} through JNI, with Qwen2.5-0.5B-Instruct~\cite{qwen25} quantized to Q4\_K\_M.
 
-\textbf{JNI boundary.}
-Nine native functions are exposed via JNI in a single C++ source file (801 lines), organized into three groups: lifecycle (\texttt{initializeBackend}, \texttt{initializeModel}, \texttt{release}), KV cache operations (\texttt{saveKVCache}, \texttt{loadKVCache}, \texttt{clearKVCache}), and inference (\texttt{runInference}, \texttt{prefillOnly}, \texttt{resumeInference}). A strict design constraint governs this boundary: \textbf{all arguments and return values are JNI scalar types} (\texttt{jstring}, \texttt{jint}, \texttt{jboolean})---no Java objects, arrays, or callbacks cross the boundary, eliminating GC root pinning. The critical distinction is between \texttt{runInference} (clears session, processes from position zero) and \texttt{resumeInference} (appends at position $n_{\text{past}}$), preventing position-ID collisions that would corrupt the attention computation.
+\textbf{Native boundary.} The JNI layer exposes 14 functions, all with scalar arguments and results: lifecycle (initialize backend, load model, release), KV operations (save, load, clear scratch, reset slot), inference (inline run, prefill only, resume) and four timing getters. A single \texttt{ReentrantLock} serializes every native call, because llama.cpp context state is shared.
 
-\textbf{Concurrency.}
-The C++ backend maintains shared global state (a \texttt{llama\_context} pointer and \texttt{session\_tokens} vector) accessed by the background priming coroutine, cache manager, and foreground inference path. A single \texttt{ReentrantLock} (the ``engine lock'') guards all JNI call sequences. The lock is held across both \texttt{loadKVCache} and \texttt{resumeInference} within a single acquisition, because releasing between calls would allow another thread to mutate \texttt{session\_tokens}. Per-state coroutine \texttt{Mutex} instances separately protect cache residency metadata without blocking unrelated cache operations.
+\textbf{Sequence slots.} The llama.cpp context is created with four sequences of 1024 tokens: three for resident states and one scratch sequence for inline inference and benchmark restores, so neither disturbs a resident state. Priming decodes a context directly into the slot assigned to it and serializes that slot to a temporary file, which is then renamed into place, so a crash cannot leave a partial cache file. Resuming appends the intent at the slot's current position and, after generation, removes everything after the cached context, so the resident state is reused unchanged by the next interaction. With 24 layers, 2 KV heads of dimension 64 and fp16 storage, Qwen2.5-0.5B needs 12~KiB of KV per token; the four sequences reserve 48~MiB at context creation. We did not re-measure process memory after this layout change.
 
-\textbf{Cache priming lifecycle.}
-Each state undergoes three phases: (1)~prefill via \texttt{prefillOnly} under the engine lock, which runs the forward pass without entering the generation loop; (2)~serialization via \texttt{saveKVCache} to a temporary file while still holding the lock (sequence slot~0 is mandatory since \texttt{prefillOnly} decodes into slot~0 via \texttt{llama\_batch\_get\_one}); (3)~atomic rename to the final path after lock release, exploiting ext4's atomic \texttt{rename()} to guarantee crash consistency. A model-readiness gate (\texttt{AtomicBoolean}) prevents priming before native context initialization.
+\textbf{Sensing.} A foreground service runs the sweep every 60~s: a 3-second BLE scan and a location fix. Each provider's last fix is validated (not flagged as mock by the OS, at most 120~s old, reported accuracy between 2 and 500~m); if none passes, one fresh fix is requested, preferring the network provider over GPS. A WorkManager job runs every 15~minutes without BLE scanning.
 
-\textbf{Sensor integration.}
-Background sensing uses two cooperating components: an \emph{ActiveSweep} coroutine that concurrently acquires GPS coordinates (via cached \texttt{getLastKnownLocation}) and BLE topology (via a 3-second \texttt{BluetoothLeScanner} window), and a \emph{DriftDetector} \texttt{CoroutineWorker} registered with \texttt{WorkManager} for 15-minute periodic execution using a BLE-blind snapshot. A \texttt{BroadcastReceiver} for \texttt{BOOT\_COMPLETED} and \texttt{MY\_PACKAGE\_REPLACED} triggers cache population at boot via the \texttt{goAsync()} pattern.
+\textbf{Intent input.} Intents come from on-screen buttons or a gaze-dwell interface; an sEMG+gaze fusion classifier from earlier work is included as a prototype input but is not evaluated here.
 
-\textbf{Inference fallback.}
-If no cached context is available at interaction time (cold miss), a two-tier fallback fires: Tier~1 returns a generic pre-configured response immediately; Tier~2 initiates an asynchronous RAG prefill so subsequent intents can use contextual inference once the prefill completes.
+\textbf{Backup.} The manifest disables app backup and excludes the KV cache directory from cloud backup and device-to-device transfer.
 
-% ===========================================================================
-% V. EVALUATION
 % ===========================================================================
 \section{Evaluation}
-\label{sec:experiments}
+\label{sec:evaluation}
 
 \subsection{Setup}
+Latency was measured on a OnePlus~11R (Snapdragon~8+~Gen~1, 8~GB RAM, Android~14) with 4 threads, batch 512, greedy decoding and at most 64 output tokens. Each condition ran 2 warm-up and 30 measured trials. Prefill and generation times come from \texttt{std::chrono} timestamps around \texttt{llama\_decode} in native code; restore time is measured around the load call. All 180 trials and the analysis script are in the repository.
 
-\textbf{Hardware.} OnePlus~11R (Snapdragon~8+~Gen~1, 8~GB LPDDR5X, UFS~3.1), Android~14, airplane mode, 50\% brightness, no other foreground applications.
+During this run the phone's gaze interface remained active and issued 45 interaction inferences between trials. These held the engine lock, and the trial timer started before the lock was taken, so the end-to-end totals of some trials include waiting time. We therefore report only the natively timed components, which the lock wait does not affect, and not end-to-end totals. The app now blocks interaction inference during benchmarks and starts trial timers after taking the lock.
 
-\textbf{Model.} Qwen2.5-0.5B-Instruct Q4\_K\_M via \texttt{llama.cpp} GGUF (\texttt{n\_ctx}$=2048$, \texttt{n\_batch}$=512$, \texttt{n\_threads}$=4$, greedy decoding, max 64 output tokens).
+\subsection{Matched-Context Latency}
+\label{sec:eval_latency}
+The CAP-KVC cache holds a 44-token context. The matched inline condition decodes the same context plus the intent (52 tokens). Larger inline conditions use longer contexts and show how inline prefill scales; their ratios to CAP-KVC grow by construction and are not matched comparisons.
 
-\textbf{Conditions.} Three pipelines are compared: (1)~ZERO\_CONTEXT (intent tokens only, establishing the hardware latency floor); (2)~RAG\_INLINE (full context + intent via \texttt{runInference}, $N \in \{50, 100, 200, 500\}$); (3)~CAP\_KVC (restored cache via \texttt{loadKVCache} + intent via \texttt{resumeInference}). Each condition runs 32 sequential trials (2~warmup, 30~measured). The warmup phase absorbs Kotlin/ART JIT compilation and initial thermal settling.
-
-\textbf{Important limitation.} CAP\_KVC caches were derived from $\sim$50-token prompts. Comparisons against longer RAG\_INLINE contexts characterize inference-time amortization behavior rather than response quality under equivalent context richness.
-
-\subsection{Measurement Methodology}
-\label{sec:measurement}
-
-End-to-end wall-clock latency is captured via \texttt{System.nanoTime()} at the Kotlin layer. To decompose latency into constituent phases, \texttt{std::chrono::high\_resolution\_clock} timestamps are inserted immediately before and after each \texttt{llama\_decode()} call within both \texttt{runInference} and \texttt{resumeInference}. This isolates the prefill phase---the single \texttt{llama\_decode()} call that processes all prompt tokens---from the autoregressive generation loop. On the Android NDK runtime, \texttt{high\_resolution\_clock} maps to the monotonic \texttt{CLOCK\_MONOTONIC} source (vDSO-accelerated, $\approx$10--50~ns overhead), preventing corruption from NTP synchronization. JNI boundaries and log serialization occur strictly outside the timed regions.
-
-For the CAP\_KVC condition, three sub-components are instrumented separately: \texttt{cache\_load\_ms} (Kotlin layer), \texttt{prefill\_ms} (native layer, intent-only \texttt{llama\_decode}), and \texttt{gen\_ms} (native layer, generation loop). Both layers are captured under the same engine lock acquisition.
-
-Results are emitted as structured CSV via \texttt{adb logcat}. The extraction script matches JNI timing entries to Kotlin bench entries by strict proximity and asserts alignment of trial indices and token counts; any mismatch aborts the parser. All 180 trials reported here were fully verified.
-
-% ===========================================================================
-% VI. RESULTS
-% ===========================================================================
-\section{Results}
-\label{sec:results}
-
-\subsection{Inference Latency}
-\label{sec:results_latency}
-
-Table~\ref{tab:latency} reports latency with native-side prefill decomposition ($n = 30$ per condition, 180 total).
-
-\begin{table}[htbp]
+\begin{table}[t]
 \centering
-\caption{Latency decomposition (ms). Prefill isolates the \texttt{llama\_decode()} forward pass; generation covers autoregressive sampling. Both measured via native \texttt{std::chrono}. OnePlus~11R, Qwen2.5-0.5B-Instruct Q4\_K\_M, greedy sampling, max 64~output tokens, $n = 30$.}
+\caption{Natively timed latency components (ms), median [IQR], $n=30$ each. CAP-KVC restores a 44-token context and decodes the 9 intent tokens.}
 \label{tab:latency}
-\resizebox{\columnwidth}{!}{%
-\begin{tabular}{lrrrrr}
-\hline
-\textbf{Condition} & \textbf{E2E (ms)} & \textbf{Prefill (ms)} & \textbf{Gen (ms)} & \textbf{E2E $\sigma$} & \textbf{Tokens} \\
-\hline
-ZERO\_CONTEXT       & 3823.78 & 274.79  & 3544.58  & 569.76  & 9  \\
-RAG ($N\!\approx\!50$)  & 6547.13 & 2021.46 & 4508.53  & 8392.58 & 52 \\
-RAG ($N\!\approx\!100$) & 7900.92 & 3015.09 & 4877.95  & 3857.18 & 89 \\
-RAG ($N\!\approx\!200$) & 12122.30 & 6673.53 & 5439.96 & 2740.12 & 206 \\
-RAG ($N\!\approx\!500$) & 19408.89 & 14001.46 & 5390.76 & 2113.04 & 439 \\
-\hline
-CAP\_KVC (cache load)       & 2.74  & ---  & ---  & 1.35 & --- \\
-CAP\_KVC (inference)        & 4571.97 & 343.35 & 4226.74  & 373.65 & 9  \\
-CAP\_KVC (total)            & 4574.70 & ---    & ---      & 373.49 & ---  \\
-\hline
-\end{tabular}%
-}
-\end{table}
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=\columnwidth]{latency_breakdown_new.png}
-\caption{Latency decomposition across conditions. RAG\_INLINE prefill scales linearly (274~ms at $N\!=\!9$ to 14001~ms at $N\!=\!439$ tokens); CAP\_KVC prefill is 343~ms regardless of cached context size, yielding a 40.78$\times$ prefill speedup. Error bars: $\pm 1\sigma$, $n = 30$.}
-\label{fig:latency_breakdown}
-\end{figure}
-
-\textbf{Cache restoration is negligible.} The mean cache load time is 2.74~ms ($\sigma = 1.35$~ms), representing less than 0.1\% of total CAP\_KVC latency. This measures the complete Kotlin-side \texttt{loadKVCache()} round trip including JNI marshalling, native file I/O, and KV tensor deserialization.
-
-\textbf{Prefill amortization.} RAG\_INLINE prefill scales linearly from 2021~ms ($N \approx 52$) to 14001~ms ($N \approx 439$), a 6.93$\times$ increase. CAP\_KVC prefill is 343.35~ms ($\sigma = 45.00$~ms) for 9 intent tokens regardless of cached context size, yielding a \textbf{40.78$\times$ prefill speedup} at $N \approx 500$. End-to-end, CAP\_KVC achieves 4574.70~ms versus 19408.89~ms, a \textbf{4.24$\times$ speedup}. The generation phase ($\sim$3500--5400~ms) masks the prefill improvement in the end-to-end ratio.
-
-\textbf{Statistical significance.} Welch's two-sample $t$-tests ($\alpha = 0.05$, two-tailed) on prefill-only latency confirm significance: CAP\_KVC vs.\ RAG@500 ($t(29.0) = -40.42$, $p < 10^{-26}$, Cohen's $d = 10.44$); CAP\_KVC vs.\ RAG@50 ($p = 0.011$, $d = 0.70$, medium-to-large effect). The end-to-end comparison at $N \approx 500$ is also significant ($t(30.8) = -37.86$, $p < 10^{-26}$, $d = 9.78$); at $N \approx 50$ it is not ($p = 0.209$) due to high generation-phase variance. Although Welch's $t$-test is robust to unequal variances, the extreme skewness of RAG latency distributions violates normality assumptions; the reported statistics should be interpreted as general trends.
-
-\textbf{Generation-phase variance.} Generation time varies across conditions (ZERO\_CONTEXT 3544~ms, RAG@500 5390~ms, CAP\_KVC 4226~ms), consistent with differing per-token attention cost when the KV cache contains different numbers of entries and with uncharacterized system-level effects over the 29-minute benchmark session. Because prefill and generation are decomposed independently, these differences do not confound the prefill speedup.
-
-\textbf{Outliers.} Five trials were flagged by Tukey's criterion ($Q_3 + 3 \times \text{IQR}$). No thermal telemetry or CPU frequency logs were captured, so the specific mechanisms cannot be attributed. All outliers were retained in reported statistics to preserve operational realism.
-
-\subsection{Memory Budget}
-\label{sec:results_memory}
-
-\begin{table}[htbp]
-\centering
-\caption{Native heap memory (KB) via \texttt{dumpsys meminfo}. Delta represents the marginal cost of loading three KV cache states.}
-\label{tab:memory}
-\begin{tabular}{lrr}
-\hline
-\textbf{State} & \textbf{Native Heap (KB)} & \textbf{Total PSS (KB)} \\
-\hline
-Idle (0 states)     & 18,856  & 623,488 \\
-Loaded (3 states)   & 140,420 & 612,940 \\
-\hline
-\textbf{Delta}      & +121,564 ($\approx$118.7~MB) & --- \\
-\hline
+\scriptsize
+\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Condition (tokens) & Prefill & Generation & Restore \\
+\midrule
+No context (9) & 377 [288, 503] & 5775 [2823, 6213] & -- \\
+\textbf{Inline, matched (52)} & \textbf{2449} [2231, 2777] & 7964 [7350, 9374] & -- \\
+Inline (89) & 4116 [3677, 4487] & 8589 [7822, 11294] & -- \\
+Inline (206) & 7075 [5148, 8700] & 6991 [4107, 10275] & -- \\
+Inline (439) & 14024 [13219, 14941] & 5912 [5467, 7003] & -- \\
+\textbf{CAP-KVC (9)} & \textbf{331} [276, 355] & 4395 [3985, 5110] & 1.2 [1.0, 3.3] \\
+\bottomrule
 \end{tabular}
 \end{table}
 
-Three-state residency adds approximately 118.7~MB of native heap ($\sim$40~MB per state for a 0.5B Q4\_K\_M model), a feasible budget on 8~GB devices. The slight PSS decrease between states reflects measurement variability in shared memory attribution.
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{prefill_scaling.pdf}
+\caption{Prefill latency against tokens decoded (log scale). Points are trials; markers show median and IQR ($n=30$ per condition).}
+\label{fig:prefill}
+\end{figure}
 
-\subsection{Multimodal Fusion (Proof-of-Concept)}
-\label{sec:results_fusion}
+With the context matched, mean prefill fell from 2507~ms (SD 522) to 351~ms (SD 97), a ratio of 7.1 (Welch $t(31.0)=22.2$, $p<10^{-19}$; Mann--Whitney $p<10^{-10}$; Table~\ref{tab:latency}). Restoring the state took 2.4~ms on average (median 1.2~ms). A rough time to first token, taken as restore plus prefill plus one mean generation step, is about 0.43~s for CAP-KVC and 2.6~s inline. Inline prefill grew by about 30~ms per prompt token (OLS, $R^2=0.91$; Fig.~\ref{fig:prefill}), reaching 14.2~s at 439 tokens, where the CAP-KVC prefill was 40.5$\times$ shorter. That larger ratio compares different context lengths and reflects the cost CAP-KVC avoids when contexts are long, not a matched speedup. We measured restore only for the 44-token cache, so we cannot say how restore time grows with context length.
 
-As a motivating application interface, a late fusion model combining CNN-LSTM sEMG embeddings ($\mathbb{R}^{64}$) with MediaPipe gaze features ($\mathbb{R}^{5}$) was evaluated on a synthetic dataset (2000 paired samples, 60/20/20 split). The pre-specified decision criterion required the cross-attention model to exceed late fusion F1 by more than 3~percentage points (absolute). Late fusion achieves macro F1 = 0.9963 versus cross-attention F1 = 0.9437 (5.26~pp difference, reversed direction), so the simpler architecture was selected. The standalone CNN-LSTM EMG classifier achieves 42.4\% accuracy under cross-subject LOSO evaluation (NinaPro~DB5~\cite{ninapro}), with 0\% recall on the \emph{reject} class---expected given inter-subject EMG variability. These numbers characterize model capacity on synthetic/controlled data and do not predict clinical accuracy; no gaze-only baseline was evaluated.
+Generation dominates the full response. With 64 output tokens, generation took 4.4--8.6~s (medians), so the 2.1~s saved in prefill at matched length shortens the complete response far less than the prefill ratio suggests. The benefit is concentrated in time to first token. Generation times varied between conditions and trials (IQRs above 1~s); the run recorded no thermal or CPU-frequency data, so we cannot attribute this variation.
 
-\subsection{Drift Detection}
-\label{sec:results_drift}
+\subsection{Prediction and Cache Policy}
+\label{sec:eval_prediction}
+\textbf{Traces.} We have no recorded sensor traces from users, so we use synthetic ones (seed 42). Each of 100 days follows the five-context routine 06:00--22:00, with every context boundary shifted per day by $U(\pm0.5~\mathrm{h})$. A sweep runs every minute and an interaction every 15 minutes (6,400 interactions). Each sweep draws GPS displacement $\mathcal{N}(0,50~\mathrm{m})$, GPS dropout 10\%, reported accuracy $\mathcal{N}(15,10)$~m, per-beacon detection 80\% with RSSI $\mathcal{N}(-65,10)$~dBm, BLE outage 15\%, and a spurious beacon 10\% of the time. The high-noise setting uses $\pm1.5$~h shifts, 200~m GPS noise, 30\% GPS dropout, 50~m accuracy, 50\% detection and 40\% BLE outage. The context time anchors were written from the same routine, so time-of-day evidence is favourable by construction.
 
-An offline Sentence-BERT k-ablation on DailyDialog~\cite{dailydialog} yields maximum F1 = 0.367 at $k = 1$, degrading monotonically with window size. The deployed system uses $k = 3$ as a sensor-score smoothing heuristic---chosen for stability against transient sensor fluctuations rather than from the DailyDialog results, which are methodologically distinct (Sentence-BERT centroid distances vs.\ deployed sensor-score hysteresis).
+\textbf{Simulation.} The evaluator calls the production scoring, residency and selection code. It does not model priming delay: a state chosen at one sweep is assumed usable by the next minute.
+
+\textbf{Metrics.} For each interaction with true context $c^\ast$ and used context $\hat{c}$: correct if $\hat{c}=c^\ast$; wrong context if $\hat{c}\neq c^\ast$; cold miss if no ranked context is resident. These three partition the interactions. We also report loads per day (states primed or restored into the resident set), which measures churn.
+
+\textbf{Baselines.} \emph{Oracle}: $c^\ast$ is always resident, giving the restore benefit with perfect prediction. \emph{Request-driven LRU}: no sensing; the context becomes known when the request arrives (the best case for request-driven reuse), is used if cached, and is otherwise a cold miss and inserted into a three-entry LRU cache that persists across days. \emph{Random}: uniform random scores each sweep, same residency rule. \emph{Single sensor}: time only (no GPS or BLE), and GPS only or BLE only with $w_t$ reduced to 0.001 so that time does not leak in through normalization.
+
+\begin{table}[t]
+\centering
+\caption{Interaction outcomes over 6,400 synthetic interactions (\%) and states loaded per day. $\Delta=0.10$ unless noted.}
+\label{tab:prediction}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+Policy / scenario & Correct & Wrong & Cold & Loads/d \\
+\midrule
+Oracle (always resident) & 100.0 & 0.0 & 0.0 & 5.0 \\
+Request-driven LRU, no sensing & 92.2 & 0.0 & 7.8 & 5.0 \\
+Random ranking & 20.7 & 79.3 & 0.0 & 1011 \\
+Time only & 92.2 & 7.8 & 0.0 & 5.0 \\
+GPS only & 87.9 & 12.1 & 0.0 & 45.7 \\
+BLE only & 92.6 & 6.9 & 0.5 & 115.8 \\
+\textbf{All sensors (deployed)} & \textbf{98.5} & \textbf{1.5} & \textbf{0.0} & \textbf{31.6} \\
+All sensors, $\Delta=0$ & 98.5 & 1.5 & 0.0 & 65.9 \\
+GPS 70\% unavailable & 98.2 & 1.8 & 0.0 & 116.7 \\
+High noise & 90.6 & 9.4 & 0.0 & 106.2 \\
+\midrule
+GPS forged, not detected & 61.1 & 38.9 & 0.0 & 18.2 \\
+GPS forged, mock flag rejected & 98.3 & 1.7 & 0.0 & 75.8 \\
+Cloned BLE beacons & 90.1 & 9.9 & 0.0 & 103.2 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:prediction} shows the results. With all sensors the deployed rules used the correct context for 98.5\% of interactions. The request-driven LRU baseline never used a wrong context but missed 7.8\% of interactions, one at each of the five daily context changes, because five contexts visited in order never fit in three entries. Sensing removed those misses at the price of 1.5\% wrong-context interactions. Each sensor alone did worse than the combination: GPS cannot separate the three contexts that share the home coordinates, and with BLE alone the router produced no candidate in 0.5\% of interactions, when no registered beacon was seen. Time alone reached 92.2\%, which reflects how the traces were built rather than a property of real schedules.
+
+Cold misses were near zero for every sensing policy, and in every sensing configuration the router's top-1 accuracy equalled the share of correct interactions. With three of five contexts resident, the dominant failure is a wrong context rather than a miss, so Hit@3-style residency metrics say little in this configuration. Random ranking also had no cold misses but was correct only 20.7\% of the time.
+
+\subsection{Hysteresis}
+\label{sec:eval_hysteresis}
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{hysteresis_churn.pdf}
+\caption{States loaded per day against hysteresis margin $\Delta$ (100 synthetic days each). The share of correct interactions stayed at 98.5\% (normal) and 90.6\% (high noise) across all margins up to 0.5.}
+\label{fig:hysteresis}
+\end{figure}
+
+Fig.~\ref{fig:hysteresis} varies $\Delta$ with everything else fixed. Raising $\Delta$ from 0 to the deployed 0.10 halved loads per day under normal noise (65.9 to 31.6) and cut them from 297.5 to 106.2 under high noise. The share of correct interactions did not change for any margin up to 0.5, presumably because a change of context moves scores by more than these margins. Each load is a restore or, if the cache file is missing, a full prefill, so the margin mainly saves background work. On these traces a margin of 0.3 would cut loads further at no cost in accuracy; we keep 0.10 until real traces are available, since a larger margin also delays switching after a genuine but small change in evidence.
+
+\subsection{Not Measured}
+We did not measure battery drain, power, temperature or CPU frequency for the 60-second sweep, the 15-minute job or background priming. Each load in Table~\ref{tab:prediction} is a unit of background work whose energy cost remains to be quantified on the device.
 
 % ===========================================================================
-% VII. CONCLUSION AND LIMITATIONS
+\section{Threat Model}
+\label{sec:threat}
+
+\textbf{Assets.} The choice of context that shapes what the device says for its user, and the cached KV files, which encode the context prompts.
+
+\textbf{Adversaries.} (A) An app on the same phone supplying mock locations. (B) Someone nearby advertising BLE beacons that copy registered anchors. (C) Someone with access to the phone's files or backups. Ordinary sensor noise and stale fixes are covered by the evaluation above.
+
+\textbf{What an attacker can do.} The router only ranks the five pre-written contexts. Sensor manipulation can therefore make the app use the wrong one of them, but it cannot add a context, change a prompt, or alter the user's intent. This bounds the damage without removing it: a wrong context still changes what the model writes for the user.
+
+\textbf{Mitigations and residual risk.} Location fixes flagged as mock by Android are rejected, as are stale fixes and implausible accuracy values. When the mock flag is set, forged GPS had little effect (1.7\% wrong context, Table~\ref{tab:prediction}). On a rooted phone a forged fix need not carry the flag; if it also reports a plausible accuracy such as 5~m, the checks accept it, and the wrong-context rate rose to 38.9\%. BLE advertisements are unauthenticated and we have no defence against cloned beacons (9.9\% wrong context); the router has no check that GPS and BLE agree. Cache files are stored unencrypted in app-private storage and are excluded from backup and device transfer, which protects them only as far as the Android sandbox does.
+
+\textbf{Out of scope.} Rooted or compromised operating systems, kernel or firmware attackers, and physical extraction of storage.
+
 % ===========================================================================
-\section{Conclusion}
+\section{Limitations and Conclusion}
 \label{sec:conclusion}
 
-CAP-KVC demonstrates that sensor-driven predictive caching eliminates prompt-length-dependent prefill latency on mobile hardware. Native-side instrumentation confirms a 40.78$\times$ prefill speedup (343~ms vs.\ 14001~ms at $N \approx 500$) and 4.24$\times$ end-to-end reduction (4574~ms vs.\ 19408~ms), with 2.74~ms cache restoration. The Android implementation operates within 118.7~MB native heap for three simultaneous cache states. The approach generalizes beyond the AAC motivating scenario: any mobile application processing recurring environmental contexts can exploit idle-time cache priming.
+The latency results come from one phone, one 0.5B model and 30 trials per condition, with a single cached context size; restore time for longer contexts, end-to-end latency without interference, memory use under the current slot layout, and an independent llama.cpp throughput benchmark on the same phone remain to be measured. The prediction results come from synthetic traces whose schedule matches the contexts' time anchors and do not model priming delay; real multi-day sensor recordings are needed to confirm them. The prototype has five hand-written contexts. Energy cost is unmeasured. Nothing here has been evaluated with AAC users, and no clinical claim is made.
 
-\textbf{Limitations.}
-All benchmarks use a single device (OnePlus~11R, Snapdragon~8+~Gen~1) and a single model (Qwen2.5-0.5B Q4\_K\_M) with $n = 30$ trials; results may differ on other SoCs or model families. The fusion evaluation uses synthetic data and lacks clinical validation or a gaze-only baseline. Prefill timing measures the single \texttt{llama\_decode()} call; tokenization overhead ($< 1$~ms) is excluded. No thermal telemetry, CPU frequency logs, power measurements, or non-predictive cache baseline were captured. The evaluation uses five static context configurations rather than learned profiles. Serialized KV cache files are unencrypted, relying on Android's application sandbox. Battery impact of the \texttt{ContextDaemon} (60-second sweep) and \texttt{DriftDetector} (15-minute poll via WorkManager) has not been characterized.
+Within those limits, the measurements separate the parts of the question. Restoring a primed context removed most of the matched prefill cost (351 versus 2507~ms, 2.4~ms restore). Sensor-driven residency used the correct context for 98.5\% of synthetic interactions, compared with 92.2\% for request-driven LRU, by trading first-visit misses for 1.5\% wrong-context answers. Undetected GPS forgery is the main weakness: it raised wrong-context answers to 38.9\%.
+
+The code, benchmark logs, evaluation harness and figure scripts are available at \url{https://github.com/omni-ar/AACBridge}.
 
 % ===========================================================================
-% REFERENCES
+\section*{Acknowledgment}
+The authors used Claude (Anthropic) to draft the text of this revised manuscript (all sections), which the authors then edited; to help write and revise code in the Android application, the JNI layer, the trace evaluator and the analysis and plotting scripts used for Tables~\ref{tab:latency}--\ref{tab:prediction} and Figs.~\ref{fig:prefill}--\ref{fig:hysteresis}; and for language editing. Google Antigravity was used as an AI-assisted development tool for parts of the Android/JNI implementation (Section~\ref{sec:implementation}). Fig.~\ref{fig:architecture} is drawn with TikZ code, written with Claude's assistance from a component layout specified by the authors; Figs.~\ref{fig:prefill}--\ref{fig:hysteresis} are rendered from measured or simulated data by scripts in the repository. No figure was produced by an image-generation model. Research questions, system design decisions, experiment choices and the interpretation of results are the authors'.
+
 % ===========================================================================
 \begin{thebibliography}{20}
+\footnotesize
 
 \bibitem{beukelman2020}
-D.~R. Beukelman and J.~C. Light,
-``Augmentative and alternative communication,''
-\emph{Paul H. Brookes Publishing}, 5th ed., 2020.
+D.~R. Beukelman and J.~C. Light, \emph{Augmentative and Alternative Communication: Supporting Children and Adults with Complex Communication Needs}, 5th~ed. Baltimore, MD, USA: Paul H. Brookes, 2020.
 
 \bibitem{llamacpp}
-G.~Gerganov,
-``llama.cpp: LLM inference in {C/C++},''
-2023. [Online]. Available: \url{https://github.com/ggerganov/llama.cpp}
+G.~Gerganov \emph{et al.}, ``llama.cpp: LLM inference in C/C++,'' 2023. [Online]. Available: \url{https://github.com/ggerganov/llama.cpp}
 
 \bibitem{qwen25}
-A.~Yang \emph{et al.},
-``{Qwen2.5 Technical Report},''
-\emph{arXiv:2412.15115}, 2024.
+A.~Yang \emph{et al.}, ``Qwen2.5 technical report,'' \emph{arXiv:2412.15115}, 2024.
 
 \bibitem{dettmers2022}
-T.~Dettmers, M.~Lewis, Y.~Belkada, and L.~Zettlemoyer,
-``{LLM.int8()},''
-in \emph{Proc. NeurIPS}, 2022.
+T.~Dettmers, M.~Lewis, Y.~Belkada, and L.~Zettlemoyer, ``LLM.int8(): 8-bit matrix multiplication for transformers at scale,'' in \emph{Proc. NeurIPS}, 2022.
 
 \bibitem{frantar2022}
-E.~Frantar, S.~Ashkboos, T.~Hoefler, and D.~Alistarh,
-``{GPTQ},''
-in \emph{Proc. ICLR}, 2023.
-
-\bibitem{scissorhands}
-Z.~Liu \emph{et al.},
-``Scissorhands,''
-in \emph{Proc. NeurIPS}, 2023.
-
-\bibitem{h2o}
-Z.~Zhang \emph{et al.},
-``{H$_2$O},''
-in \emph{Proc. NeurIPS}, 2023.
-
-\bibitem{streamingllm}
-G.~Xiao, Y.~Tian, B.~Chen, S.~Han, and M.~Lewis,
-``{Efficient streaming language models with attention sinks},''
-\emph{arXiv:2309.17453}, 2023.
+E.~Frantar, S.~Ashkboos, T.~Hoefler, and D.~Alistarh, ``GPTQ: Accurate post-training quantization for generative pre-trained transformers,'' in \emph{Proc. ICLR}, 2023.
 
 \bibitem{sglang}
-L.~Zheng \emph{et al.},
-``{SGLang},''
-in \emph{Proc. NeurIPS}, 2024.
+L.~Zheng, L.~Yin, Z.~Xie, C.~Sun, J.~Huang, C.~H. Yu, S.~Cao, C.~Kozyrakis, I.~Stoica, J.~E. Gonzalez, C.~Barrett, and Y.~Sheng, ``SGLang: Efficient execution of structured language model programs,'' in \emph{Proc. NeurIPS}, 2024.
 
 \bibitem{vllm}
-W.~Kwon \emph{et al.},
-``{PagedAttention},''
-in \emph{Proc. 29th SOSP}, 2023.
-
-\bibitem{infinigen}
-W.~Lee, J.~Lee, J.~Seo, and J.~Sim,
-``{InfiniGen},''
-in \emph{Proc. 18th USENIX OSDI}, 2024.
-
-\bibitem{cachegen}
-Y.~Liu \emph{et al.},
-``{CacheGen},''
-in \emph{Proc. ACM SIGCOMM}, 2024.
-
-\bibitem{ninapro}
-M.~Atzori \emph{et al.},
-``{NinaPro},''
-\emph{Scientific Data}, vol.~1, p.~140053, 2014.
-
-\bibitem{snapkv}
-Y.~Li \emph{et al.},
-``{SnapKV},''
-\emph{arXiv:2404.14469}, 2024.
+W.~Kwon, Z.~Li, S.~Zhuang, Y.~Sheng, L.~Zheng, C.~H. Yu, J.~E. Gonzalez, H.~Zhang, and I.~Stoica, ``Efficient memory management for large language model serving with PagedAttention,'' in \emph{Proc. SOSP}, 2023.
 
 \bibitem{promptcache}
-I.~Gim \emph{et al.},
-``{Prompt Cache},''
-in \emph{Proc. MLSys}, 2024.
+I.~Gim, G.~Chen, S.-S. Lee, N.~Sarda, A.~Khandelwal, and L.~Zhong, ``Prompt Cache: Modular attention reuse for low-latency inference,'' in \emph{Proc. MLSys}, 2024.
+
+\bibitem{ragcache}
+C.~Jin, Z.~Zhang, X.~Jiang, F.~Liu, S.~Liu, X.~Liu, and X.~Jin, ``RAGCache: Efficient knowledge caching for retrieval-augmented generation,'' \emph{ACM Trans. Comput. Syst.}, vol.~44, no.~1, Art.~2, Feb. 2026, doi: 10.1145/3768628.
 
 \bibitem{cacheblend}
-J.~Yao \emph{et al.},
-``{CacheBlend},''
-\emph{arXiv:2405.16444}, 2024.
+J.~Yao \emph{et al.}, ``CacheBlend: Fast large language model serving for RAG with cached knowledge fusion,'' in \emph{Proc. EuroSys}, 2025.
 
-\bibitem{powerinfer2}
-Z.~Xue \emph{et al.},
-``{PowerInfer-2},''
-\emph{arXiv:2406.06282}, 2024.
+\bibitem{cachegen}
+Y.~Liu \emph{et al.}, ``CacheGen: KV cache compression and streaming for fast large language model serving,'' in \emph{Proc. ACM SIGCOMM}, 2024.
+
+\bibitem{h2o}
+Z.~Zhang \emph{et al.}, ``H$_2$O: Heavy-hitter oracle for efficient generative inference of large language models,'' in \emph{Proc. NeurIPS}, 2023.
+
+\bibitem{scissorhands}
+Z.~Liu \emph{et al.}, ``Scissorhands: Exploiting the persistence of importance hypothesis for LLM KV cache compression at test time,'' in \emph{Proc. NeurIPS}, 2023.
+
+\bibitem{snapkv}
+Y.~Li \emph{et al.}, ``SnapKV: LLM knows what you are looking for before generation,'' in \emph{Proc. NeurIPS}, 2024.
+
+\bibitem{streamingllm}
+G.~Xiao, Y.~Tian, B.~Chen, S.~Han, and M.~Lewis, ``Efficient streaming language models with attention sinks,'' in \emph{Proc. ICLR}, 2024.
 
 \bibitem{kvquant}
-C.~Hooper \emph{et al.},
-``{KVQuant},''
-in \emph{Proc. NeurIPS}, 2024.
+C.~Hooper \emph{et al.}, ``KVQuant: Towards 10 million context length LLM inference with KV cache quantization,'' in \emph{Proc. NeurIPS}, 2024.
 
 \bibitem{mobilellm}
-Z.~Liu \emph{et al.},
-``{MobileLLM},''
-in \emph{Proc. ICML}, 2024.
+Z.~Liu \emph{et al.}, ``MobileLLM: Optimizing sub-billion parameter language models for on-device use cases,'' in \emph{Proc. ICML}, 2024.
 
 \bibitem{mlcllm}
-MLC Team,
-``{MLC LLM},''
-2023. [Online]. Available: \url{https://github.com/mlc-ai/mlc-llm}
+MLC Team, ``MLC LLM,'' 2023. [Online]. Available: \url{https://github.com/mlc-ai/mlc-llm}
 
 \bibitem{llminaflash}
-K.~Alizadeh \emph{et al.},
-``{LLM in a Flash},''
-\emph{arXiv:2312.11514}, 2023.
+K.~Alizadeh \emph{et al.}, ``LLM in a flash: Efficient large language model inference with limited memory,'' in \emph{Proc. ACL}, 2024.
 
-\bibitem{vaswani2017}
-A.~Vaswani \emph{et al.},
-``{Attention is all you need},''
-in \emph{Proc. NeurIPS}, 2017.
-
-\bibitem{dailydialog}
-Y.~Li \emph{et al.},
-``{DailyDialog},''
-\emph{arXiv:1710.03957}, 2017.
+\bibitem{powerinfer2}
+Z.~Xue \emph{et al.}, ``PowerInfer-2: Fast large language model inference on a smartphone,'' \emph{arXiv:2406.06282}, 2024.
 
 \end{thebibliography}
 
