@@ -1,0 +1,601 @@
+--------- beginning of main
+10-04 22:00:24.432 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=3824.59,gen_ms=13357.75,prompt_tokens=89,gen_tokens=64
+10-04 22:00:24.432 I/AACBridgeJNI(21578): resumeInference: slot=0 appending 8 intent tokens at pos 44
+10-04 22:00:24.435 I/LatencyProfiler(21578): BENCH,6,RAG_INLINE,home_morning,100,17188.11,3824.59,13357.75,0.00,89,64
+10-04 22:00:24.436 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=100 trial=6 => total_ms=17,188.11 prefill_ms=3,824.59 gen_ms=13,357.75 cache_load_ms=0.00 prompt_tokens=89 gen_tokens=64
+10-04 22:00:37.071 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=840.37,gen_ms=11797.76,prompt_tokens=8,gen_tokens=64,seq=0
+10-04 22:00:37.072 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:00:54.618 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=4870.98,gen_ms=12590.84,prompt_tokens=89,gen_tokens=64
+10-04 22:00:54.619 I/LatencyProfiler(21578): BENCH,7,RAG_INLINE,home_morning,100,30181.88,4870.98,12590.84,0.00,89,64
+10-04 22:00:54.621 I/AACBridgeJNI(21578): resumeInference: slot=0 appending 8 intent tokens at pos 44
+10-04 22:00:54.630 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=100 trial=7 => total_ms=30,181.88 prefill_ms=4,870.98 gen_ms=12,590.84 cache_load_ms=0.00 prompt_tokens=89 gen_tokens=64
+10-04 22:01:04.156 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=544.85,gen_ms=8989.84,prompt_tokens=8,gen_tokens=64,seq=0
+10-04 22:01:04.157 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:01:14.993 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=3177.45,gen_ms=7656.51,prompt_tokens=89,gen_tokens=64
+10-04 22:01:14.994 I/LatencyProfiler(21578): BENCH,8,RAG_INLINE,home_morning,100,20362.43,3177.45,7656.51,0.00,89,64
+10-04 22:01:14.997 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=100 trial=8 => total_ms=20,362.43 prefill_ms=3,177.45 gen_ms=7,656.51 cache_load_ms=0.00 prompt_tokens=89 gen_tokens=64
+10-04 22:01:14.998 I/AACBridgeJNI(21578): resumeInference: slot=0 appending 9 intent tokens at pos 44
+10-04 22:01:25.004 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=589.76,gen_ms=9415.95,prompt_tokens=9,gen_tokens=64,seq=0
+10-04 22:01:25.006 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:01:36.935 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=3671.65,gen_ms=8256.18,prompt_tokens=89,gen_tokens=64
+10-04 22:01:36.937 I/LatencyProfiler(21578): BENCH,9,RAG_INLINE,home_morning,100,21938.39,3671.65,8256.18,0.00,89,64
+10-04 22:01:36.941 I/AACBridgeJNI(21578): resumeInference: slot=0 appending 9 intent tokens at pos 44
+10-04 22:01:36.941 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=100 trial=9 => total_ms=21,938.39 prefill_ms=3,671.65 gen_ms=8,256.18 cache_load_ms=0.00 prompt_tokens=89 gen_tokens=64
+10-04 22:01:47.149 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=873.61,gen_ms=9333.70,prompt_tokens=9,gen_tokens=64,seq=0
+10-04 22:01:47.152 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:01:59.372 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=3692.50,gen_ms=8506.24,prompt_tokens=89,gen_tokens=64
+10-04 22:01:59.373 I/LatencyProfiler(21578): BENCH,10,RAG_INLINE,home_morning,100,22430.54,3692.50,8506.24,0.00,89,64
+10-04 22:01:59.374 I/AACBridgeJNI(21578): resumeInference: slot=0 appending 9 intent tokens at pos 44
+10-04 22:01:59.375 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=100 trial=10 => total_ms=22,430.54 prefill_ms=3,692.50 gen_ms=8,506.24 cache_load_ms=0.00 prompt_tokens=89 gen_tokens=64
+10-04 22:02:04.535 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=405.80,gen_ms=4754.89,prompt_tokens=9,gen_tokens=64,seq=0
+10-04 22:02:04.536 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:02:10.781 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=2481.99,gen_ms=3760.07,prompt_tokens=89,gen_tokens=64
+10-04 22:02:10.781 I/LatencyProfiler(21578): BENCH,11,RAG_INLINE,home_morning,100,11402.08,2481.99,3760.07,0.00,89,64
+10-04 22:02:10.782 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=100 trial=11 => total_ms=11,402.08 prefill_ms=2,481.99 gen_ms=3,760.07 cache_load_ms=0.00 prompt_tokens=89 gen_tokens=64
+10-04 22:02:10.782 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:02:17.325 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=2528.07,gen_ms=4013.18,prompt_tokens=89,gen_tokens=64
+10-04 22:02:17.325 I/LatencyProfiler(21578): BENCH,12,RAG_INLINE,home_morning,100,6542.89,2528.07,4013.18,0.00,89,64
+10-04 22:02:17.326 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=100 trial=12 => total_ms=6,542.89 prefill_ms=2,528.07 gen_ms=4,013.18 cache_load_ms=0.00 prompt_tokens=89 gen_tokens=64
+10-04 22:02:17.327 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:02:23.608 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=2105.30,gen_ms=4174.24,prompt_tokens=89,gen_tokens=64
+10-04 22:02:23.609 I/LatencyProfiler(21578): BENCH,13,RAG_INLINE,home_morning,100,6281.43,2105.30,4174.24,0.00,89,64
+10-04 22:02:23.609 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=100 trial=13 => total_ms=6,281.43 prefill_ms=2,105.30 gen_ms=4,174.24 cache_load_ms=0.00 prompt_tokens=89 gen_tokens=64
+10-04 22:02:23.609 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:02:28.841 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=2265.24,gen_ms=2964.81,prompt_tokens=89,gen_tokens=64
+10-04 22:02:28.842 I/LatencyProfiler(21578): BENCH,14,RAG_INLINE,home_morning,100,5232.13,2265.24,2964.81,0.00,89,64
+10-04 22:02:28.843 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=100 trial=14 => total_ms=5,232.13 prefill_ms=2,265.24 gen_ms=2,964.81 cache_load_ms=0.00 prompt_tokens=89 gen_tokens=64
+10-04 22:02:28.843 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:02:46.964 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=4077.38,gen_ms=14042.29,prompt_tokens=89,gen_tokens=64
+10-04 22:02:46.966 I/LatencyProfiler(21578): BENCH,15,RAG_INLINE,home_morning,100,18121.74,4077.38,14042.29,0.00,89,64
+10-04 22:02:46.973 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=100 trial=15 => total_ms=18,121.74 prefill_ms=4,077.38 gen_ms=14,042.29 cache_load_ms=0.00 prompt_tokens=89 gen_tokens=64
+10-04 22:02:46.974 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:02:57.973 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=3242.71,gen_ms=7710.51,prompt_tokens=89,gen_tokens=64
+10-04 22:02:57.974 I/LatencyProfiler(21578): BENCH,16,RAG_INLINE,home_morning,100,10999.67,3242.71,7710.51,0.00,89,64
+10-04 22:02:57.975 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=100 trial=16 => total_ms=10,999.67 prefill_ms=3,242.71 gen_ms=7,710.51 cache_load_ms=0.00 prompt_tokens=89 gen_tokens=64
+10-04 22:02:57.974 I/AACBridgeJNI(21578): resumeInference: slot=0 appending 8 intent tokens at pos 44
+10-04 22:03:11.505 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=718.64,gen_ms=12809.35,prompt_tokens=8,gen_tokens=64,seq=0
+10-04 22:03:11.506 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:03:26.195 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=4864.66,gen_ms=9781.14,prompt_tokens=89,gen_tokens=64
+10-04 22:03:26.196 I/LatencyProfiler(21578): BENCH,17,RAG_INLINE,home_morning,100,28220.66,4864.66,9781.14,0.00,89,64
+10-04 22:03:26.196 I/AACBridgeJNI(21578): resumeInference: slot=0 appending 8 intent tokens at pos 44
+10-04 22:03:26.203 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=100 trial=17 => total_ms=28,220.66 prefill_ms=4,864.66 gen_ms=9,781.14 cache_load_ms=0.00 prompt_tokens=89 gen_tokens=64
+10-04 22:03:34.596 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=726.95,gen_ms=7672.94,prompt_tokens=8,gen_tokens=64,seq=0
+10-04 22:03:34.597 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:03:47.436 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=4312.43,gen_ms=8515.86,prompt_tokens=89,gen_tokens=64
+10-04 22:03:47.437 I/LatencyProfiler(21578): BENCH,18,RAG_INLINE,home_morning,100,21233.33,4312.43,8515.86,0.00,89,64
+10-04 22:03:47.438 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=100 trial=18 => total_ms=21,233.33 prefill_ms=4,312.43 gen_ms=8,515.86 cache_load_ms=0.00 prompt_tokens=89 gen_tokens=64
+10-04 22:03:47.438 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:03:59.181 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=4155.42,gen_ms=7586.78,prompt_tokens=89,gen_tokens=64
+10-04 22:03:59.182 I/LatencyProfiler(21578): BENCH,19,RAG_INLINE,home_morning,100,11743.94,4155.42,7586.78,0.00,89,64
+10-04 22:03:59.183 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=100 trial=19 => total_ms=11,743.94 prefill_ms=4,155.42 gen_ms=7,586.78 cache_load_ms=0.00 prompt_tokens=89 gen_tokens=64
+10-04 22:03:59.183 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:04:11.107 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=3743.20,gen_ms=8178.64,prompt_tokens=89,gen_tokens=64
+10-04 22:04:11.107 I/AACBridgeJNI(21578): resumeInference: slot=0 appending 8 intent tokens at pos 44
+10-04 22:04:11.111 I/LatencyProfiler(21578): BENCH,20,RAG_INLINE,home_morning,100,11927.22,3743.20,8178.64,0.00,89,64
+10-04 22:04:11.112 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=100 trial=20 => total_ms=11,927.22 prefill_ms=3,743.20 gen_ms=8,178.64 cache_load_ms=0.00 prompt_tokens=89 gen_tokens=64
+10-04 22:04:19.266 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=664.10,gen_ms=7494.22,prompt_tokens=8,gen_tokens=64,seq=0
+10-04 22:04:19.267 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:04:31.589 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=4513.44,gen_ms=7796.41,prompt_tokens=89,gen_tokens=64
+10-04 22:04:31.590 I/LatencyProfiler(21578): BENCH,21,RAG_INLINE,home_morning,100,20474.54,4513.44,7796.41,0.00,89,64
+10-04 22:04:31.590 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=100 trial=21 => total_ms=20,474.54 prefill_ms=4,513.44 gen_ms=7,796.41 cache_load_ms=0.00 prompt_tokens=89 gen_tokens=64
+10-04 22:04:31.591 I/AACBridgeJNI(21578): resumeInference: slot=0 appending 8 intent tokens at pos 44
+10-04 22:04:40.056 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=584.86,gen_ms=7880.64,prompt_tokens=8,gen_tokens=64,seq=0
+10-04 22:04:40.057 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:04:53.420 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=4520.83,gen_ms=8831.01,prompt_tokens=89,gen_tokens=64
+10-04 22:04:53.423 I/LatencyProfiler(21578): BENCH,22,RAG_INLINE,home_morning,100,21832.35,4520.83,8831.01,0.00,89,64
+10-04 22:04:53.423 I/AACBridgeJNI(21578): resumeInference: slot=0 appending 8 intent tokens at pos 44
+10-04 22:04:53.424 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=100 trial=22 => total_ms=21,832.35 prefill_ms=4,520.83 gen_ms=8,831.01 cache_load_ms=0.00 prompt_tokens=89 gen_tokens=64
+10-04 22:05:01.394 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=626.42,gen_ms=7344.42,prompt_tokens=8,gen_tokens=64,seq=0
+10-04 22:05:01.395 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:05:13.857 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=4275.21,gen_ms=8184.78,prompt_tokens=89,gen_tokens=64
+10-04 22:05:13.859 I/LatencyProfiler(21578): BENCH,23,RAG_INLINE,home_morning,100,20433.11,4275.21,8184.78,0.00,89,64
+10-04 22:05:13.859 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=100 trial=23 => total_ms=20,433.11 prefill_ms=4,275.21 gen_ms=8,184.78 cache_load_ms=0.00 prompt_tokens=89 gen_tokens=64
+10-04 22:05:13.860 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:05:29.595 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=4408.39,gen_ms=11324.89,prompt_tokens=89,gen_tokens=64
+10-04 22:05:29.597 I/LatencyProfiler(21578): BENCH,24,RAG_INLINE,home_morning,100,15736.36,4408.39,11324.89,0.00,89,64
+10-04 22:05:29.599 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=100 trial=24 => total_ms=15,736.36 prefill_ms=4,408.39 gen_ms=11,324.89 cache_load_ms=0.00 prompt_tokens=89 gen_tokens=64
+10-04 22:05:29.603 I/AACBridgeJNI(21578): resumeInference: slot=0 appending 9 intent tokens at pos 44
+10-04 22:05:38.687 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=701.39,gen_ms=8383.01,prompt_tokens=9,gen_tokens=64,seq=0
+10-04 22:05:38.689 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:05:57.907 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=5194.08,gen_ms=13971.05,prompt_tokens=89,gen_tokens=64
+10-04 22:05:57.908 I/LatencyProfiler(21578): BENCH,25,RAG_INLINE,home_morning,100,28307.99,5194.08,13971.05,0.00,89,64
+10-04 22:05:57.910 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=100 trial=25 => total_ms=28,307.99 prefill_ms=5,194.08 gen_ms=13,971.05 cache_load_ms=0.00 prompt_tokens=89 gen_tokens=64
+10-04 22:05:57.915 I/AACBridgeJNI(21578): resumeInference: slot=0 appending 8 intent tokens at pos 44
+10-04 22:06:12.668 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=672.51,gen_ms=14080.86,prompt_tokens=8,gen_tokens=64,seq=0
+10-04 22:06:12.671 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:06:29.404 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=4049.16,gen_ms=12617.78,prompt_tokens=89,gen_tokens=64
+10-04 22:06:29.405 I/LatencyProfiler(21578): BENCH,26,RAG_INLINE,home_morning,100,31494.04,4049.16,12617.78,0.00,89,64
+10-04 22:06:29.407 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=100 trial=26 => total_ms=31,494.04 prefill_ms=4,049.16 gen_ms=12,617.78 cache_load_ms=0.00 prompt_tokens=89 gen_tokens=64
+10-04 22:06:29.407 I/AACBridgeJNI(21578): resumeInference: slot=0 appending 8 intent tokens at pos 44
+10-04 22:06:40.239 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=585.50,gen_ms=10246.32,prompt_tokens=8,gen_tokens=64,seq=0
+10-04 22:06:40.239 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:06:57.712 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=3728.51,gen_ms=13740.38,prompt_tokens=89,gen_tokens=64
+10-04 22:06:57.713 I/LatencyProfiler(21578): BENCH,27,RAG_INLINE,home_morning,100,28305.22,3728.51,13740.38,0.00,89,64
+10-04 22:06:57.713 I/AACBridgeJNI(21578): resumeInference: slot=0 appending 8 intent tokens at pos 44
+10-04 22:06:57.714 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=100 trial=27 => total_ms=28,305.22 prefill_ms=3,728.51 gen_ms=13,740.38 cache_load_ms=0.00 prompt_tokens=89 gen_tokens=64
+10-04 22:07:04.860 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=496.13,gen_ms=6650.25,prompt_tokens=8,gen_tokens=64,seq=0
+10-04 22:07:04.863 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:07:18.658 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=4802.62,gen_ms=8909.55,prompt_tokens=89,gen_tokens=64
+10-04 22:07:18.659 I/LatencyProfiler(21578): BENCH,28,RAG_INLINE,home_morning,100,20944.48,4802.62,8909.55,0.00,89,64
+10-04 22:07:18.659 I/AACBridgeJNI(21578): resumeInference: slot=0 appending 8 intent tokens at pos 44
+10-04 22:07:18.659 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=100 trial=28 => total_ms=20,944.48 prefill_ms=4,802.62 gen_ms=8,909.55 cache_load_ms=0.00 prompt_tokens=89 gen_tokens=64
+10-04 22:07:26.382 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=481.40,gen_ms=7242.15,prompt_tokens=8,gen_tokens=64,seq=0
+10-04 22:07:26.390 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:07:39.050 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=4306.24,gen_ms=8344.74,prompt_tokens=89,gen_tokens=64
+10-04 22:07:39.055 I/LatencyProfiler(21578): BENCH,29,RAG_INLINE,home_morning,100,20395.05,4306.24,8344.74,0.00,89,64
+10-04 22:07:39.056 I/AACBridgeJNI(21578): resumeInference: slot=0 appending 8 intent tokens at pos 44
+10-04 22:07:39.056 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=100 trial=29 => total_ms=20,395.05 prefill_ms=4,306.24 gen_ms=8,344.74 cache_load_ms=0.00 prompt_tokens=89 gen_tokens=64
+10-04 22:07:49.022 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=642.34,gen_ms=9323.37,prompt_tokens=8,gen_tokens=64,seq=0
+10-04 22:07:49.026 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:08:04.691 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=5870.59,gen_ms=9789.24,prompt_tokens=89,gen_tokens=64
+10-04 22:08:04.699 I/LatencyProfiler(21578): BENCH,30,RAG_INLINE,home_morning,100,25642.61,5870.59,9789.24,0.00,89,64
+10-04 22:08:04.702 I/AACBridgeJNI(21578): resumeInference: slot=0 appending 9 intent tokens at pos 44
+10-04 22:08:04.703 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=100 trial=30 => total_ms=25,642.61 prefill_ms=5,870.59 gen_ms=9,789.24 cache_load_ms=0.00 prompt_tokens=89 gen_tokens=64
+10-04 22:08:04.704 I/LatencyProfiler(21578): --- RAG_INLINE N=200 ---
+10-04 22:08:04.704 I/LatencyProfiler(21578): Expanded prompt length: 878 chars (target ~200 tokens)
+10-04 22:08:13.465 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=769.74,gen_ms=7992.43,prompt_tokens=9,gen_tokens=64,seq=0
+10-04 22:08:13.465 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:08:31.819 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=8933.47,gen_ms=9285.34,prompt_tokens=206,gen_tokens=64
+10-04 22:08:31.819 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:09:01.296 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=10592.83,gen_ms=18881.74,prompt_tokens=206,gen_tokens=64
+10-04 22:09:01.297 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:09:24.900 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=9907.19,gen_ms=13637.46,prompt_tokens=206,gen_tokens=64
+10-04 22:09:24.901 I/LatencyProfiler(21578): BENCH,1,RAG_INLINE,home_morning,200,23603.73,9907.19,13637.46,0.00,206,64
+10-04 22:09:24.902 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=200 trial=1 => total_ms=23,603.73 prefill_ms=9,907.19 gen_ms=13,637.46 cache_load_ms=0.00 prompt_tokens=206 gen_tokens=64
+10-04 22:09:24.905 I/AACBridgeJNI(21578): resumeInference: slot=0 appending 8 intent tokens at pos 44
+10-04 22:09:42.056 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=1350.47,gen_ms=15800.07,prompt_tokens=8,gen_tokens=64,seq=0
+10-04 22:09:42.057 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:10:04.129 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=9888.23,gen_ms=12100.31,prompt_tokens=206,gen_tokens=64
+10-04 22:10:04.131 I/LatencyProfiler(21578): BENCH,2,RAG_INLINE,home_morning,200,39227.14,9888.23,12100.31,0.00,206,64
+10-04 22:10:04.134 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=200 trial=2 => total_ms=39,227.14 prefill_ms=9,888.23 gen_ms=12,100.31 cache_load_ms=0.00 prompt_tokens=206 gen_tokens=64
+10-04 22:10:04.134 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:10:22.873 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=8429.87,gen_ms=10248.62,prompt_tokens=206,gen_tokens=64
+10-04 22:10:22.874 I/AACBridgeJNI(21578): resumeInference: slot=0 appending 9 intent tokens at pos 44
+10-04 22:10:22.881 I/LatencyProfiler(21578): BENCH,3,RAG_INLINE,home_morning,200,18746.48,8429.87,10248.62,0.00,206,64
+10-04 22:10:22.884 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=200 trial=3 => total_ms=18,746.48 prefill_ms=8,429.87 gen_ms=10,248.62 cache_load_ms=0.00 prompt_tokens=206 gen_tokens=64
+10-04 22:10:33.288 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=660.89,gen_ms=9752.28,prompt_tokens=9,gen_tokens=64,seq=0
+10-04 22:10:33.292 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:10:50.720 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=7884.34,gen_ms=9520.03,prompt_tokens=206,gen_tokens=64
+10-04 22:10:50.720 I/AACBridgeJNI(21578): resumeInference: slot=0 appending 8 intent tokens at pos 44
+10-04 22:10:50.721 I/LatencyProfiler(21578): BENCH,4,RAG_INLINE,home_morning,200,27836.10,7884.34,9520.03,0.00,206,64
+10-04 22:10:50.724 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=200 trial=4 => total_ms=27,836.10 prefill_ms=7,884.34 gen_ms=9,520.03 cache_load_ms=0.00 prompt_tokens=206 gen_tokens=64
+10-04 22:11:00.150 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=549.94,gen_ms=8879.79,prompt_tokens=8,gen_tokens=64,seq=0
+10-04 22:11:00.151 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:11:17.666 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=7811.19,gen_ms=9697.00,prompt_tokens=206,gen_tokens=64
+10-04 22:11:17.667 I/LatencyProfiler(21578): BENCH,5,RAG_INLINE,home_morning,200,26941.75,7811.19,9697.00,0.00,206,64
+10-04 22:11:17.667 I/AACBridgeJNI(21578): resumeInference: slot=0 appending 8 intent tokens at pos 44
+10-04 22:11:17.668 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=200 trial=5 => total_ms=26,941.75 prefill_ms=7,811.19 gen_ms=9,697.00 cache_load_ms=0.00 prompt_tokens=206 gen_tokens=64
+10-04 22:11:24.409 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=515.12,gen_ms=6226.18,prompt_tokens=8,gen_tokens=64,seq=0
+10-04 22:11:24.410 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:11:33.689 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=5137.71,gen_ms=4136.93,prompt_tokens=206,gen_tokens=64
+10-04 22:11:33.701 I/LatencyProfiler(21578): BENCH,6,RAG_INLINE,home_morning,200,16022.04,5137.71,4136.93,0.00,206,64
+10-04 22:11:33.702 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=200 trial=6 => total_ms=16,022.04 prefill_ms=5,137.71 gen_ms=4,136.93 cache_load_ms=0.00 prompt_tokens=206 gen_tokens=64
+10-04 22:11:33.703 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:11:44.787 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=5041.33,gen_ms=6034.25,prompt_tokens=206,gen_tokens=64
+10-04 22:11:44.790 I/LatencyProfiler(21578): BENCH,7,RAG_INLINE,home_morning,200,11087.61,5041.33,6034.25,0.00,206,64
+10-04 22:11:44.791 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=200 trial=7 => total_ms=11,087.61 prefill_ms=5,041.33 gen_ms=6,034.25 cache_load_ms=0.00 prompt_tokens=206 gen_tokens=64
+10-04 22:11:44.792 I/AACBridgeJNI(21578): resumeInference: slot=0 appending 6 intent tokens at pos 44
+10-04 22:11:50.977 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=361.90,gen_ms=5822.82,prompt_tokens=6,gen_tokens=64,seq=0
+10-04 22:11:50.979 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:12:15.800 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=11156.95,gen_ms=13658.81,prompt_tokens=206,gen_tokens=64
+10-04 22:12:15.800 I/AACBridgeJNI(21578): resumeInference: slot=0 appending 8 intent tokens at pos 44
+10-04 22:12:15.800 I/LatencyProfiler(21578): BENCH,8,RAG_INLINE,home_morning,200,31006.72,11156.95,13658.81,0.00,206,64
+10-04 22:12:15.810 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=200 trial=8 => total_ms=31,006.72 prefill_ms=11,156.95 gen_ms=13,658.81 cache_load_ms=0.00 prompt_tokens=206 gen_tokens=64
+10-04 22:12:22.084 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=849.06,gen_ms=5434.27,prompt_tokens=8,gen_tokens=64,seq=0
+10-04 22:12:22.084 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:12:32.944 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=7202.19,gen_ms=3655.09,prompt_tokens=206,gen_tokens=64
+10-04 22:12:32.945 I/LatencyProfiler(21578): BENCH,9,RAG_INLINE,home_morning,200,17133.84,7202.19,3655.09,0.00,206,64
+10-04 22:12:32.945 I/AACBridgeJNI(21578): resumeInference: slot=0 appending 9 intent tokens at pos 44
+10-04 22:12:32.946 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=200 trial=9 => total_ms=17,133.84 prefill_ms=7,202.19 gen_ms=3,655.09 cache_load_ms=0.00 prompt_tokens=206 gen_tokens=64
+10-04 22:12:36.514 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=383.90,gen_ms=3185.07,prompt_tokens=9,gen_tokens=64,seq=0
+10-04 22:12:36.515 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:12:49.048 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=8274.58,gen_ms=4252.04,prompt_tokens=206,gen_tokens=64
+10-04 22:12:49.049 I/LatencyProfiler(21578): BENCH,10,RAG_INLINE,home_morning,200,16101.94,8274.58,4252.04,0.00,206,64
+10-04 22:12:49.049 I/AACBridgeJNI(21578): resumeInference: slot=0 appending 9 intent tokens at pos 44
+10-04 22:12:49.050 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=200 trial=10 => total_ms=16,101.94 prefill_ms=8,274.58 gen_ms=4,252.04 cache_load_ms=0.00 prompt_tokens=206 gen_tokens=64
+10-04 22:12:53.204 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=407.11,gen_ms=3747.66,prompt_tokens=9,gen_tokens=64,seq=0
+10-04 22:12:53.205 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:13:02.472 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=5180.68,gen_ms=4082.33,prompt_tokens=206,gen_tokens=64
+10-04 22:13:02.472 I/LatencyProfiler(21578): BENCH,11,RAG_INLINE,home_morning,200,13422.03,5180.68,4082.33,0.00,206,64
+10-04 22:13:02.472 I/AACBridgeJNI(21578): resumeInference: slot=0 appending 9 intent tokens at pos 44
+10-04 22:13:02.473 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=200 trial=11 => total_ms=13,422.03 prefill_ms=5,180.68 gen_ms=4,082.33 cache_load_ms=0.00 prompt_tokens=206 gen_tokens=64
+10-04 22:13:06.539 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=434.51,gen_ms=3632.49,prompt_tokens=9,gen_tokens=64,seq=0
+10-04 22:13:06.540 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:13:15.502 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=5025.09,gen_ms=3931.91,prompt_tokens=206,gen_tokens=64
+10-04 22:13:15.503 I/LatencyProfiler(21578): BENCH,12,RAG_INLINE,home_morning,200,13028.67,5025.09,3931.91,0.00,206,64
+10-04 22:13:15.504 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=200 trial=12 => total_ms=13,028.67 prefill_ms=5,025.09 gen_ms=3,931.91 cache_load_ms=0.00 prompt_tokens=206 gen_tokens=64
+10-04 22:13:15.506 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:13:24.465 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=4859.70,gen_ms=4096.71,prompt_tokens=206,gen_tokens=64
+10-04 22:13:24.467 I/LatencyProfiler(21578): BENCH,13,RAG_INLINE,home_morning,200,8959.45,4859.70,4096.71,0.00,206,64
+10-04 22:13:24.467 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=200 trial=13 => total_ms=8,959.45 prefill_ms=4,859.70 gen_ms=4,096.71 cache_load_ms=0.00 prompt_tokens=206 gen_tokens=64
+10-04 22:13:24.469 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:13:32.558 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=4971.95,gen_ms=3114.51,prompt_tokens=206,gen_tokens=64
+10-04 22:13:32.559 I/LatencyProfiler(21578): BENCH,14,RAG_INLINE,home_morning,200,8089.40,4971.95,3114.51,0.00,206,64
+10-04 22:13:32.559 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=200 trial=14 => total_ms=8,089.40 prefill_ms=4,971.95 gen_ms=3,114.51 cache_load_ms=0.00 prompt_tokens=206 gen_tokens=64
+10-04 22:13:32.561 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:13:49.003 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=10594.44,gen_ms=5845.36,prompt_tokens=206,gen_tokens=64
+10-04 22:13:49.004 I/LatencyProfiler(21578): BENCH,15,RAG_INLINE,home_morning,200,16442.91,10594.44,5845.36,0.00,206,64
+10-04 22:13:49.006 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=200 trial=15 => total_ms=16,442.91 prefill_ms=10,594.44 gen_ms=5,845.36 cache_load_ms=0.00 prompt_tokens=206 gen_tokens=64
+10-04 22:13:49.007 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:13:57.891 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=5085.76,gen_ms=3740.01,prompt_tokens=206,gen_tokens=64
+10-04 22:13:57.891 I/LatencyProfiler(21578): BENCH,16,RAG_INLINE,home_morning,200,8885.08,5085.76,3740.01,0.00,206,64
+10-04 22:13:57.892 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=200 trial=16 => total_ms=8,885.08 prefill_ms=5,085.76 gen_ms=3,740.01 cache_load_ms=0.00 prompt_tokens=206 gen_tokens=64
+10-04 22:13:57.893 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:14:09.556 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=4909.29,gen_ms=6751.11,prompt_tokens=206,gen_tokens=64
+10-04 22:14:09.556 I/LatencyProfiler(21578): BENCH,17,RAG_INLINE,home_morning,200,11663.31,4909.29,6751.11,0.00,206,64
+10-04 22:14:09.557 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=200 trial=17 => total_ms=11,663.31 prefill_ms=4,909.29 gen_ms=6,751.11 cache_load_ms=0.00 prompt_tokens=206 gen_tokens=64
+10-04 22:14:09.558 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:14:20.803 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=5870.93,gen_ms=5370.55,prompt_tokens=206,gen_tokens=64
+10-04 22:14:20.804 I/LatencyProfiler(21578): BENCH,18,RAG_INLINE,home_morning,200,11245.51,5870.93,5370.55,0.00,206,64
+10-04 22:14:20.804 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=200 trial=18 => total_ms=11,245.51 prefill_ms=5,870.93 gen_ms=5,370.55 cache_load_ms=0.00 prompt_tokens=206 gen_tokens=64
+10-04 22:14:20.805 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:14:29.363 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=5046.04,gen_ms=3490.27,prompt_tokens=206,gen_tokens=64
+10-04 22:14:29.363 I/LatencyProfiler(21578): BENCH,19,RAG_INLINE,home_morning,200,8558.53,5046.04,3490.27,0.00,206,64
+10-04 22:14:29.368 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=200 trial=19 => total_ms=8,558.53 prefill_ms=5,046.04 gen_ms=3,490.27 cache_load_ms=0.00 prompt_tokens=206 gen_tokens=64
+10-04 22:14:29.369 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:14:38.320 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=5245.61,gen_ms=3702.52,prompt_tokens=206,gen_tokens=64
+10-04 22:14:38.321 I/LatencyProfiler(21578): BENCH,20,RAG_INLINE,home_morning,200,8951.23,5245.61,3702.52,0.00,206,64
+10-04 22:14:38.321 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=200 trial=20 => total_ms=8,951.23 prefill_ms=5,245.61 gen_ms=3,702.52 cache_load_ms=0.00 prompt_tokens=206 gen_tokens=64
+10-04 22:14:38.322 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:14:59.594 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=6075.03,gen_ms=15193.00,prompt_tokens=206,gen_tokens=64
+10-04 22:14:59.595 I/LatencyProfiler(21578): BENCH,21,RAG_INLINE,home_morning,200,21272.96,6075.03,15193.00,0.00,206,64
+10-04 22:14:59.597 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=200 trial=21 => total_ms=21,272.96 prefill_ms=6,075.03 gen_ms=15,193.00 cache_load_ms=0.00 prompt_tokens=206 gen_tokens=64
+10-04 22:14:59.597 I/AACBridgeJNI(21578): resumeInference: slot=0 appending 6 intent tokens at pos 44
+10-04 22:15:17.293 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=789.54,gen_ms=16906.21,prompt_tokens=6,gen_tokens=64,seq=0
+10-04 22:15:17.295 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:15:40.763 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=10709.07,gen_ms=12692.01,prompt_tokens=206,gen_tokens=64
+10-04 22:15:40.764 I/AACBridgeJNI(21578): resumeInference: slot=0 appending 8 intent tokens at pos 44
+10-04 22:15:40.767 I/LatencyProfiler(21578): BENCH,22,RAG_INLINE,home_morning,200,41170.14,10709.07,12692.01,0.00,206,64
+10-04 22:15:40.770 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=200 trial=22 => total_ms=41,170.14 prefill_ms=10,709.07 gen_ms=12,692.01 cache_load_ms=0.00 prompt_tokens=206 gen_tokens=64
+10-04 22:15:44.820 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=454.43,gen_ms=3601.95,prompt_tokens=8,gen_tokens=64,seq=0
+10-04 22:15:44.821 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:16:04.770 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=10664.10,gen_ms=9279.27,prompt_tokens=206,gen_tokens=64
+10-04 22:16:04.771 I/LatencyProfiler(21578): BENCH,23,RAG_INLINE,home_morning,200,24000.66,10664.10,9279.27,0.00,206,64
+10-04 22:16:04.772 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=200 trial=23 => total_ms=24,000.66 prefill_ms=10,664.10 gen_ms=9,279.27 cache_load_ms=0.00 prompt_tokens=206 gen_tokens=64
+10-04 22:16:04.776 I/AACBridgeJNI(21578): resumeInference: slot=0 appending 8 intent tokens at pos 44
+10-04 22:16:10.511 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=527.34,gen_ms=5207.02,prompt_tokens=8,gen_tokens=64,seq=0
+10-04 22:16:10.512 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:16:28.648 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=7778.15,gen_ms=10283.51,prompt_tokens=206,gen_tokens=64
+10-04 22:16:28.650 I/LatencyProfiler(21578): BENCH,24,RAG_INLINE,home_morning,200,23876.01,7778.15,10283.51,0.00,206,64
+10-04 22:16:28.657 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=200 trial=24 => total_ms=23,876.01 prefill_ms=7,778.15 gen_ms=10,283.51 cache_load_ms=0.00 prompt_tokens=206 gen_tokens=64
+10-04 22:16:28.659 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:16:48.872 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=8790.56,gen_ms=11325.92,prompt_tokens=206,gen_tokens=64
+10-04 22:16:48.872 I/LatencyProfiler(21578): BENCH,25,RAG_INLINE,home_morning,200,20213.99,8790.56,11325.92,0.00,206,64
+10-04 22:16:48.874 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=200 trial=25 => total_ms=20,213.99 prefill_ms=8,790.56 gen_ms=11,325.92 cache_load_ms=0.00 prompt_tokens=206 gen_tokens=64
+10-04 22:16:48.876 I/AACBridgeJNI(21578): resumeInference: slot=0 appending 6 intent tokens at pos 44
+10-04 22:17:02.708 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=896.40,gen_ms=12935.24,prompt_tokens=6,gen_tokens=64,seq=0
+10-04 22:17:02.713 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:17:18.846 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=6946.53,gen_ms=9104.79,prompt_tokens=206,gen_tokens=64
+10-04 22:17:18.846 I/LatencyProfiler(21578): BENCH,26,RAG_INLINE,home_morning,200,29971.26,6946.53,9104.79,0.00,206,64
+10-04 22:17:18.849 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=200 trial=26 => total_ms=29,971.26 prefill_ms=6,946.53 gen_ms=9,104.79 cache_load_ms=0.00 prompt_tokens=206 gen_tokens=64
+10-04 22:17:18.849 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:17:33.351 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=5600.83,gen_ms=8850.55,prompt_tokens=206,gen_tokens=64
+10-04 22:17:33.351 I/LatencyProfiler(21578): BENCH,27,RAG_INLINE,home_morning,200,14502.10,5600.83,8850.55,0.00,206,64
+10-04 22:17:33.352 I/AACBridgeJNI(21578): resumeInference: slot=0 appending 8 intent tokens at pos 44
+10-04 22:17:33.352 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=200 trial=27 => total_ms=14,502.10 prefill_ms=5,600.83 gen_ms=8,850.55 cache_load_ms=0.00 prompt_tokens=206 gen_tokens=64
+10-04 22:17:37.401 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=463.30,gen_ms=3586.40,prompt_tokens=8,gen_tokens=64,seq=0
+10-04 22:17:37.408 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:17:55.896 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=7849.11,gen_ms=10636.50,prompt_tokens=206,gen_tokens=64
+10-04 22:17:55.897 I/AACBridgeJNI(21578): resumeInference: slot=0 appending 8 intent tokens at pos 44
+10-04 22:17:55.898 I/LatencyProfiler(21578): BENCH,28,RAG_INLINE,home_morning,200,22544.16,7849.11,10636.50,0.00,206,64
+10-04 22:17:55.900 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=200 trial=28 => total_ms=22,544.16 prefill_ms=7,849.11 gen_ms=10,636.50 cache_load_ms=0.00 prompt_tokens=206 gen_tokens=64
+10-04 22:18:02.383 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=377.57,gen_ms=6108.21,prompt_tokens=8,gen_tokens=64,seq=0
+10-04 22:18:02.384 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:18:18.789 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=9391.59,gen_ms=7004.45,prompt_tokens=206,gen_tokens=64
+10-04 22:18:18.790 I/AACBridgeJNI(21578): resumeInference: slot=0 appending 8 intent tokens at pos 44
+10-04 22:18:18.791 I/LatencyProfiler(21578): BENCH,29,RAG_INLINE,home_morning,200,22889.25,9391.59,7004.45,0.00,206,64
+10-04 22:18:18.794 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=200 trial=29 => total_ms=22,889.25 prefill_ms=9,391.59 gen_ms=7,004.45 cache_load_ms=0.00 prompt_tokens=206 gen_tokens=64
+10-04 22:18:22.751 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=388.16,gen_ms=3573.00,prompt_tokens=8,gen_tokens=64,seq=0
+10-04 22:18:22.752 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:18:36.690 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=6947.89,gen_ms=6978.27,prompt_tokens=206,gen_tokens=64
+10-04 22:18:36.691 I/LatencyProfiler(21578): BENCH,30,RAG_INLINE,home_morning,200,17895.04,6947.89,6978.27,0.00,206,64
+10-04 22:18:36.693 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=200 trial=30 => total_ms=17,895.04 prefill_ms=6,947.89 gen_ms=6,978.27 cache_load_ms=0.00 prompt_tokens=206 gen_tokens=64
+10-04 22:18:36.694 I/LatencyProfiler(21578): --- RAG_INLINE N=500 ---
+10-04 22:18:36.694 I/LatencyProfiler(21578): Expanded prompt length: 2181 chars (target ~500 tokens)
+10-04 22:18:36.694 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:18:56.174 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=13310.19,gen_ms=6123.20,prompt_tokens=439,gen_tokens=64
+10-04 22:18:56.174 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:19:15.936 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=14816.89,gen_ms=4935.93,prompt_tokens=439,gen_tokens=64
+10-04 22:19:15.941 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:19:34.428 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=13920.04,gen_ms=4530.29,prompt_tokens=439,gen_tokens=64
+10-04 22:19:34.429 I/LatencyProfiler(21578): BENCH,1,RAG_INLINE,home_morning,500,18487.88,13920.04,4530.29,0.00,439,64
+10-04 22:19:34.431 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=500 trial=1 => total_ms=18,487.88 prefill_ms=13,920.04 gen_ms=4,530.29 cache_load_ms=0.00 prompt_tokens=439 gen_tokens=64
+10-04 22:19:34.432 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:19:52.945 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=12592.56,gen_ms=5911.09,prompt_tokens=439,gen_tokens=64
+10-04 22:19:52.946 I/LatencyProfiler(21578): BENCH,2,RAG_INLINE,home_morning,500,18514.22,12592.56,5911.09,0.00,439,64
+10-04 22:19:52.947 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=500 trial=2 => total_ms=18,514.22 prefill_ms=12,592.56 gen_ms=5,911.09 cache_load_ms=0.00 prompt_tokens=439 gen_tokens=64
+10-04 22:19:52.947 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:20:11.475 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=13110.75,gen_ms=5400.48,prompt_tokens=439,gen_tokens=64
+10-04 22:20:11.475 I/LatencyProfiler(21578): BENCH,3,RAG_INLINE,home_morning,500,18527.76,13110.75,5400.48,0.00,439,64
+10-04 22:20:11.476 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=500 trial=3 => total_ms=18,527.76 prefill_ms=13,110.75 gen_ms=5,400.48 cache_load_ms=0.00 prompt_tokens=439 gen_tokens=64
+10-04 22:20:11.477 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:20:32.656 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=12566.15,gen_ms=8604.69,prompt_tokens=439,gen_tokens=64
+10-04 22:20:32.657 I/LatencyProfiler(21578): BENCH,4,RAG_INLINE,home_morning,500,21180.46,12566.15,8604.69,0.00,439,64
+10-04 22:20:32.658 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=500 trial=4 => total_ms=21,180.46 prefill_ms=12,566.15 gen_ms=8,604.69 cache_load_ms=0.00 prompt_tokens=439 gen_tokens=64
+10-04 22:20:32.658 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:20:50.179 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=13158.43,gen_ms=4271.34,prompt_tokens=439,gen_tokens=64
+10-04 22:20:50.180 I/LatencyProfiler(21578): BENCH,5,RAG_INLINE,home_morning,500,17521.56,13158.43,4271.34,0.00,439,64
+10-04 22:20:50.181 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=500 trial=5 => total_ms=17,521.56 prefill_ms=13,158.43 gen_ms=4,271.34 cache_load_ms=0.00 prompt_tokens=439 gen_tokens=64
+10-04 22:20:50.181 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:21:07.326 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=12464.22,gen_ms=4672.04,prompt_tokens=439,gen_tokens=64
+10-04 22:21:07.327 I/LatencyProfiler(21578): BENCH,6,RAG_INLINE,home_morning,500,17145.60,12464.22,4672.04,0.00,439,64
+10-04 22:21:07.327 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=500 trial=6 => total_ms=17,145.60 prefill_ms=12,464.22 gen_ms=4,672.04 cache_load_ms=0.00 prompt_tokens=439 gen_tokens=64
+10-04 22:21:07.328 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:21:23.833 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=11706.66,gen_ms=4782.67,prompt_tokens=439,gen_tokens=64
+10-04 22:21:23.833 I/LatencyProfiler(21578): BENCH,7,RAG_INLINE,home_morning,500,16505.28,11706.66,4782.67,0.00,439,64
+10-04 22:21:23.834 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=500 trial=7 => total_ms=16,505.28 prefill_ms=11,706.66 gen_ms=4,782.67 cache_load_ms=0.00 prompt_tokens=439 gen_tokens=64
+10-04 22:21:23.835 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:21:43.886 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=14127.56,gen_ms=5909.90,prompt_tokens=439,gen_tokens=64
+10-04 22:21:43.887 I/LatencyProfiler(21578): BENCH,8,RAG_INLINE,home_morning,500,20052.07,14127.56,5909.90,0.00,439,64
+10-04 22:21:43.887 I/AACBridgeJNI(21578): resumeInference: slot=0 appending 8 intent tokens at pos 44
+10-04 22:21:43.887 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=500 trial=8 => total_ms=20,052.07 prefill_ms=14,127.56 gen_ms=5,909.90 cache_load_ms=0.00 prompt_tokens=439 gen_tokens=64
+10-04 22:21:51.620 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=420.94,gen_ms=7311.12,prompt_tokens=8,gen_tokens=64,seq=0
+10-04 22:21:51.624 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:22:12.443 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=14736.31,gen_ms=6077.50,prompt_tokens=439,gen_tokens=64
+10-04 22:22:12.444 I/LatencyProfiler(21578): BENCH,9,RAG_INLINE,home_morning,500,28555.97,14736.31,6077.50,0.00,439,64
+10-04 22:22:12.444 I/AACBridgeJNI(21578): resumeInference: slot=0 appending 6 intent tokens at pos 44
+10-04 22:22:12.445 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=500 trial=9 => total_ms=28,555.97 prefill_ms=14,736.31 gen_ms=6,077.50 cache_load_ms=0.00 prompt_tokens=439 gen_tokens=64
+10-04 22:22:20.831 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=597.87,gen_ms=7789.25,prompt_tokens=6,gen_tokens=64,seq=0
+10-04 22:22:20.832 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:22:49.152 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=20189.62,gen_ms=8123.64,prompt_tokens=439,gen_tokens=64
+10-04 22:22:49.155 I/LatencyProfiler(21578): BENCH,10,RAG_INLINE,home_morning,500,36707.22,20189.62,8123.64,0.00,439,64
+10-04 22:22:49.156 I/AACBridgeJNI(21578): resumeInference: slot=0 appending 6 intent tokens at pos 44
+10-04 22:22:49.162 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=500 trial=10 => total_ms=36,707.22 prefill_ms=20,189.62 gen_ms=8,123.64 cache_load_ms=0.00 prompt_tokens=439 gen_tokens=64
+10-04 22:22:53.896 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=436.51,gen_ms=4303.36,prompt_tokens=6,gen_tokens=64,seq=0
+10-04 22:22:53.896 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:23:16.196 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=15379.67,gen_ms=6849.26,prompt_tokens=439,gen_tokens=64
+10-04 22:23:16.197 I/LatencyProfiler(21578): BENCH,11,RAG_INLINE,home_morning,500,27034.30,15379.67,6849.26,0.00,439,64
+10-04 22:23:16.199 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=500 trial=11 => total_ms=27,034.30 prefill_ms=15,379.67 gen_ms=6,849.26 cache_load_ms=0.00 prompt_tokens=439 gen_tokens=64
+10-04 22:23:16.199 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:23:36.127 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=14202.41,gen_ms=5716.80,prompt_tokens=439,gen_tokens=64
+10-04 22:23:36.127 I/LatencyProfiler(21578): BENCH,12,RAG_INLINE,home_morning,500,19928.33,14202.41,5716.80,0.00,439,64
+10-04 22:23:36.128 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=500 trial=12 => total_ms=19,928.33 prefill_ms=14,202.41 gen_ms=5,716.80 cache_load_ms=0.00 prompt_tokens=439 gen_tokens=64
+10-04 22:23:36.128 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:23:57.732 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=13516.57,gen_ms=8081.28,prompt_tokens=439,gen_tokens=64
+10-04 22:23:57.733 I/LatencyProfiler(21578): BENCH,13,RAG_INLINE,home_morning,500,21604.13,13516.57,8081.28,0.00,439,64
+10-04 22:23:57.733 I/AACBridgeJNI(21578): resumeInference: slot=0 appending 8 intent tokens at pos 44
+10-04 22:23:57.733 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=500 trial=13 => total_ms=21,604.13 prefill_ms=13,516.57 gen_ms=8,081.28 cache_load_ms=0.00 prompt_tokens=439 gen_tokens=64
+10-04 22:24:02.669 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=505.88,gen_ms=4430.29,prompt_tokens=8,gen_tokens=64,seq=0
+10-04 22:24:02.671 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:24:24.454 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=14987.87,gen_ms=6775.97,prompt_tokens=439,gen_tokens=64
+10-04 22:24:24.455 I/LatencyProfiler(21578): BENCH,14,RAG_INLINE,home_morning,500,26720.09,14987.87,6775.97,0.00,439,64
+10-04 22:24:24.458 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=500 trial=14 => total_ms=26,720.09 prefill_ms=14,987.87 gen_ms=6,775.97 cache_load_ms=0.00 prompt_tokens=439 gen_tokens=64
+10-04 22:24:24.458 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:24:43.715 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=13763.09,gen_ms=5487.52,prompt_tokens=439,gen_tokens=64
+10-04 22:24:43.716 I/LatencyProfiler(21578): BENCH,15,RAG_INLINE,home_morning,500,19257.73,13763.09,5487.52,0.00,439,64
+10-04 22:24:43.717 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=500 trial=15 => total_ms=19,257.73 prefill_ms=13,763.09 gen_ms=5,487.52 cache_load_ms=0.00 prompt_tokens=439 gen_tokens=64
+10-04 22:24:43.717 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:25:02.828 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=13641.38,gen_ms=5460.15,prompt_tokens=439,gen_tokens=64
+10-04 22:25:02.836 I/LatencyProfiler(21578): BENCH,16,RAG_INLINE,home_morning,500,19111.52,13641.38,5460.15,0.00,439,64
+10-04 22:25:02.840 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=500 trial=16 => total_ms=19,111.52 prefill_ms=13,641.38 gen_ms=5,460.15 cache_load_ms=0.00 prompt_tokens=439 gen_tokens=64
+10-04 22:25:02.840 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:25:24.795 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=14377.41,gen_ms=7570.45,prompt_tokens=439,gen_tokens=64
+10-04 22:25:24.796 I/LatencyProfiler(21578): BENCH,17,RAG_INLINE,home_morning,500,21954.92,14377.41,7570.45,0.00,439,64
+10-04 22:25:24.799 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=500 trial=17 => total_ms=21,954.92 prefill_ms=14,377.41 gen_ms=7,570.45 cache_load_ms=0.00 prompt_tokens=439 gen_tokens=64
+10-04 22:25:24.800 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:25:44.774 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=14170.46,gen_ms=5785.20,prompt_tokens=439,gen_tokens=64
+10-04 22:25:44.774 I/LatencyProfiler(21578): BENCH,18,RAG_INLINE,home_morning,500,19974.73,14170.46,5785.20,0.00,439,64
+10-04 22:25:44.778 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=500 trial=18 => total_ms=19,974.73 prefill_ms=14,170.46 gen_ms=5,785.20 cache_load_ms=0.00 prompt_tokens=439 gen_tokens=64
+10-04 22:25:44.781 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:26:07.919 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=13572.37,gen_ms=9556.02,prompt_tokens=439,gen_tokens=64
+10-04 22:26:07.921 I/LatencyProfiler(21578): BENCH,19,RAG_INLINE,home_morning,500,23139.83,13572.37,9556.02,0.00,439,64
+10-04 22:26:07.923 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=500 trial=19 => total_ms=23,139.83 prefill_ms=13,572.37 gen_ms=9,556.02 cache_load_ms=0.00 prompt_tokens=439 gen_tokens=64
+10-04 22:26:07.925 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:26:30.751 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=15113.77,gen_ms=7672.24,prompt_tokens=439,gen_tokens=64
+10-04 22:26:30.752 I/LatencyProfiler(21578): BENCH,20,RAG_INLINE,home_morning,500,22827.03,15113.77,7672.24,0.00,439,64
+10-04 22:26:30.758 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=500 trial=20 => total_ms=22,827.03 prefill_ms=15,113.77 gen_ms=7,672.24 cache_load_ms=0.00 prompt_tokens=439 gen_tokens=64
+10-04 22:26:30.759 I/AACBridgeJNI(21578): resumeInference: slot=0 appending 8 intent tokens at pos 44
+10-04 22:26:35.954 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=512.22,gen_ms=4681.96,prompt_tokens=8,gen_tokens=64,seq=0
+10-04 22:26:35.954 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:26:56.540 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=14201.49,gen_ms=6355.29,prompt_tokens=439,gen_tokens=64
+10-04 22:26:56.544 I/LatencyProfiler(21578): BENCH,21,RAG_INLINE,home_morning,500,25782.64,14201.49,6355.29,0.00,439,64
+10-04 22:26:56.547 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=500 trial=21 => total_ms=25,782.64 prefill_ms=14,201.49 gen_ms=6,355.29 cache_load_ms=0.00 prompt_tokens=439 gen_tokens=64
+10-04 22:26:56.548 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:27:16.927 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=14799.53,gen_ms=5562.99,prompt_tokens=439,gen_tokens=64
+10-04 22:27:16.927 I/LatencyProfiler(21578): BENCH,22,RAG_INLINE,home_morning,500,20379.30,14799.53,5562.99,0.00,439,64
+10-04 22:27:16.928 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=500 trial=22 => total_ms=20,379.30 prefill_ms=14,799.53 gen_ms=5,562.99 cache_load_ms=0.00 prompt_tokens=439 gen_tokens=64
+10-04 22:27:16.928 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:27:36.247 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=13400.43,gen_ms=5913.13,prompt_tokens=439,gen_tokens=64
+10-04 22:27:36.247 I/LatencyProfiler(21578): BENCH,23,RAG_INLINE,home_morning,500,19319.14,13400.43,5913.13,0.00,439,64
+10-04 22:27:36.249 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=500 trial=23 => total_ms=19,319.14 prefill_ms=13,400.43 gen_ms=5,913.13 cache_load_ms=0.00 prompt_tokens=439 gen_tokens=64
+10-04 22:27:36.253 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:27:59.470 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=15155.51,gen_ms=8055.69,prompt_tokens=439,gen_tokens=64
+10-04 22:27:59.482 I/LatencyProfiler(21578): BENCH,24,RAG_INLINE,home_morning,500,23231.07,15155.51,8055.69,0.00,439,64
+10-04 22:27:59.483 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=500 trial=24 => total_ms=23,231.07 prefill_ms=15,155.51 gen_ms=8,055.69 cache_load_ms=0.00 prompt_tokens=439 gen_tokens=64
+10-04 22:27:59.483 I/AACBridgeJNI(21578): resumeInference: slot=0 appending 8 intent tokens at pos 44
+10-04 22:28:06.086 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=394.67,gen_ms=6207.27,prompt_tokens=8,gen_tokens=64,seq=0
+10-04 22:28:06.087 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:28:29.432 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=16136.65,gen_ms=7054.52,prompt_tokens=439,gen_tokens=64
+10-04 22:28:29.433 I/LatencyProfiler(21578): BENCH,25,RAG_INLINE,home_morning,500,29947.27,16136.65,7054.52,0.00,439,64
+10-04 22:28:29.434 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=500 trial=25 => total_ms=29,947.27 prefill_ms=16,136.65 gen_ms=7,054.52 cache_load_ms=0.00 prompt_tokens=439 gen_tokens=64
+10-04 22:28:29.435 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:28:52.903 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=16951.03,gen_ms=6455.29,prompt_tokens=439,gen_tokens=64
+10-04 22:28:52.904 I/LatencyProfiler(21578): BENCH,26,RAG_INLINE,home_morning,500,23468.45,16951.03,6455.29,0.00,439,64
+10-04 22:28:52.905 I/AACBridgeJNI(21578): resumeInference: slot=0 appending 6 intent tokens at pos 44
+10-04 22:28:52.907 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=500 trial=26 => total_ms=23,468.45 prefill_ms=16,951.03 gen_ms=6,455.29 cache_load_ms=0.00 prompt_tokens=439 gen_tokens=64
+10-04 22:28:58.195 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=446.09,gen_ms=4844.31,prompt_tokens=6,gen_tokens=64,seq=0
+10-04 22:28:58.202 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:29:20.771 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=16691.99,gen_ms=5753.30,prompt_tokens=439,gen_tokens=64
+10-04 22:29:20.773 I/LatencyProfiler(21578): BENCH,27,RAG_INLINE,home_morning,500,27864.51,16691.99,5753.30,0.00,439,64
+10-04 22:29:20.776 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=500 trial=27 => total_ms=27,864.51 prefill_ms=16,691.99 gen_ms=5,753.30 cache_load_ms=0.00 prompt_tokens=439 gen_tokens=64
+10-04 22:29:20.778 I/AACBridgeJNI(21578): resumeInference: slot=0 appending 6 intent tokens at pos 44
+10-04 22:29:30.290 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=342.15,gen_ms=9169.43,prompt_tokens=6,gen_tokens=64,seq=0
+10-04 22:29:30.293 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:29:48.070 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=13728.52,gen_ms=3915.22,prompt_tokens=439,gen_tokens=64
+10-04 22:29:48.070 I/LatencyProfiler(21578): BENCH,28,RAG_INLINE,home_morning,500,27294.22,13728.52,3915.22,0.00,439,64
+10-04 22:29:48.071 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=500 trial=28 => total_ms=27,294.22 prefill_ms=13,728.52 gen_ms=3,915.22 cache_load_ms=0.00 prompt_tokens=439 gen_tokens=64
+10-04 22:29:48.071 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:30:06.966 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=12389.69,gen_ms=6494.97,prompt_tokens=439,gen_tokens=64
+10-04 22:30:06.967 I/LatencyProfiler(21578): BENCH,29,RAG_INLINE,home_morning,500,18895.15,12389.69,6494.97,0.00,439,64
+10-04 22:30:06.968 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=500 trial=29 => total_ms=18,895.15 prefill_ms=12,389.69 gen_ms=6,494.97 cache_load_ms=0.00 prompt_tokens=439 gen_tokens=64
+10-04 22:30:06.968 I/AACBridgeJNI(21578): Scratch slot 3 cleared
+10-04 22:30:24.251 I/AACBridgeJNI(21578): TIMING,runInference,prefill_ms=12292.82,gen_ms=4979.23,prompt_tokens=439,gen_tokens=64
+10-04 22:30:24.252 I/LatencyProfiler(21578): BENCH,30,RAG_INLINE,home_morning,500,17283.77,12292.82,4979.23,0.00,439,64
+10-04 22:30:24.253 I/LatencyProfiler(21578): TRIAL_RESULT: mode=RAG_INLINE target=500 trial=30 => total_ms=17,283.77 prefill_ms=12,292.82 gen_ms=4,979.23 cache_load_ms=0.00 prompt_tokens=439 gen_tokens=64
+10-04 22:30:24.255 I/LatencyProfiler(21578): --- CAP_KVC ---
+10-04 22:30:24.284 I/AACBridgeJNI(21578): KV cache loaded: slot=3 tokens=44
+10-04 22:30:24.285 I/AACBridgeJNI(21578): resumeInference: slot=3 appending 9 intent tokens at pos 44
+10-04 22:30:28.150 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=265.25,gen_ms=3599.79,prompt_tokens=9,gen_tokens=64,seq=3
+10-04 22:30:28.151 I/AACBridgeJNI(21578): KV cache loaded: slot=3 tokens=44
+10-04 22:30:28.151 I/AACBridgeJNI(21578): resumeInference: slot=3 appending 9 intent tokens at pos 44
+10-04 22:30:33.619 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=319.43,gen_ms=5148.40,prompt_tokens=9,gen_tokens=64,seq=3
+10-04 22:30:33.620 I/AACBridgeJNI(21578): KV cache loaded: slot=3 tokens=44
+10-04 22:30:33.621 I/AACBridgeJNI(21578): resumeInference: slot=3 appending 9 intent tokens at pos 44
+10-04 22:30:38.356 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=331.43,gen_ms=4403.40,prompt_tokens=9,gen_tokens=64,seq=3
+10-04 22:30:38.356 I/LatencyProfiler(21578): BENCH,1,CAP_KVC,home_morning,50,4736.38,331.43,4403.40,1.05,9,64
+10-04 22:30:38.357 I/LatencyProfiler(21578): TRIAL_RESULT: mode=CAP_KVC target=50 trial=1 => total_ms=4,736.38 prefill_ms=331.43 gen_ms=4,403.40 cache_load_ms=1.05 prompt_tokens=9 gen_tokens=64
+10-04 22:30:38.358 I/AACBridgeJNI(21578): KV cache loaded: slot=3 tokens=44
+10-04 22:30:38.358 I/AACBridgeJNI(21578): resumeInference: slot=3 appending 9 intent tokens at pos 44
+10-04 22:30:42.706 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=272.08,gen_ms=4075.19,prompt_tokens=9,gen_tokens=64,seq=3
+10-04 22:30:42.706 I/LatencyProfiler(21578): BENCH,2,CAP_KVC,home_morning,50,4348.82,272.08,4075.19,1.05,9,64
+10-04 22:30:42.707 I/LatencyProfiler(21578): TRIAL_RESULT: mode=CAP_KVC target=50 trial=2 => total_ms=4,348.82 prefill_ms=272.08 gen_ms=4,075.19 cache_load_ms=1.05 prompt_tokens=9 gen_tokens=64
+10-04 22:30:42.708 I/AACBridgeJNI(21578): KV cache loaded: slot=3 tokens=44
+10-04 22:30:42.708 I/AACBridgeJNI(21578): resumeInference: slot=3 appending 9 intent tokens at pos 44
+10-04 22:30:47.289 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=331.31,gen_ms=4249.68,prompt_tokens=9,gen_tokens=64,seq=3
+10-04 22:30:47.290 I/LatencyProfiler(21578): BENCH,3,CAP_KVC,home_morning,50,4582.53,331.31,4249.68,1.06,9,64
+10-04 22:30:47.291 I/LatencyProfiler(21578): TRIAL_RESULT: mode=CAP_KVC target=50 trial=3 => total_ms=4,582.53 prefill_ms=331.31 gen_ms=4,249.68 cache_load_ms=1.06 prompt_tokens=9 gen_tokens=64
+10-04 22:30:47.292 I/AACBridgeJNI(21578): KV cache loaded: slot=3 tokens=44
+10-04 22:30:47.292 I/AACBridgeJNI(21578): resumeInference: slot=3 appending 9 intent tokens at pos 44
+10-04 22:30:51.137 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=333.32,gen_ms=3511.87,prompt_tokens=9,gen_tokens=64,seq=3
+10-04 22:30:51.138 I/LatencyProfiler(21578): BENCH,4,CAP_KVC,home_morning,50,3846.63,333.32,3511.87,0.92,9,64
+10-04 22:30:51.138 I/LatencyProfiler(21578): TRIAL_RESULT: mode=CAP_KVC target=50 trial=4 => total_ms=3,846.63 prefill_ms=333.32 gen_ms=3,511.87 cache_load_ms=0.92 prompt_tokens=9 gen_tokens=64
+10-04 22:30:51.141 I/AACBridgeJNI(21578): KV cache loaded: slot=3 tokens=44
+10-04 22:30:51.142 I/AACBridgeJNI(21578): resumeInference: slot=3 appending 9 intent tokens at pos 44
+10-04 22:30:58.491 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=278.57,gen_ms=7070.65,prompt_tokens=9,gen_tokens=64,seq=3
+10-04 22:30:58.492 I/LatencyProfiler(21578): BENCH,5,CAP_KVC,home_morning,50,7352.73,278.57,7070.65,2.95,9,64
+10-04 22:30:58.492 I/AACBridgeJNI(21578): resumeInference: slot=0 appending 6 intent tokens at pos 44
+10-04 22:30:58.492 I/LatencyProfiler(21578): TRIAL_RESULT: mode=CAP_KVC target=50 trial=5 => total_ms=7,352.73 prefill_ms=278.57 gen_ms=7,070.65 cache_load_ms=2.95 prompt_tokens=9 gen_tokens=64
+10-04 22:31:03.382 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=346.75,gen_ms=4543.93,prompt_tokens=6,gen_tokens=64,seq=0
+10-04 22:31:03.386 I/AACBridgeJNI(21578): KV cache loaded: slot=3 tokens=44
+10-04 22:31:03.387 I/AACBridgeJNI(21578): resumeInference: slot=3 appending 9 intent tokens at pos 44
+10-04 22:31:08.050 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=495.17,gen_ms=4167.91,prompt_tokens=9,gen_tokens=64,seq=3
+10-04 22:31:08.051 I/LatencyProfiler(21578): BENCH,6,CAP_KVC,home_morning,50,9557.76,495.17,4167.91,3.65,9,64
+10-04 22:31:08.051 I/LatencyProfiler(21578): TRIAL_RESULT: mode=CAP_KVC target=50 trial=6 => total_ms=9,557.76 prefill_ms=495.17 gen_ms=4,167.91 cache_load_ms=3.65 prompt_tokens=9 gen_tokens=64
+10-04 22:31:08.053 I/AACBridgeJNI(21578): KV cache loaded: slot=3 tokens=44
+10-04 22:31:08.053 I/AACBridgeJNI(21578): resumeInference: slot=3 appending 9 intent tokens at pos 44
+10-04 22:31:16.242 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=320.62,gen_ms=7868.82,prompt_tokens=9,gen_tokens=64,seq=3
+10-04 22:31:16.244 I/LatencyProfiler(21578): BENCH,7,CAP_KVC,home_morning,50,8191.48,320.62,7868.82,1.18,9,64
+10-04 22:31:16.245 I/AACBridgeJNI(21578): resumeInference: slot=0 appending 6 intent tokens at pos 44
+10-04 22:31:16.245 I/LatencyProfiler(21578): TRIAL_RESULT: mode=CAP_KVC target=50 trial=7 => total_ms=8,191.48 prefill_ms=320.62 gen_ms=7,868.82 cache_load_ms=1.18 prompt_tokens=9 gen_tokens=64
+10-04 22:31:20.040 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=351.55,gen_ms=3443.98,prompt_tokens=6,gen_tokens=64,seq=0
+10-04 22:31:20.044 I/AACBridgeJNI(21578): KV cache loaded: slot=3 tokens=44
+10-04 22:31:20.044 I/AACBridgeJNI(21578): resumeInference: slot=3 appending 9 intent tokens at pos 44
+10-04 22:31:25.026 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=497.89,gen_ms=4483.64,prompt_tokens=9,gen_tokens=64,seq=3
+10-04 22:31:25.027 I/LatencyProfiler(21578): BENCH,8,CAP_KVC,home_morning,50,8781.43,497.89,4483.64,3.13,9,64
+10-04 22:31:25.030 I/LatencyProfiler(21578): TRIAL_RESULT: mode=CAP_KVC target=50 trial=8 => total_ms=8,781.43 prefill_ms=497.89 gen_ms=4,483.64 cache_load_ms=3.13 prompt_tokens=9 gen_tokens=64
+10-04 22:31:25.033 I/AACBridgeJNI(21578): KV cache loaded: slot=3 tokens=44
+10-04 22:31:25.034 I/AACBridgeJNI(21578): resumeInference: slot=3 appending 9 intent tokens at pos 44
+10-04 22:31:30.127 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=334.28,gen_ms=4758.60,prompt_tokens=9,gen_tokens=64,seq=3
+10-04 22:31:30.128 I/LatencyProfiler(21578): BENCH,9,CAP_KVC,home_morning,50,5096.86,334.28,4758.60,3.29,9,64
+10-04 22:31:30.129 I/LatencyProfiler(21578): TRIAL_RESULT: mode=CAP_KVC target=50 trial=9 => total_ms=5,096.86 prefill_ms=334.28 gen_ms=4,758.60 cache_load_ms=3.29 prompt_tokens=9 gen_tokens=64
+10-04 22:31:30.130 I/AACBridgeJNI(21578): KV cache loaded: slot=3 tokens=44
+10-04 22:31:30.131 I/AACBridgeJNI(21578): resumeInference: slot=3 appending 9 intent tokens at pos 44
+10-04 22:31:34.163 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=272.80,gen_ms=3759.74,prompt_tokens=9,gen_tokens=64,seq=3
+10-04 22:31:34.164 I/LatencyProfiler(21578): BENCH,10,CAP_KVC,home_morning,50,4034.05,272.80,3759.74,1.00,9,64
+10-04 22:31:34.165 I/LatencyProfiler(21578): TRIAL_RESULT: mode=CAP_KVC target=50 trial=10 => total_ms=4,034.05 prefill_ms=272.80 gen_ms=3,759.74 cache_load_ms=1.00 prompt_tokens=9 gen_tokens=64
+10-04 22:31:34.167 I/AACBridgeJNI(21578): KV cache loaded: slot=3 tokens=44
+10-04 22:31:34.168 I/AACBridgeJNI(21578): resumeInference: slot=3 appending 9 intent tokens at pos 44
+10-04 22:31:39.003 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=275.73,gen_ms=4559.90,prompt_tokens=9,gen_tokens=64,seq=3
+10-04 22:31:39.004 I/LatencyProfiler(21578): BENCH,11,CAP_KVC,home_morning,50,4838.36,275.73,4559.90,2.15,9,64
+10-04 22:31:39.004 I/LatencyProfiler(21578): TRIAL_RESULT: mode=CAP_KVC target=50 trial=11 => total_ms=4,838.36 prefill_ms=275.73 gen_ms=4,559.90 cache_load_ms=2.15 prompt_tokens=9 gen_tokens=64
+10-04 22:31:39.005 I/AACBridgeJNI(21578): KV cache loaded: slot=3 tokens=44
+10-04 22:31:39.005 I/AACBridgeJNI(21578): resumeInference: slot=3 appending 9 intent tokens at pos 44
+10-04 22:31:43.695 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=302.14,gen_ms=4387.52,prompt_tokens=9,gen_tokens=64,seq=3
+10-04 22:31:43.697 I/LatencyProfiler(21578): BENCH,12,CAP_KVC,home_morning,50,4691.44,302.14,4387.52,0.86,9,64
+10-04 22:31:43.699 I/LatencyProfiler(21578): TRIAL_RESULT: mode=CAP_KVC target=50 trial=12 => total_ms=4,691.44 prefill_ms=302.14 gen_ms=4,387.52 cache_load_ms=0.86 prompt_tokens=9 gen_tokens=64
+10-04 22:31:43.703 I/AACBridgeJNI(21578): KV cache loaded: slot=3 tokens=44
+10-04 22:31:43.703 I/AACBridgeJNI(21578): resumeInference: slot=3 appending 9 intent tokens at pos 44
+10-04 22:31:47.391 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=274.74,gen_ms=3412.63,prompt_tokens=9,gen_tokens=64,seq=3
+10-04 22:31:47.392 I/LatencyProfiler(21578): BENCH,13,CAP_KVC,home_morning,50,3691.63,274.74,3412.63,3.35,9,64
+10-04 22:31:47.393 I/LatencyProfiler(21578): TRIAL_RESULT: mode=CAP_KVC target=50 trial=13 => total_ms=3,691.63 prefill_ms=274.74 gen_ms=3,412.63 cache_load_ms=3.35 prompt_tokens=9 gen_tokens=64
+10-04 22:31:47.396 I/AACBridgeJNI(21578): KV cache loaded: slot=3 tokens=44
+10-04 22:31:47.396 I/AACBridgeJNI(21578): resumeInference: slot=3 appending 9 intent tokens at pos 44
+10-04 22:31:51.927 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=256.66,gen_ms=4273.81,prompt_tokens=9,gen_tokens=64,seq=3
+10-04 22:31:51.927 I/LatencyProfiler(21578): BENCH,14,CAP_KVC,home_morning,50,4532.29,256.66,4273.81,1.29,9,64
+10-04 22:31:51.928 I/LatencyProfiler(21578): TRIAL_RESULT: mode=CAP_KVC target=50 trial=14 => total_ms=4,532.29 prefill_ms=256.66 gen_ms=4,273.81 cache_load_ms=1.29 prompt_tokens=9 gen_tokens=64
+10-04 22:31:51.934 I/AACBridgeJNI(21578): KV cache loaded: slot=3 tokens=44
+10-04 22:31:51.934 I/AACBridgeJNI(21578): resumeInference: slot=3 appending 9 intent tokens at pos 44
+10-04 22:31:57.450 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=336.32,gen_ms=5179.46,prompt_tokens=9,gen_tokens=64,seq=3
+10-04 22:31:57.450 I/LatencyProfiler(21578): BENCH,15,CAP_KVC,home_morning,50,5521.88,336.32,5179.46,5.61,9,64
+10-04 22:31:57.451 I/LatencyProfiler(21578): TRIAL_RESULT: mode=CAP_KVC target=50 trial=15 => total_ms=5,521.88 prefill_ms=336.32 gen_ms=5,179.46 cache_load_ms=5.61 prompt_tokens=9 gen_tokens=64
+10-04 22:31:57.464 I/AACBridgeJNI(21578): KV cache loaded: slot=3 tokens=44
+10-04 22:31:57.464 I/AACBridgeJNI(21578): resumeInference: slot=3 appending 9 intent tokens at pos 44
+10-04 22:32:14.493 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=462.81,gen_ms=16565.09,prompt_tokens=9,gen_tokens=64,seq=3
+10-04 22:32:14.494 I/LatencyProfiler(21578): BENCH,16,CAP_KVC,home_morning,50,17037.41,462.81,16565.09,7.95,9,64
+10-04 22:32:14.497 I/AACBridgeJNI(21578): resumeInference: slot=0 appending 8 intent tokens at pos 44
+10-04 22:32:14.585 I/LatencyProfiler(21578): TRIAL_RESULT: mode=CAP_KVC target=50 trial=16 => total_ms=17,037.41 prefill_ms=462.81 gen_ms=16,565.09 cache_load_ms=7.95 prompt_tokens=9 gen_tokens=64
+10-04 22:32:20.955 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=900.76,gen_ms=5556.87,prompt_tokens=8,gen_tokens=64,seq=0
+10-04 22:32:20.965 I/AACBridgeJNI(21578): KV cache loaded: slot=3 tokens=44
+10-04 22:32:20.966 I/AACBridgeJNI(21578): resumeInference: slot=3 appending 9 intent tokens at pos 44
+10-04 22:32:30.339 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=610.08,gen_ms=8762.55,prompt_tokens=9,gen_tokens=64,seq=3
+10-04 22:32:30.340 I/LatencyProfiler(21578): BENCH,17,CAP_KVC,home_morning,50,15753.40,610.08,8762.55,10.31,9,64
+10-04 22:32:30.340 I/LatencyProfiler(21578): TRIAL_RESULT: mode=CAP_KVC target=50 trial=17 => total_ms=15,753.40 prefill_ms=610.08 gen_ms=8,762.55 cache_load_ms=10.31 prompt_tokens=9 gen_tokens=64
+10-04 22:32:30.341 I/AACBridgeJNI(21578): resumeInference: slot=0 appending 6 intent tokens at pos 44
+10-04 22:32:34.444 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=362.07,gen_ms=3741.23,prompt_tokens=6,gen_tokens=64,seq=0
+10-04 22:32:34.446 I/AACBridgeJNI(21578): KV cache loaded: slot=3 tokens=44
+10-04 22:32:34.446 I/AACBridgeJNI(21578): resumeInference: slot=3 appending 9 intent tokens at pos 44
+10-04 22:32:39.123 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=513.68,gen_ms=4163.37,prompt_tokens=9,gen_tokens=64,seq=3
+10-04 22:32:39.124 I/LatencyProfiler(21578): BENCH,18,CAP_KVC,home_morning,50,8782.72,513.68,4163.37,1.06,9,64
+10-04 22:32:39.124 I/LatencyProfiler(21578): TRIAL_RESULT: mode=CAP_KVC target=50 trial=18 => total_ms=8,782.72 prefill_ms=513.68 gen_ms=4,163.37 cache_load_ms=1.06 prompt_tokens=9 gen_tokens=64
+10-04 22:32:39.125 I/AACBridgeJNI(21578): KV cache loaded: slot=3 tokens=44
+10-04 22:32:39.126 I/AACBridgeJNI(21578): resumeInference: slot=3 appending 9 intent tokens at pos 44
+10-04 22:32:44.836 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=370.18,gen_ms=5340.22,prompt_tokens=9,gen_tokens=64,seq=3
+10-04 22:32:44.836 I/LatencyProfiler(21578): BENCH,19,CAP_KVC,home_morning,50,5711.82,370.18,5340.22,1.00,9,64
+10-04 22:32:44.837 I/LatencyProfiler(21578): TRIAL_RESULT: mode=CAP_KVC target=50 trial=19 => total_ms=5,711.82 prefill_ms=370.18 gen_ms=5,340.22 cache_load_ms=1.00 prompt_tokens=9 gen_tokens=64
+10-04 22:32:44.838 I/AACBridgeJNI(21578): KV cache loaded: slot=3 tokens=44
+10-04 22:32:44.838 I/AACBridgeJNI(21578): resumeInference: slot=3 appending 9 intent tokens at pos 44
+10-04 22:32:48.798 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=329.24,gen_ms=3630.14,prompt_tokens=9,gen_tokens=64,seq=3
+10-04 22:32:48.798 I/LatencyProfiler(21578): BENCH,20,CAP_KVC,home_morning,50,3960.64,329.24,3630.14,0.76,9,64
+10-04 22:32:48.799 I/LatencyProfiler(21578): TRIAL_RESULT: mode=CAP_KVC target=50 trial=20 => total_ms=3,960.64 prefill_ms=329.24 gen_ms=3,630.14 cache_load_ms=0.76 prompt_tokens=9 gen_tokens=64
+10-04 22:32:48.802 I/AACBridgeJNI(21578): KV cache loaded: slot=3 tokens=44
+10-04 22:32:48.802 I/AACBridgeJNI(21578): resumeInference: slot=3 appending 9 intent tokens at pos 44
+10-04 22:32:56.337 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=267.54,gen_ms=7267.77,prompt_tokens=9,gen_tokens=64,seq=3
+10-04 22:32:56.339 I/LatencyProfiler(21578): BENCH,21,CAP_KVC,home_morning,50,7537.12,267.54,7267.77,1.03,9,64
+10-04 22:32:56.346 I/LatencyProfiler(21578): TRIAL_RESULT: mode=CAP_KVC target=50 trial=21 => total_ms=7,537.12 prefill_ms=267.54 gen_ms=7,267.77 cache_load_ms=1.03 prompt_tokens=9 gen_tokens=64
+10-04 22:32:56.350 I/AACBridgeJNI(21578): KV cache loaded: slot=3 tokens=44
+10-04 22:32:56.361 I/AACBridgeJNI(21578): resumeInference: slot=3 appending 9 intent tokens at pos 44
+10-04 22:33:01.814 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=584.89,gen_ms=4867.61,prompt_tokens=9,gen_tokens=64,seq=3
+10-04 22:33:01.814 I/LatencyProfiler(21578): BENCH,22,CAP_KVC,home_morning,50,5467.38,584.89,4867.61,3.90,9,64
+10-04 22:33:01.815 I/LatencyProfiler(21578): TRIAL_RESULT: mode=CAP_KVC target=50 trial=22 => total_ms=5,467.38 prefill_ms=584.89 gen_ms=4,867.61 cache_load_ms=3.90 prompt_tokens=9 gen_tokens=64
+10-04 22:33:01.821 I/AACBridgeJNI(21578): KV cache loaded: slot=3 tokens=44
+10-04 22:33:01.822 I/AACBridgeJNI(21578): resumeInference: slot=3 appending 9 intent tokens at pos 44
+10-04 22:33:06.989 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=265.34,gen_ms=4901.96,prompt_tokens=9,gen_tokens=64,seq=3
+10-04 22:33:06.990 I/LatencyProfiler(21578): BENCH,23,CAP_KVC,home_morning,50,5171.97,265.34,4901.96,4.05,9,64
+10-04 22:33:06.990 I/LatencyProfiler(21578): TRIAL_RESULT: mode=CAP_KVC target=50 trial=23 => total_ms=5,171.97 prefill_ms=265.34 gen_ms=4,901.96 cache_load_ms=4.05 prompt_tokens=9 gen_tokens=64
+10-04 22:33:06.991 I/AACBridgeJNI(21578): KV cache loaded: slot=3 tokens=44
+10-04 22:33:06.992 I/AACBridgeJNI(21578): resumeInference: slot=3 appending 9 intent tokens at pos 44
+10-04 22:33:11.906 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=360.47,gen_ms=4553.95,prompt_tokens=9,gen_tokens=64,seq=3
+10-04 22:33:11.907 I/LatencyProfiler(21578): BENCH,24,CAP_KVC,home_morning,50,4915.98,360.47,4553.95,1.07,9,64
+10-04 22:33:11.907 I/LatencyProfiler(21578): TRIAL_RESULT: mode=CAP_KVC target=50 trial=24 => total_ms=4,915.98 prefill_ms=360.47 gen_ms=4,553.95 cache_load_ms=1.07 prompt_tokens=9 gen_tokens=64
+10-04 22:33:11.909 I/AACBridgeJNI(21578): KV cache loaded: slot=3 tokens=44
+10-04 22:33:11.909 I/AACBridgeJNI(21578): resumeInference: slot=3 appending 9 intent tokens at pos 44
+10-04 22:33:16.022 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=338.65,gen_ms=3773.96,prompt_tokens=9,gen_tokens=64,seq=3
+10-04 22:33:16.022 I/LatencyProfiler(21578): BENCH,25,CAP_KVC,home_morning,50,4114.44,338.65,3773.96,1.28,9,64
+10-04 22:33:16.023 I/LatencyProfiler(21578): TRIAL_RESULT: mode=CAP_KVC target=50 trial=25 => total_ms=4,114.44 prefill_ms=338.65 gen_ms=3,773.96 cache_load_ms=1.28 prompt_tokens=9 gen_tokens=64
+10-04 22:33:16.027 I/AACBridgeJNI(21578): KV cache loaded: slot=3 tokens=44
+10-04 22:33:16.027 I/AACBridgeJNI(21578): resumeInference: slot=3 appending 9 intent tokens at pos 44
+10-04 22:33:20.127 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=283.43,gen_ms=3815.90,prompt_tokens=9,gen_tokens=64,seq=3
+10-04 22:33:20.127 I/LatencyProfiler(21578): BENCH,26,CAP_KVC,home_morning,50,4103.30,283.43,3815.90,3.46,9,64
+10-04 22:33:20.129 I/LatencyProfiler(21578): TRIAL_RESULT: mode=CAP_KVC target=50 trial=26 => total_ms=4,103.30 prefill_ms=283.43 gen_ms=3,815.90 cache_load_ms=3.46 prompt_tokens=9 gen_tokens=64
+10-04 22:33:20.130 I/AACBridgeJNI(21578): KV cache loaded: slot=3 tokens=44
+10-04 22:33:20.130 I/AACBridgeJNI(21578): resumeInference: slot=3 appending 9 intent tokens at pos 44
+10-04 22:33:24.776 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=306.02,gen_ms=4339.37,prompt_tokens=9,gen_tokens=64,seq=3
+10-04 22:33:24.776 I/LatencyProfiler(21578): BENCH,27,CAP_KVC,home_morning,50,4647.19,306.02,4339.37,1.28,9,64
+10-04 22:33:24.777 I/LatencyProfiler(21578): TRIAL_RESULT: mode=CAP_KVC target=50 trial=27 => total_ms=4,647.19 prefill_ms=306.02 gen_ms=4,339.37 cache_load_ms=1.28 prompt_tokens=9 gen_tokens=64
+10-04 22:33:24.778 I/AACBridgeJNI(21578): KV cache loaded: slot=3 tokens=44
+10-04 22:33:24.778 I/AACBridgeJNI(21578): resumeInference: slot=3 appending 9 intent tokens at pos 44
+10-04 22:33:28.672 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=331.64,gen_ms=3562.21,prompt_tokens=9,gen_tokens=64,seq=3
+10-04 22:33:28.673 I/LatencyProfiler(21578): BENCH,28,CAP_KVC,home_morning,50,3895.27,331.64,3562.21,0.82,9,64
+10-04 22:33:28.674 I/LatencyProfiler(21578): TRIAL_RESULT: mode=CAP_KVC target=50 trial=28 => total_ms=3,895.27 prefill_ms=331.64 gen_ms=3,562.21 cache_load_ms=0.82 prompt_tokens=9 gen_tokens=64
+10-04 22:33:28.675 I/AACBridgeJNI(21578): KV cache loaded: slot=3 tokens=44
+10-04 22:33:28.675 I/AACBridgeJNI(21578): resumeInference: slot=3 appending 9 intent tokens at pos 44
+10-04 22:33:32.896 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=266.79,gen_ms=3954.33,prompt_tokens=9,gen_tokens=64,seq=3
+10-04 22:33:32.897 I/LatencyProfiler(21578): BENCH,29,CAP_KVC,home_morning,50,4222.95,266.79,3954.33,1.01,9,64
+10-04 22:33:32.898 I/LatencyProfiler(21578): TRIAL_RESULT: mode=CAP_KVC target=50 trial=29 => total_ms=4,222.95 prefill_ms=266.79 gen_ms=3,954.33 cache_load_ms=1.01 prompt_tokens=9 gen_tokens=64
+10-04 22:33:32.901 I/AACBridgeJNI(21578): KV cache loaded: slot=3 tokens=44
+10-04 22:33:32.901 I/AACBridgeJNI(21578): resumeInference: slot=3 appending 9 intent tokens at pos 44
+10-04 22:33:38.657 I/AACBridgeJNI(21578): TIMING,resumeInference,prefill_ms=338.29,gen_ms=5417.23,prompt_tokens=9,gen_tokens=64,seq=3
+10-04 22:33:38.657 I/LatencyProfiler(21578): BENCH,30,CAP_KVC,home_morning,50,5757.28,338.29,5417.23,1.08,9,64
+10-04 22:33:38.658 I/LatencyProfiler(21578): TRIAL_RESULT: mode=CAP_KVC target=50 trial=30 => total_ms=5,757.28 prefill_ms=338.29 gen_ms=5,417.23 cache_load_ms=1.08 prompt_tokens=9 gen_tokens=64
+10-04 22:33:38.659 I/LatencyProfiler(21578): === BENCHMARK SUITE COMPLETE ===
+10-04 22:33:38.659 I/LatencyProfiler(21578): ContextDaemon sweeps resumed

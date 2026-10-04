@@ -246,12 +246,17 @@ class KVCacheManager(
                      * Fast path: restore from disk.
                      * Engine lock protects native ctx/session_tokens.
                      */
-                    if (engineLock != null) {
+                    val loaded = if (engineLock != null) {
                         engineLock.lockWithLock {
                             jniBridge.loadKVCache(filePath, seqId)
                         }
                     } else {
                         jniBridge.loadKVCache(filePath, seqId)
+                    }
+                    if (!loaded && contextPrimer != null) {
+                        contextPrimer.primeAndSave(stateId, seqId, filePath)
+                    } else {
+                        loaded
                     }
 
                 } else if (contextPrimer != null) {

@@ -962,10 +962,24 @@ class LatencyProfiler(
 
         val capResult = engineLock.withLock {
 
-            val loadSuccess = bridge.loadKVCache(
+            var loadSuccess = bridge.loadKVCache(
                 cacheFilePath,
                 BENCH_SEQ_ID
             )
+
+            if (!loadSuccess) {
+                Log.w(
+                    TAG,
+                    "Cache file missing or invalid for $cacheFilePath — priming fresh cache now..."
+                )
+                val prefillOk = bridge.prefillOnly(basePrompt, BENCH_SEQ_ID)
+                if (prefillOk) {
+                    val saveOk = bridge.saveKVCache(cacheFilePath, BENCH_SEQ_ID)
+                    if (saveOk) {
+                        loadSuccess = bridge.loadKVCache(cacheFilePath, BENCH_SEQ_ID)
+                    }
+                }
+            }
 
             if (!loadSuccess) {
                 Log.e(
