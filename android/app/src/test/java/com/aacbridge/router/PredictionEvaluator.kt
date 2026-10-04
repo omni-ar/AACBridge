@@ -1,238 +1,180 @@
 package com.aacbridge.router
 
 /**
- * Controlled sensor trace generator and prediction evaluator.
- *
- * PURPOSE:
- * Evaluates the StateRouter's prediction accuracy under
- * controlled/synthetic sensor conditions to measure:
- * - Hit@1: top-ranked state matches ground truth
- * - Hit@3: ground truth is in the top-3 resident set
- * - Cold miss: ground truth not resident at interaction time
- * - Wrong-context rate: inference uses incorrect context
- *
- * METHODOLOGY:
- * The trace generator produces SensorSnapshot sequences with
- * independently sampled noise, NOT generated from the scoring
- * functions, to avoid circular evaluation.
- *
- * The actual production StateRouter is used for scoring.
- *
- * TRACE STRUCTURE:
- * Each trace episode represents one day (24 hours) of
- * simulated AAC device usage. The ground-truth context
- * follows a deterministic schedule with configurable
- * transition times. Sensor observations are independently
- * perturbed.
+ * Controlled sensor-trace generator and trace-driven
+ * evaluator for the context router + KV residency policy.
  *
  * IMPORTANT:
  * These traces are controlled/synthetic. They are NOT
  * real-world sensor recordings from AAC users.
+ *
+ * What is simulated:
+ * - One ActiveSweep per minute (production cadence 60 s),
+ *   06:00-22:00. Each sweep scores all contexts with the
+ *   production StateRouter and applies the production
+ *   ResidencyPolicy (same code the device runs).
+ * - One user interaction every 15 minutes. The context used
+ *   is ResidencyPolicy.selectForInference (same rule as
+ *   MainActivity.handleIntent).
+ *
+ * What is NOT simulated:
+ * - Priming/restore latency: a state chosen at a sweep is
+ *   assumed resident by the next minute (on-device priming
+ *   takes seconds, restore milliseconds).
+ * - Real schedules: the ground truth is a five-context daily
+ *   routine whose boundaries are shifted per day (see
+ *   TraceGenerator). The router's time anchors were authored
+ *   from the same routine, so time-of-day evidence is
+ *   favourable by construction.
  */
 
-/**
- * Single point in a sensor trace with ground-truth label.
- */
+/** Ground truth for one simulated sweep. */
 data class TracePoint(
+    /** True wall-clock hour (device clock is exact). */
     val timestampHour: Double,
     val groundTruthStateId: String,
-    val snapshot: SensorSnapshot
+    val snapshot: SensorSnapshot,
+    /** True if a user interaction happens at this sweep. */
+    val isInteraction: Boolean
+)
+
+/** Noise / scenario parameters for one trace configuration. */
+data class TraceConfig(
+    /** Per-day uniform shift (+/- hours) of each context boundary. */
+    val scheduleShiftHours: Double = 0.5,
+    val gpsNoiseKm: Double = 0.05,
+    val gpsDropoutProb: Double = 0.1,
+    val gpsAccuracyMean: Double = 15.0,
+    val gpsAccuracySd: Double = 10.0,
+    val bleDetectionProb: Double = 0.8,
+    val bleRssiMean: Double = -65.0,
+    val bleRssiSd: Double = 10.0,
+    val bleDropoutProb: Double = 0.15,
+    val spuriousBleProb: Double = 0.1,
+    val sweepMinutes: Double = 1.0,
+    val interactionEveryMinutes: Double = 15.0
 )
 
 /**
- * Results from evaluating a single trace episode.
- */
-data class EpisodeResult(
-    val episodeId: Int,
-    val totalInteractions: Int,
-    val hit1Count: Int,
-    val hit3Count: Int,
-    val coldMissCount: Int,
-    val wrongContextCount: Int,
-    val contextSwitchCount: Int
-) {
-    val hit1Rate: Double get() = if (totalInteractions > 0) hit1Count.toDouble() / totalInteractions else 0.0
-    val hit3Rate: Double get() = if (totalInteractions > 0) hit3Count.toDouble() / totalInteractions else 0.0
-    val coldMissRate: Double get() = if (totalInteractions > 0) coldMissCount.toDouble() / totalInteractions else 0.0
-}
-
-/**
- * Aggregate results across all episodes for a single
- * routing configuration.
- */
-data class PredictionResults(
-    val configName: String,
-    val episodes: List<EpisodeResult>,
-    val totalInteractions: Int,
-    val hit1: Double,
-    val hit3: Double,
-    val coldMissRate: Double,
-    val wrongContextRate: Double,
-    val meanContextSwitches: Double
-)
-
-/**
- * Generates controlled sensor traces independently
- * of the scoring functions.
- *
- * Noise model:
- * - Time: uniform perturbation ±timeNoiseHours
- * - GPS: independent Gaussian displacement in lat/lng
- * - GPS accuracy: log-normal distribution
- * - BLE: independent per-device detection probability
- *        with RSSI drawn from Gaussian around anchor
- * - Missing sensors: configurable dropout probability
+ * Generates controlled sensor traces independently of the
+ * scoring functions (noise is not drawn from the scorers).
  */
 class TraceGenerator(
     private val seed: Long = 42L
 ) {
-    /**
-     * Ground-truth daily schedule.
-     *
-     * Each entry: (startHour, endHour, stateId)
-     *
-     * The schedule covers a representative day for
-     * an AAC user with the five configured contexts.
-     */
-    private val dailySchedule = listOf(
-        Triple(6.0, 10.0, "home_morning"),
-        Triple(10.0, 13.0, "hospital_ward"),
-        Triple(13.0, 15.5, "therapy_room"),
-        Triple(15.5, 18.0, "caregiver_visit"),
-        Triple(18.0, 22.0, "home_evening")
-    )
+
+    companion object {
+
+        /** Nominal routine: (startHour, stateId), ends at 22:00. */
+        val NOMINAL_SCHEDULE = listOf(
+            6.0 to "home_morning",
+            10.0 to "hospital_ward",
+            13.0 to "therapy_room",
+            15.5 to "caregiver_visit",
+            18.0 to "home_evening"
+        )
+
+        const val DAY_START = 6.0
+        const val DAY_END = 22.0
+
+        /** Must match SeededStateRepository. */
+        val STATE_ANCHORS = mapOf(
+            "home_morning" to Pair(28.6139, 77.2090),
+            "home_evening" to Pair(28.6139, 77.2090),
+            "hospital_ward" to Pair(28.5672, 77.2100),
+            "therapy_room" to Pair(28.5672, 77.2105),
+            "caregiver_visit" to Pair(28.6139, 77.2090)
+        )
+
+        /** Must match SeededStateRepository. */
+        val STATE_BLE_ANCHORS = mapOf(
+            "home_morning" to listOf("AA:BB:CC:DD:EE:01", "AA:BB:CC:DD:EE:02"),
+            "home_evening" to listOf("AA:BB:CC:DD:EE:01", "AA:BB:CC:DD:EE:03"),
+            "hospital_ward" to listOf("AA:BB:CC:DD:EE:04", "AA:BB:CC:DD:EE:05"),
+            "therapy_room" to listOf("AA:BB:CC:DD:EE:06"),
+            "caregiver_visit" to listOf("AA:BB:CC:DD:EE:07", "AA:BB:CC:DD:EE:01")
+        )
+
+        /** Minimum duration of any context after shifting. */
+        private const val MIN_SEGMENT_HOURS = 0.25
+    }
 
     /**
-     * Anchor coordinates for each context state.
-     * Must match SeededStateRepository exactly.
+     * Per-day schedule: interior boundaries shifted by
+     * U(-shift, +shift), kept ordered with a minimum
+     * segment length.
      */
-    private val stateAnchors = mapOf(
-        "home_morning" to Pair(28.6139, 77.2090),
-        "home_evening" to Pair(28.6139, 77.2090),
-        "hospital_ward" to Pair(28.5672, 77.2100),
-        "therapy_room" to Pair(28.5672, 77.2105),
-        "caregiver_visit" to Pair(28.6139, 77.2090)
-    )
+    fun daySchedule(episodeId: Int, shiftHours: Double): List<Pair<Double, String>> {
+        val rng = java.util.Random(seed * 7919 + episodeId)
+        val shifted = NOMINAL_SCHEDULE.mapIndexed { i, (start, id) ->
+            if (i == 0) start to id
+            else (start + (rng.nextDouble() * 2.0 - 1.0) * shiftHours) to id
+        }.toMutableList()
+        for (i in 1 until shifted.size) {
+            val lo = shifted[i - 1].first + MIN_SEGMENT_HOURS
+            val hi = DAY_END - MIN_SEGMENT_HOURS * (shifted.size - i)
+            shifted[i] = shifted[i].first.coerceIn(lo, hi) to shifted[i].second
+        }
+        return shifted
+    }
 
-    /**
-     * BLE anchor devices per state.
-     * Must match SeededStateRepository exactly.
-     */
-    private val stateBleAnchors = mapOf(
-        "home_morning" to listOf("AA:BB:CC:DD:EE:01", "AA:BB:CC:DD:EE:02"),
-        "home_evening" to listOf("AA:BB:CC:DD:EE:01", "AA:BB:CC:DD:EE:03"),
-        "hospital_ward" to listOf("AA:BB:CC:DD:EE:04", "AA:BB:CC:DD:EE:05"),
-        "therapy_room" to listOf("AA:BB:CC:DD:EE:06"),
-        "caregiver_visit" to listOf("AA:BB:CC:DD:EE:07", "AA:BB:CC:DD:EE:01")
-    )
-
-    /**
-     * Generates a single day's trace.
-     *
-     * @param interactionIntervalMinutes Time between simulated user interactions
-     * @param timeNoiseHours Max time perturbation (uniform ±)
-     * @param gpsNoiseKm GPS displacement noise std dev in km
-     * @param gpsDropoutProb Probability GPS is unavailable
-     * @param gpsAccuracyMean Mean reported GPS accuracy (meters)
-     * @param gpsAccuracySd Std dev of reported GPS accuracy
-     * @param bleDetectionProb Per-device BLE detection probability
-     * @param bleRssiMean Mean RSSI for detected devices (dBm)
-     * @param bleRssiSd RSSI noise std dev
-     * @param bleDropoutProb Probability all BLE is unavailable
-     * @param spuriousBleProb Probability of a spurious non-anchor BLE device appearing
-     */
-    fun generateDayTrace(
-        episodeId: Int,
-        interactionIntervalMinutes: Double = 15.0,
-        timeNoiseHours: Double = 0.5,
-        gpsNoiseKm: Double = 0.05,
-        gpsDropoutProb: Double = 0.1,
-        gpsAccuracyMean: Double = 15.0,
-        gpsAccuracySd: Double = 10.0,
-        bleDetectionProb: Double = 0.8,
-        bleRssiMean: Double = -65.0,
-        bleRssiSd: Double = 10.0,
-        bleDropoutProb: Double = 0.15,
-        spuriousBleProb: Double = 0.1
-    ): List<TracePoint> {
+    fun generateDayTrace(episodeId: Int, config: TraceConfig = TraceConfig()): List<TracePoint> {
 
         val rng = java.util.Random(seed + episodeId)
+        val schedule = daySchedule(episodeId, config.scheduleShiftHours)
         val points = mutableListOf<TracePoint>()
 
-        // Generate interaction points throughout the day
-        var currentHour = 6.0
-        while (currentHour < 22.0) {
-            // Find ground-truth state for this time
-            val groundTruth = dailySchedule.find {
-                currentHour >= it.first && currentHour < it.second
-            } ?: continue
+        val sweepsPerInteraction =
+            Math.round(config.interactionEveryMinutes / config.sweepMinutes).toInt().coerceAtLeast(1)
 
-            val stateId = groundTruth.third
+        var step = 0
+        var hour = DAY_START
+        while (hour < DAY_END - 1e-9) {
 
-            // Time observation: independent uniform perturbation
-            val observedHour = currentHour +
-                (rng.nextDouble() * 2.0 - 1.0) * timeNoiseHours
+            val stateId = schedule.last { hour >= it.first }.second
 
-            // GPS observation
-            val gpsLocation = if (rng.nextDouble() > gpsDropoutProb) {
-                val anchor = stateAnchors[stateId]!!
-                // Independent Gaussian displacement (~0.05km ≈ 0.00045 degrees)
-                val latNoise = rng.nextGaussian() * gpsNoiseKm / 111.0
-                val lngNoise = rng.nextGaussian() * gpsNoiseKm / 111.0
-                val accuracy = (gpsAccuracyMean +
-                    rng.nextGaussian() * gpsAccuracySd)
+            val gps = if (rng.nextDouble() > config.gpsDropoutProb) {
+                val anchor = STATE_ANCHORS.getValue(stateId)
+                val latNoise = rng.nextGaussian() * config.gpsNoiseKm / 111.0
+                val lngNoise = rng.nextGaussian() * config.gpsNoiseKm / 111.0
+                val accuracy = (config.gpsAccuracyMean + rng.nextGaussian() * config.gpsAccuracySd)
                     .coerceIn(3.0, 200.0)
-
                 GpsLocation(
                     lat = (anchor.first + latNoise).coerceIn(-90.0, 90.0),
                     lng = (anchor.second + lngNoise).coerceIn(-180.0, 180.0),
                     accuracyMeters = accuracy.toFloat()
                 )
-            } else {
-                null
-            }
+            } else null
 
-            // BLE observation
-            val bleDevices = if (rng.nextDouble() > bleDropoutProb) {
-                val anchors = stateBleAnchors[stateId] ?: emptyList()
+            val ble = if (rng.nextDouble() > config.bleDropoutProb) {
                 val detected = mutableMapOf<String, Rssi>()
-
-                for (mac in anchors) {
-                    if (rng.nextDouble() < bleDetectionProb) {
-                        val rssi = (bleRssiMean +
-                            rng.nextGaussian() * bleRssiSd)
-                            .toInt()
-                            .coerceIn(-127, -1)
+                for (mac in STATE_BLE_ANCHORS[stateId].orEmpty()) {
+                    if (rng.nextDouble() < config.bleDetectionProb) {
+                        val rssi = (config.bleRssiMean + rng.nextGaussian() * config.bleRssiSd)
+                            .toInt().coerceIn(-127, -1)
                         detected[mac] = Rssi(rssi)
                     }
                 }
-
-                // Occasionally add a spurious non-anchor device
-                if (rng.nextDouble() < spuriousBleProb) {
-                    val spuriousMac = "FF:FF:FF:FF:FF:%02X".format(rng.nextInt(256))
-                    val rssi = (-80 + rng.nextGaussian() * 10.0)
-                        .toInt().coerceIn(-127, -1)
-                    detected[spuriousMac] = Rssi(rssi)
+                if (rng.nextDouble() < config.spuriousBleProb) {
+                    val mac = "FF:FF:FF:FF:FF:%02X".format(rng.nextInt(256))
+                    detected[mac] = Rssi((-80 + rng.nextGaussian() * 10.0).toInt().coerceIn(-127, -1))
                 }
-
                 detected
-            } else {
-                emptyMap()
-            }
+            } else emptyMap()
 
-            val snapshot = SensorSnapshot(
-                currentHourDecimal = observedHour,
-                location = gpsLocation,
-                detectedBleDevices = bleDevices
+            points += TracePoint(
+                timestampHour = hour,
+                groundTruthStateId = stateId,
+                snapshot = SensorSnapshot(
+                    currentHourDecimal = hour,
+                    location = gps,
+                    detectedBleDevices = ble
+                ),
+                isInteraction = step % sweepsPerInteraction == 0
             )
 
-            points.add(TracePoint(
-                timestampHour = currentHour,
-                groundTruthStateId = stateId,
-                snapshot = snapshot
-            ))
-
-            currentHour += interactionIntervalMinutes / 60.0
+            step++
+            hour = DAY_START + step * config.sweepMinutes / 60.0
         }
 
         return points
@@ -240,141 +182,220 @@ class TraceGenerator(
 }
 
 /**
- * Evaluates the prediction accuracy of a StateRouter
- * configuration against generated traces.
+ * Per-interaction outcome. Exactly one applies, so
+ * correct + wrong + coldMiss = interactions.
+ */
+enum class Outcome {
+    /** Context used for inference == ground truth. */
+    CORRECT,
+    /** A resident context was used, but not the ground truth. */
+    WRONG_CONTEXT,
+    /** No ranked context resident: Tier-1 generic response. */
+    COLD_MISS
+}
+
+data class EvalResult(
+    val configName: String,
+    val days: Int,
+    val interactions: Int,
+    /** Router top-1 == ground truth (prediction accuracy). */
+    val top1Correct: Int,
+    /** Ground truth resident at interaction time. */
+    val gtResident: Int,
+    /** Router produced no candidate above the dead-state threshold. */
+    val noPrediction: Int,
+    val correct: Int,
+    val wrongContext: Int,
+    val coldMiss: Int,
+    /** States loaded (primed or restored) into residency. */
+    val loads: Int,
+    /** States evicted from residency (cache replacements). */
+    val evictions: Int,
+    /** False for baselines that make no prediction (oracle, reactive). */
+    val predictive: Boolean = true
+) {
+    private fun rate(n: Int) = if (interactions > 0) n.toDouble() / interactions else 0.0
+    val hit1 get() = rate(top1Correct)
+    val gtResidentRate get() = rate(gtResident)
+    val noPredictionRate get() = rate(noPrediction)
+    val correctRate get() = rate(correct)
+    val wrongContextRate get() = rate(wrongContext)
+    val coldMissRate get() = rate(coldMiss)
+    val loadsPerDay get() = loads.toDouble() / days
+    val evictionsPerDay get() = evictions.toDouble() / days
+
+    init {
+        check(correct + wrongContext + coldMiss == interactions) {
+            "$configName: outcomes do not partition interactions"
+        }
+    }
+
+    companion object {
+        const val CSV_HEADER =
+            "config,days,interactions,hit1,gt_resident,no_prediction," +
+                "served_correct,wrong_context,cold_miss,loads_per_day,evictions_per_day"
+    }
+
+    fun toCsv(): String = listOf(
+        configName, days, interactions,
+        if (predictive) "%.6f".format(hit1) else "NA",
+        "%.6f".format(gtResidentRate),
+        if (predictive) "%.6f".format(noPredictionRate) else "NA",
+        "%.6f".format(correctRate), "%.6f".format(wrongContextRate), "%.6f".format(coldMissRate),
+        "%.3f".format(loadsPerDay), "%.3f".format(evictionsPerDay)
+    ).joinToString(",")
+}
+
+/** Accumulates per-interaction / per-sweep events. */
+private class Tally(val name: String, val predictive: Boolean = true) {
+    var days = 0
+    var interactions = 0
+    var top1 = 0
+    var gtResident = 0
+    var noPrediction = 0
+    var correct = 0
+    var wrong = 0
+    var cold = 0
+    var loads = 0
+    var evictions = 0
+
+    fun interaction(gt: String, top1Id: String?, resident: Set<String>, served: String?) {
+        interactions++
+        if (top1Id == gt) top1++
+        if (top1Id == null) noPrediction++
+        if (gt in resident) gtResident++
+        when {
+            served == null -> cold++
+            served == gt -> correct++
+            else -> wrong++
+        }
+    }
+
+    fun result() = EvalResult(name, days, interactions, top1, gtResident, noPrediction,
+        correct, wrong, cold, loads, evictions, predictive)
+}
+
+/**
+ * Runs the production routing + residency rules over traces.
  */
 class PredictionEvaluator(
-    private val router: StateRouter,
     private val states: List<ContextState>,
-    private val maxResidentStates: Int = HardwareConfig.MAX_ACTIVE_KV_STATES
+    private val capacity: Int = HardwareConfig.MAX_ACTIVE_KV_STATES
 ) {
 
     /**
-     * Evaluates a single trace episode.
+     * Sensor-driven CAP-KVC: production router + ResidencyPolicy.
      *
-     * Simulates the resident-set behavior:
-     * - Router selects top-K states
-     * - Resident set is updated (simulating LRU)
-     * - At each interaction, check if ground-truth is resident
+     * @param transform optional per-point snapshot rewrite
+     *        (spoofing scenarios); applied before scoring.
      */
-    fun evaluateEpisode(
-        trace: List<TracePoint>,
-        episodeId: Int
-    ): EpisodeResult {
-        // Simulated resident set
-        val residentStates = mutableListOf<String>()
-        var hit1 = 0
-        var hit3 = 0
-        var coldMiss = 0
-        var wrongContext = 0
-        var contextSwitches = 0
-        var lastTopState: String? = null
-
-        for (point in trace) {
-            // Score all states using the production router
-            val scored = router.getScoredStates(
-                snapshot = point.snapshot,
-                states = states
-            )
-
-            val topK = scored.take(maxResidentStates).map { it.first }
-            val top1 = scored.firstOrNull()?.first
-
-            // Update resident set (simplified LRU simulation)
-            for (stateId in topK) {
-                if (stateId !in residentStates) {
-                    if (residentStates.size >= maxResidentStates) {
-                        // Evict the state not in topK that was least recently added
-                        val toEvict = residentStates.firstOrNull { it !in topK }
-                        if (toEvict != null) {
-                            residentStates.remove(toEvict)
-                        }
-                    }
-                    if (residentStates.size < maxResidentStates) {
-                        residentStates.add(stateId)
-                    }
+    fun evaluateRouter(
+        configName: String,
+        router: StateRouter,
+        traces: List<List<TracePoint>>,
+        margin: Double = HardwareConfig.RESIDENCY_HYSTERESIS_MARGIN,
+        transform: (TracePoint) -> SensorSnapshot = { it.snapshot }
+    ): EvalResult {
+        val t = Tally(configName)
+        for (trace in traces) {
+            t.days++
+            val resident = mutableSetOf<String>()
+            for (point in trace) {
+                val ranked = router.getScoredStates(transform(point), states)
+                applyPlan(t, resident, ResidencyPolicy.plan(ranked, resident, capacity, margin))
+                if (point.isInteraction) {
+                    t.interaction(
+                        gt = point.groundTruthStateId,
+                        top1Id = ranked.firstOrNull()?.first,
+                        resident = resident,
+                        served = ResidencyPolicy.selectForInference(ranked, resident)
+                    )
                 }
             }
-
-            // Track context switches
-            if (top1 != null && top1 != lastTopState) {
-                if (lastTopState != null) contextSwitches++
-                lastTopState = top1
-            }
-
-            // Evaluate prediction quality
-            val gt = point.groundTruthStateId
-
-            if (top1 == gt) hit1++
-            // Hit@3 = ground truth is actually resident in the cache (not top-3 ranking)
-            if (gt in residentStates) hit3++
-            if (gt !in residentStates) coldMiss++
-            if (top1 != null && top1 != gt && gt in residentStates) wrongContext++
         }
-
-        return EpisodeResult(
-            episodeId = episodeId,
-            totalInteractions = trace.size,
-            hit1Count = hit1,
-            hit3Count = hit3,
-            coldMissCount = coldMiss,
-            wrongContextCount = wrongContext,
-            contextSwitchCount = contextSwitches
-        )
+        return t.result()
     }
 
     /**
-     * Evaluates multiple episodes and aggregates results.
+     * Random ranking each sweep (uniform scores), same
+     * residency policy and selection rule.
      */
-    fun evaluate(
-        generator: TraceGenerator,
-        numEpisodes: Int,
+    fun evaluateRandom(
         configName: String,
-        interactionIntervalMinutes: Double = 15.0,
-        timeNoiseHours: Double = 0.5,
-        gpsNoiseKm: Double = 0.05,
-        gpsDropoutProb: Double = 0.1,
-        gpsAccuracyMean: Double = 15.0,
-        gpsAccuracySd: Double = 10.0,
-        bleDetectionProb: Double = 0.8,
-        bleRssiMean: Double = -65.0,
-        bleRssiSd: Double = 10.0,
-        bleDropoutProb: Double = 0.15,
-        spuriousBleProb: Double = 0.1
-    ): PredictionResults {
-        val episodes = (0 until numEpisodes).map { i ->
-            val trace = generator.generateDayTrace(
-                episodeId = i,
-                interactionIntervalMinutes = interactionIntervalMinutes,
-                timeNoiseHours = timeNoiseHours,
-                gpsNoiseKm = gpsNoiseKm,
-                gpsDropoutProb = gpsDropoutProb,
-                gpsAccuracyMean = gpsAccuracyMean,
-                gpsAccuracySd = gpsAccuracySd,
-                bleDetectionProb = bleDetectionProb,
-                bleRssiMean = bleRssiMean,
-                bleRssiSd = bleRssiSd,
-                bleDropoutProb = bleDropoutProb,
-                spuriousBleProb = spuriousBleProb
-            )
-            evaluateEpisode(trace, i)
+        traces: List<List<TracePoint>>,
+        seed: Long,
+        margin: Double = HardwareConfig.RESIDENCY_HYSTERESIS_MARGIN
+    ): EvalResult {
+        val rng = java.util.Random(seed)
+        val ids = states.map { it.stateId }
+        val t = Tally(configName)
+        for (trace in traces) {
+            t.days++
+            val resident = mutableSetOf<String>()
+            for (point in trace) {
+                val ranked = ids.map { it to rng.nextDouble() }.sortedByDescending { it.second }
+                applyPlan(t, resident, ResidencyPolicy.plan(ranked, resident, capacity, margin))
+                if (point.isInteraction) {
+                    t.interaction(point.groundTruthStateId, ranked.first().first, resident,
+                        ResidencyPolicy.selectForInference(ranked, resident))
+                }
+            }
         }
+        return t.result()
+    }
 
-        val totalInteractions = episodes.sumOf { it.totalInteractions }
-        val totalHit1 = episodes.sumOf { it.hit1Count }
-        val totalHit3 = episodes.sumOf { it.hit3Count }
-        val totalCold = episodes.sumOf { it.coldMissCount }
-        val totalWrong = episodes.sumOf { it.wrongContextCount }
+    /**
+     * Oracle / always-resident: the ground-truth context is
+     * always resident and used. Isolates the KV-restore
+     * benefit from prediction (every interaction is a hit).
+     */
+    fun evaluateOracle(configName: String, traces: List<List<TracePoint>>): EvalResult {
+        val t = Tally(configName, predictive = false)
+        for (trace in traces) {
+            t.days++
+            var current: String? = null
+            for (point in trace) {
+                val gt = point.groundTruthStateId
+                if (gt != current) { t.loads++; if (current != null) t.evictions++; current = gt }
+                if (point.isInteraction) t.interaction(gt, gt, setOf(gt), gt)
+            }
+        }
+        return t.result()
+    }
 
-        return PredictionResults(
-            configName = configName,
-            episodes = episodes,
-            totalInteractions = totalInteractions,
-            hit1 = if (totalInteractions > 0) totalHit1.toDouble() / totalInteractions else 0.0,
-            hit3 = if (totalInteractions > 0) totalHit3.toDouble() / totalInteractions else 0.0,
-            coldMissRate = if (totalInteractions > 0) totalCold.toDouble() / totalInteractions else 0.0,
-            wrongContextRate = if (totalInteractions > 0) totalWrong.toDouble() / totalInteractions else 0.0,
-            meanContextSwitches = episodes.map { it.contextSwitchCount.toDouble() }.average()
-        )
+    /**
+     * Reactive (request-driven) LRU cache, no sensing: the
+     * needed context is identified only when the request
+     * arrives (best case for request-driven reuse, as in
+     * prefix/RAG caches). A request whose context is not
+     * cached is a cold miss and that context is then
+     * prefilled and inserted (LRU eviction). Cache persists
+     * across days, as primed files would on the device.
+     */
+    fun evaluateReactiveLru(configName: String, traces: List<List<TracePoint>>): EvalResult {
+        val t = Tally(configName, predictive = false)
+        val lru = LinkedHashSet<String>()
+        for (trace in traces) {
+            t.days++
+            for (point in trace) {
+                if (!point.isInteraction) continue
+                val gt = point.groundTruthStateId
+                val resident = lru.toSet()
+                t.interaction(gt, top1Id = gt, resident = resident, served = gt.takeIf { it in resident })
+                if (gt in lru) {
+                    lru.remove(gt); lru.add(gt)
+                } else {
+                    if (lru.size >= capacity) { lru.remove(lru.first()); t.evictions++ }
+                    lru.add(gt); t.loads++
+                }
+            }
+        }
+        return t.result()
+    }
+
+    private fun applyPlan(t: Tally, resident: MutableSet<String>, plan: ResidencyPolicy.Plan) {
+        for (id in plan.toEvict) { resident.remove(id); t.evictions++ }
+        for (id in plan.toLoad) { resident.add(id); t.loads++ }
+        check(resident.size <= capacity)
     }
 }

@@ -54,6 +54,7 @@ class MainActivity : AppCompatActivity() {
             Manifest.permission.BLUETOOTH_CONNECT,
             Manifest.permission.CAMERA
         )
+        private const val CALIB_MIN_SAMPLES = 25
     }
 
     private val activityScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
@@ -61,6 +62,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var fallbackRouter: FallbackRouter
     private lateinit var speechManager: SpeechOutputManager
     private var gazeTracker: GazeTracker? = null
+    private var calibrationManager: CalibrationManager? = null
 
     // UI elements
     private lateinit var statusText: TextView
@@ -162,7 +164,17 @@ class MainActivity : AppCompatActivity() {
 
                 updateStatus("MODEL: Ready")
 
-                // --- Step 6: Launch benchmark suite ---
+                // --- Step 6: Benchmark suite (opt-in) ---
+                //
+                // Previously ran on every launch, pausing the
+                // daemon and occupying the engine for minutes.
+                // Launch with:
+                //   adb shell am start -n com.aacbridge/.MainActivity                 //     --ez run_benchmark true [--ez quick_benchmark false]
+                if (!intent.getBooleanExtra("run_benchmark", false)) {
+                    Log.d(TAG, "[INIT] Step 6: benchmark not requested")
+                    return@thread
+                }
+
                 Log.d(TAG, "[INIT] Step 6: Launching LatencyProfiler")
                 val resultsList = java.util.Collections.synchronizedList(
                     mutableListOf<com.aacbridge.inference.LatencyProfiler.TrialResult>()
@@ -280,7 +292,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun initGazeTracker() {
         val app = application as AACBridgeApplication
-        val calibrationManager = CalibrationManager(this)
+        val calib = CalibrationManager(this)
+        calibrationManager = calib
         
         val dwellOverlay = DwellOverlayView(this).apply {
             layoutParams = FrameLayout.LayoutParams(120, 120).apply {
@@ -321,9 +334,40 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             },
-            calibrationManager = calibrationManager
+            calibrationManager = calib,
+            onCalibrationNeeded = {
+                runOnUiThread { updateStatus("GAZE: Tap Calibrate, then look at centre") }
+            }
         )
         startCameraAnalysis()
+
+        // Auto-calibrate on first launch so gaze is testable
+        // immediately — user just needs to look at the phone
+        runCalibration()
+    }
+
+    private fun runCalibration() {
+        val calib = calibrationManager ?: return
+        calib.beginCalibration()
+        updateStatus("CALIBRATING: look at the centre of the screen")
+
+        activityScope.launch {
+            // Wait for the camera pipeline to actually deliver
+            // frames. startCameraAnalysis() returns before the
+            // provider has bound, so a fixed delay here samples
+            // nothing on a cold start.
+            val deadline = System.currentTimeMillis() + 15_000
+            while (calib.sampleCount < CALIB_MIN_SAMPLES &&
+                   System.currentTimeMillis() < deadline) {
+                delay(200)
+            }
+
+            val ok = calib.finishCalibration()
+            updateStatus(
+                if (ok) "GAZE: Calibrated"
+                else "GAZE: Calibration failed — tap Calibrate and hold still"
+            )
+        }
     }
 
     private fun startCameraAnalysis() {
@@ -351,20 +395,149 @@ class MainActivity : AppCompatActivity() {
         }, ContextCompat.getMainExecutor(this))
     }
 
+    private val inferenceBusy = java.util.concurrent.atomic.AtomicBoolean(false)
+
     /**
-     * Handles an AAC intent from any source:
-     * gaze tracking, manual button press, or mock generator.
+     * Interaction path.
+     *
+     * Tier 1: canned response shown immediately.
+     * Contextual: resume the highest-ranked RESIDENT context
+     *   (ResidencyPolicy.selectForInference over the latest
+     *   ActiveSweep ranking) and replace the canned text.
+     * Tier 2 (cold miss): no ranked context is resident; the
+     *   canned response stands and priming of the current
+     *   top-ranked states is started in the background so a
+     *   later interaction can be served from cache.
+     *
+     * Every interaction emits one INTERACTION log line
+     * (outcome, chosen context, current top-1, latencies)
+     * so hit / cold-miss / fallback rates can be measured
+     * from logcat on the device.
      */
     private fun handleIntent(intentLabel: String) {
-        intentLogText.text = "Intent: ${intentLabel.uppercase(Locale.ROOT)} @ ${System.currentTimeMillis()}"
+        intentLogText.text =
+            "Intent: ${intentLabel.uppercase(Locale.ROOT)} @ ${System.currentTimeMillis()}"
+
+        val t0 = System.nanoTime()
 
         activityScope.launch {
-            val response = fallbackRouter.resolveResponse(intentLabel)
-            responseText.text = response
-            speechManager.speak(response)
+            // Tier 1: immediate canned response, always shown.
+            val canned = fallbackRouter.resolveResponse(intentLabel)
+            responseText.text = canned
+            val tier1Ms = (System.nanoTime() - t0) / 1_000_000.0
 
-            Log.d(TAG, "Intent: $intentLabel -> Response: $response")
+            val app = application as AACBridgeApplication
+            val container = app.appContainer
+            val snapshot = container.latestRanking.get()
+            val ranked = snapshot?.ranked.orEmpty()
+            val top1 = ranked.firstOrNull()?.first ?: ""
+            val rankingAgeMs =
+                if (snapshot == null) -1L else System.currentTimeMillis() - snapshot.publishedAtMs
+
+            fun logInteraction(outcome: String, served: String, resumeMs: Double, totalMs: Double) {
+                Log.i(
+                    TAG,
+                    "INTERACTION,intent=%s,outcome=%s,served=%s,top1=%s,ranking_age_ms=%d,tier1_ms=%.2f,resume_ms=%.2f,total_ms=%.2f,resident=%s".format(
+                        Locale.US, intentLabel, outcome, served, top1, rankingAgeMs,
+                        tier1Ms, resumeMs, totalMs,
+                        container.kvCacheManager.residentStateIds().sorted().joinToString("|")
+                    )
+                )
+            }
+
+            if (!container.modelReady.get()) {
+                speechManager.speak(canned)
+                logInteraction("FALLBACK_MODEL_NOT_READY", "", 0.0, tier1Ms)
+                return@launch
+            }
+
+            if (!inferenceBusy.compareAndSet(false, true)) {
+                speechManager.speak(canned)
+                logInteraction("FALLBACK_BUSY", "", 0.0, tier1Ms)
+                return@launch
+            }
+
+            try {
+                val chosenId = com.aacbridge.router.ResidencyPolicy.selectForInference(
+                    ranked = ranked,
+                    resident = container.kvCacheManager.residentStateIds()
+                )
+
+                val state = chosenId?.let { container.kvCacheManager.acquireStateForInference(it) }
+
+                if (state == null) {
+                    // Cold miss -> Tier 2: prime current top states.
+                    speechManager.speak(canned)
+                    logInteraction("COLD_MISS", "", 0.0, (System.nanoTime() - t0) / 1_000_000.0)
+                    if (ranked.isNotEmpty()) {
+                        app.applicationScope.launch {
+                            container.kvCacheManager.updateResidency(ranked)
+                        }
+                    }
+                    return@launch
+                }
+
+                var resumeMs = 0.0
+                val reply = try {
+                    withContext(Dispatchers.IO) {
+                        container.engineLock.withLock {
+                            val r0 = System.nanoTime()
+                            /*
+                             * The slot already holds the state
+                             * (KVCacheManager loaded or primed it
+                             * there) and resumeInference rolls the
+                             * slot back afterwards, so no reload.
+                             */
+                            val out = LlamaBridge.resumeInference(
+                                promptForIntent(intentLabel),
+                                state.seqId
+                            )
+                            resumeMs = (System.nanoTime() - r0) / 1_000_000.0
+                            out
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Contextual inference failed", e)
+                    null
+                } finally {
+                    container.kvCacheManager.releaseState(state.stateId)
+                }
+
+                val totalMs = (System.nanoTime() - t0) / 1_000_000.0
+
+                if (!reply.isNullOrBlank() && !isNativeError(reply)) {
+                    responseText.text = reply
+                    speechManager.speak(reply)
+                    logInteraction(
+                        if (state.stateId == top1) "HIT_TOP1" else "HIT_RESIDENT_NOT_TOP1",
+                        state.stateId, resumeMs, totalMs
+                    )
+                } else {
+                    speechManager.speak(canned)
+                    logInteraction("FALLBACK_INFERENCE_ERROR", state.stateId, resumeMs, totalMs)
+                }
+            } finally {
+                inferenceBusy.set(false)
+            }
         }
+    }
+
+    private fun isNativeError(reply: String): Boolean =
+        reply.startsWith("No KV cache") ||
+            reply.startsWith("Inference failed") ||
+            reply.startsWith("Generation failed") ||
+            reply.startsWith("Invalid cache slot") ||
+            reply.startsWith("Context window exhausted") ||
+            reply.startsWith("Tokenization failed") ||
+            reply.startsWith("Model not initialized")
+
+    private fun promptForIntent(label: String): String = when (label) {
+        "confirm"   -> "User: yes\nAssistant:"
+        "reject"    -> "User: no\nAssistant:"
+        "select"    -> "User: I need water\nAssistant:"
+        "scroll"    -> "User: show me more options\nAssistant:"
+        "call-help" -> "User: I need help\nAssistant:"
+        else        -> "User: $label\nAssistant:"
     }
 
     private fun updateStatus(status: String) {
@@ -466,6 +639,23 @@ class MainActivity : AppCompatActivity() {
             grid.addView(btn, params)
         }
         content.addView(grid)
+
+        val recalibrateBtn = Button(this).apply {
+            text = "RECALIBRATE GAZE"
+            setTextColor(Color.WHITE)
+            textSize = 13f
+            setTypeface(null, Typeface.BOLD)
+            val bg = GradientDrawable().apply {
+                setColor(Color.parseColor("#334155"))
+                cornerRadius = 12f
+                setStroke(1, Color.parseColor("#64748B"))
+            }
+            background = bg
+            setOnClickListener { runCalibration() }
+            isAllCaps = false
+        }
+        content.addView(recalibrateBtn)
+        content.addView(spacer())
 
         // Section: Intent Log
         content.addView(makeSectionLabel("INTENT EVENT LOG"))

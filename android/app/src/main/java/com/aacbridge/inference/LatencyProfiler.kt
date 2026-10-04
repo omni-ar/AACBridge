@@ -97,19 +97,18 @@ class LatencyProfiler(
          * Native llama.cpp sequence slot used for
          * benchmark cache load operations.
          *
-         * Uses slot 0 because:
-         * - runInference() always decodes into seq 0
-         * - saveKVCache() in ContextPrimerImpl always
-         *   saves seq 0
-         * - loadKVCache() must target the same slot
-         *   to restore the correct attention tensors
+         * Uses the native scratch sequence: the same
+         * one runInference() (RAG baseline) decodes into
+         * and clearKVCache() resets between trials.
          *
-         * During benchmarking, we bypass KVCacheManager's
-         * slot allocation and directly use seq 0. This is
-         * safe because the benchmark holds the engineLock
-         * exclusively for the duration of each trial.
+         * Restoring into the scratch sequence bypasses
+         * KVCacheManager's slot allocation without
+         * overwriting a resident state's slot. The .bin
+         * file is seq-id agnostic, so a cache primed into
+         * any resident slot restores here unchanged.
          */
-        private const val BENCH_SEQ_ID = 0
+        private const val BENCH_SEQ_ID =
+            com.aacbridge.router.HardwareConfig.SCRATCH_SEQ_ID
 
         /**
          * Representative state used for single-state
@@ -578,7 +577,7 @@ class LatencyProfiler(
              * the position collision that occurs with
              * runInference()'s llama_batch_get_one.
              */
-            result = bridge.resumeInference(prompt)
+            result = bridge.resumeInference(prompt, BENCH_SEQ_ID)
 
             /*
              * Read native metrics under the same lock.
@@ -977,7 +976,7 @@ class LatencyProfiler(
                 return@withLock null
             }
 
-            bridge.resumeInference(VALIDATION_PROMPT)
+            bridge.resumeInference(VALIDATION_PROMPT, BENCH_SEQ_ID)
         }
 
         if (capResult == null) {

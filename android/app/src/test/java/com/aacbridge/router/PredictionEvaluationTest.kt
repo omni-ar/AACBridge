@@ -1,278 +1,40 @@
 package com.aacbridge.router
 
-import org.junit.Assert.*
-import org.junit.Before
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
 
 /**
- * Prediction evaluation test suite.
+ * Trace-driven evaluation of the deployed routing +
+ * residency rules (see PredictionEvaluator for what is and
+ * is not simulated).
  *
- * Evaluates prediction accuracy across multiple routing
- * configurations using the production StateRouter and
- * independently generated controlled sensor traces.
+ * Writes:
+ *   evaluation/prediction/tables/prediction_eval.csv
+ *   evaluation/prediction/tables/hysteresis_eval.csv
+ *   evaluation/prediction/tables/ground_truth_distribution.csv
  *
- * Configurations tested:
- * 1. FULL: time + GPS + BLE (production configuration)
- * 2. TIME_ONLY: GPS/BLE unavailable
- * 3. GPS_ONLY: BLE unavailable, time weight zeroed
- * 4. BLE_ONLY: GPS unavailable, time weight zeroed
- * 5. RANDOM: uniform random baseline
+ * Seeds are fixed; rerunning reproduces the files exactly.
  *
- * All traces use seed=42 for reproducibility.
- *
- * IMPORTANT: These are controlled/synthetic traces,
- * not real-world sensor recordings.
+ * IMPORTANT: controlled/synthetic traces, not recordings.
  */
 class PredictionEvaluationTest {
 
-    private lateinit var states: List<ContextState>
-    private lateinit var generator: TraceGenerator
-
-    // Production configuration
-    private val timeScorer = TimeScorer(sigmaHours = 2.0)
-    private val gpsScorer = GPSScorer(lambdaKm = 0.1, lambdaAccuracyMeters = 50.0)
-    private val bleScorer = BLEScorer(r0 = -70.0, k = 0.1)
-
-    private val fullRouter = StateRouter(timeScorer, gpsScorer, bleScorer)
-
     companion object {
-        private const val NUM_EPISODES = 100
+        private const val NUM_DAYS = 100
         private const val SEED = 42L
-    }
 
-    @Before
-    fun setup() {
-        states = listOf(
-            ContextState("home_morning", 8.0, 28.6139, 77.2090,
-                mapOf("AA:BB:CC:DD:EE:01" to 0.8, "AA:BB:CC:DD:EE:02" to 0.5)),
-            ContextState("home_evening", 19.0, 28.6139, 77.2090,
-                mapOf("AA:BB:CC:DD:EE:01" to 0.8, "AA:BB:CC:DD:EE:03" to 0.6)),
-            ContextState("hospital_ward", 11.0, 28.5672, 77.2100,
-                mapOf("AA:BB:CC:DD:EE:04" to 0.9, "AA:BB:CC:DD:EE:05" to 0.7)),
-            ContextState("therapy_room", 14.0, 28.5672, 77.2105,
-                mapOf("AA:BB:CC:DD:EE:06" to 0.85)),
-            ContextState("caregiver_visit", 16.5, 28.6139, 77.2090,
-                mapOf("AA:BB:CC:DD:EE:07" to 0.95, "AA:BB:CC:DD:EE:01" to 0.8))
-        )
-        generator = TraceGenerator(seed = SEED)
-    }
+        /** Single-modality ablations: time weight ~0 (not exactly 0: StateRouter requires > 0). */
+        private const val ABLATION_TIME_WEIGHT = 0.001
 
-    // ================================================================
-    // FULL FUSION (production configuration)
-    // ================================================================
+        private val HOSPITAL = TraceGenerator.STATE_ANCHORS.getValue("hospital_ward")
+        private val HOSPITAL_BEACONS = TraceGenerator.STATE_BLE_ANCHORS.getValue("hospital_ward")
 
-    @Test
-    fun `FULL fusion prediction evaluation`() {
-        val evaluator = PredictionEvaluator(fullRouter, states)
-        val results = evaluator.evaluate(
-            generator = generator,
-            numEpisodes = NUM_EPISODES,
-            configName = "FULL_FUSION",
-            interactionIntervalMinutes = 15.0,
-            timeNoiseHours = 0.5,
-            gpsNoiseKm = 0.05,
-            gpsDropoutProb = 0.1,
-            bleDetectionProb = 0.8,
-            bleDropoutProb = 0.15
-        )
-        printResults(results)
-        writeResultsCsv(results, "full_fusion")
+        val NORMAL = TraceConfig()
 
-        // Sanity: full fusion should beat random
-        assertTrue("Hit@1 should exceed random baseline (20%)",
-            results.hit1 > 0.20)
-        assertTrue("Hit@3 should exceed random baseline (60%)",
-            results.hit3 > 0.60)
-    }
-
-    // ================================================================
-    // TIME-ONLY (GPS and BLE unavailable)
-    // ================================================================
-
-    @Test
-    fun `TIME_ONLY prediction evaluation`() {
-        val evaluator = PredictionEvaluator(fullRouter, states)
-        val results = evaluator.evaluate(
-            generator = generator,
-            numEpisodes = NUM_EPISODES,
-            configName = "TIME_ONLY",
-            interactionIntervalMinutes = 15.0,
-            timeNoiseHours = 0.5,
-            gpsDropoutProb = 1.0,  // No GPS
-            bleDropoutProb = 1.0   // No BLE
-        )
-        printResults(results)
-        writeResultsCsv(results, "time_only")
-    }
-
-    // ================================================================
-    // GPS-ONLY (BLE unavailable, TIME STILL ACTIVE via wt=0.4)
-    // NOTE: This is NOT a true single-modality ablation.
-    // Time weight leaks into scoring. See GPS_ONLY_TRUE below.
-    // ================================================================
-
-    @Test
-    fun `GPS_ONLY prediction evaluation with time leakage`() {
-        val evaluator = PredictionEvaluator(fullRouter, states)
-        val results = evaluator.evaluate(
-            generator = generator,
-            numEpisodes = NUM_EPISODES,
-            configName = "GPS_WITH_TIME",
-            interactionIntervalMinutes = 15.0,
-            timeNoiseHours = 0.5,
-            gpsNoiseKm = 0.05,
-            gpsDropoutProb = 0.05,
-            bleDropoutProb = 1.0  // No BLE
-        )
-        printResults(results)
-        writeResultsCsv(results, "gps_with_time")
-    }
-
-    // ================================================================
-    // TRUE GPS-ONLY (time weight near-zero, BLE unavailable)
-    // ================================================================
-
-    @Test
-    fun `TRUE GPS_ONLY prediction evaluation`() {
-        // Create router with near-zero time weight to isolate GPS
-        val gpsOnlyRouter = StateRouter(
-            timeScorer = timeScorer,
-            gpsScorer = gpsScorer,
-            bleScorer = bleScorer,
-            timeBaselineWeightOverride = 0.001  // epsilon to avoid div-by-zero
-        )
-        val evaluator = PredictionEvaluator(gpsOnlyRouter, states)
-        val results = evaluator.evaluate(
-            generator = generator,
-            numEpisodes = NUM_EPISODES,
-            configName = "GPS_ONLY",
-            interactionIntervalMinutes = 15.0,
-            timeNoiseHours = 0.5,
-            gpsNoiseKm = 0.05,
-            gpsDropoutProb = 0.05,
-            bleDropoutProb = 1.0  // No BLE
-        )
-        printResults(results)
-        writeResultsCsv(results, "gps_only")
-    }
-
-    // ================================================================
-    // BLE-ONLY (GPS unavailable, TIME STILL ACTIVE via wt=0.4)
-    // NOTE: This is NOT a true single-modality ablation.
-    // ================================================================
-
-    @Test
-    fun `BLE_ONLY prediction evaluation with time leakage`() {
-        val evaluator = PredictionEvaluator(fullRouter, states)
-        val results = evaluator.evaluate(
-            generator = generator,
-            numEpisodes = NUM_EPISODES,
-            configName = "BLE_WITH_TIME",
-            interactionIntervalMinutes = 15.0,
-            timeNoiseHours = 0.5,
-            gpsDropoutProb = 1.0,  // No GPS
-            bleDetectionProb = 0.8,
-            bleDropoutProb = 0.15
-        )
-        printResults(results)
-        writeResultsCsv(results, "ble_with_time")
-    }
-
-    // ================================================================
-    // TRUE BLE-ONLY (time weight near-zero, GPS unavailable)
-    // ================================================================
-
-    @Test
-    fun `TRUE BLE_ONLY prediction evaluation`() {
-        val bleOnlyRouter = StateRouter(
-            timeScorer = timeScorer,
-            gpsScorer = gpsScorer,
-            bleScorer = bleScorer,
-            timeBaselineWeightOverride = 0.001
-        )
-        val evaluator = PredictionEvaluator(bleOnlyRouter, states)
-        val results = evaluator.evaluate(
-            generator = generator,
-            numEpisodes = NUM_EPISODES,
-            configName = "BLE_ONLY",
-            interactionIntervalMinutes = 15.0,
-            timeNoiseHours = 0.5,
-            gpsDropoutProb = 1.0,  // No GPS
-            bleDetectionProb = 0.8,
-            bleDropoutProb = 0.15
-        )
-        printResults(results)
-        writeResultsCsv(results, "ble_only")
-    }
-
-    // ================================================================
-    // RANDOM BASELINE
-    // ================================================================
-
-    @Test
-    fun `RANDOM baseline prediction evaluation`() {
-        val rng = java.util.Random(SEED)
-        val stateIds = states.map { it.stateId }
-
-        var totalInteractions = 0
-        var hit1 = 0
-        var hit3 = 0
-        var coldMiss = 0
-
-        for (episode in 0 until NUM_EPISODES) {
-            val trace = generator.generateDayTrace(episodeId = episode)
-            val residentSet = mutableListOf<String>()
-
-            for (point in trace) {
-                // Random selection
-                val shuffled = stateIds.shuffled(rng)
-                val randomTop3 = shuffled.take(3)
-                val randomTop1 = shuffled.first()
-
-                // Update resident set
-                residentSet.clear()
-                residentSet.addAll(randomTop3)
-
-                totalInteractions++
-                if (randomTop1 == point.groundTruthStateId) hit1++
-                if (point.groundTruthStateId in randomTop3) hit3++
-                if (point.groundTruthStateId !in residentSet) coldMiss++
-            }
-        }
-
-        val results = PredictionResults(
-            configName = "RANDOM",
-            episodes = emptyList(),
-            totalInteractions = totalInteractions,
-            hit1 = hit1.toDouble() / totalInteractions,
-            hit3 = hit3.toDouble() / totalInteractions,
-            coldMissRate = coldMiss.toDouble() / totalInteractions,
-            wrongContextRate = 0.0,
-            meanContextSwitches = 0.0
-        )
-        printResults(results)
-        writeResultsCsv(results, "random")
-
-        // Analytical baselines for 5 states / 3 slots
-        // Random Hit@1 = 1/5 = 0.20, Random Hit@3 = 3/5 = 0.60
-        println("  Analytical uniform Hit@1 = 0.200 (1/5)")
-        println("  Analytical uniform Hit@3 = 0.600 (3/5)")
-    }
-
-    // ================================================================
-    // NOISY CONDITIONS (stress test)
-    // ================================================================
-
-    @Test
-    fun `FULL fusion under high noise`() {
-        val evaluator = PredictionEvaluator(fullRouter, states)
-        val results = evaluator.evaluate(
-            generator = generator,
-            numEpisodes = NUM_EPISODES,
-            configName = "FULL_HIGH_NOISE",
-            interactionIntervalMinutes = 15.0,
-            timeNoiseHours = 1.5,
+        val HIGH_NOISE = TraceConfig(
+            scheduleShiftHours = 1.5,
             gpsNoiseKm = 0.2,
             gpsDropoutProb = 0.3,
             gpsAccuracyMean = 50.0,
@@ -280,217 +42,154 @@ class PredictionEvaluationTest {
             bleDetectionProb = 0.5,
             bleDropoutProb = 0.4
         )
-        printResults(results)
-        writeResultsCsv(results, "full_high_noise")
     }
 
-    // ================================================================
-    // GPS SPOOFED CONDITION (security evaluation)
-    // ================================================================
+    private val states = listOf(
+        ContextState("home_morning", 8.0, 28.6139, 77.2090,
+            mapOf("AA:BB:CC:DD:EE:01" to 0.8, "AA:BB:CC:DD:EE:02" to 0.5)),
+        ContextState("home_evening", 19.0, 28.6139, 77.2090,
+            mapOf("AA:BB:CC:DD:EE:01" to 0.8, "AA:BB:CC:DD:EE:03" to 0.6)),
+        ContextState("hospital_ward", 11.0, 28.5672, 77.2100,
+            mapOf("AA:BB:CC:DD:EE:04" to 0.9, "AA:BB:CC:DD:EE:05" to 0.7)),
+        ContextState("therapy_room", 14.0, 28.5672, 77.2105,
+            mapOf("AA:BB:CC:DD:EE:06" to 0.85)),
+        ContextState("caregiver_visit", 16.5, 28.6139, 77.2090,
+            mapOf("AA:BB:CC:DD:EE:07" to 0.95, "AA:BB:CC:DD:EE:01" to 0.8))
+    )
+
+    private val timeScorer = TimeScorer(sigmaHours = 2.0)
+    private val gpsScorer = GPSScorer(lambdaKm = 0.1, lambdaAccuracyMeters = 50.0)
+    private val bleScorer = BLEScorer(r0 = -70.0, k = 0.1)
+
+    private val fullRouter = StateRouter(timeScorer, gpsScorer, bleScorer)
+    private val ablationRouter = StateRouter(timeScorer, gpsScorer, bleScorer,
+        timeBaselineWeightOverride = ABLATION_TIME_WEIGHT)
+
+    private val generator = TraceGenerator(seed = SEED)
+    private val evaluator = PredictionEvaluator(states)
+
+    private fun traces(config: TraceConfig) =
+        (0 until NUM_DAYS).map { generator.generateDayTrace(it, config) }
+
+    private fun isHome(p: TracePoint) = p.groundTruthStateId.startsWith("home")
+
+    // ---------------------------------------------------------
+    // Spoofing transforms (applied only while the user is at a
+    // home_* context).
+    // ---------------------------------------------------------
+
+    /** Forged GPS that passes LocationValidator (e.g. rooted device). */
+    private fun gpsSpoofUndetected(p: TracePoint): SensorSnapshot =
+        if (!isHome(p)) p.snapshot
+        else p.snapshot.copy(
+            location = GpsLocation(HOSPITAL.first, HOSPITAL.second, accuracyMeters = 5.0f)
+        )
+
+    /** Mock-provider spoof caught by LocationValidator: GPS dropped. */
+    private fun gpsSpoofMockRejected(p: TracePoint): SensorSnapshot =
+        if (!isHome(p)) p.snapshot else p.snapshot.copy(location = null)
+
+    /** Cloned hospital beacons advertised near the user at home. */
+    private fun bleSpoof(p: TracePoint): SensorSnapshot =
+        if (!isHome(p)) p.snapshot
+        else p.snapshot.copy(
+            detectedBleDevices = p.snapshot.detectedBleDevices +
+                HOSPITAL_BEACONS.associateWith { Rssi(-55) }
+        )
 
     @Test
-    fun `GPS spoofed to wrong location`() {
-        // Simulate GPS reporting hospital coordinates when user is at home
-        val spoofedGenerator = object {
-            fun generateSpoofedTrace(episodeId: Int): List<TracePoint> {
-                val baseTrace = generator.generateDayTrace(episodeId = episodeId)
-                val rng = java.util.Random(SEED + episodeId + 1000)
+    fun `prediction evaluation across baselines and scenarios`() {
 
-                return baseTrace.map { point ->
-                    if (point.groundTruthStateId.startsWith("home")) {
-                        // Spoof GPS to hospital location
-                        val spoofedSnapshot = SensorSnapshot(
-                            currentHourDecimal = point.snapshot.currentHourDecimal,
-                            location = GpsLocation(
-                                lat = 28.5672 + rng.nextGaussian() * 0.0001,
-                                lng = 77.2100 + rng.nextGaussian() * 0.0001,
-                                accuracyMeters = 5.0f
-                            ),
-                            detectedBleDevices = point.snapshot.detectedBleDevices
-                        )
-                        point.copy(snapshot = spoofedSnapshot)
-                    } else {
-                        point
-                    }
-                }
+        val normal = traces(NORMAL)
+        val highNoise = traces(HIGH_NOISE)
+        val staleGps = traces(NORMAL.copy(gpsDropoutProb = 0.7))
+        val noSensors = traces(NORMAL.copy(gpsDropoutProb = 1.0, bleDropoutProb = 1.0))
+        val noBle = traces(NORMAL.copy(gpsDropoutProb = 0.05, bleDropoutProb = 1.0))
+        val noGps = traces(NORMAL.copy(gpsDropoutProb = 1.0))
+
+        val results = listOf(
+            evaluator.evaluateOracle("ORACLE_ALWAYS_RESIDENT", normal),
+            evaluator.evaluateReactiveLru("REACTIVE_LRU_NO_SENSING", normal),
+            evaluator.evaluateRandom("RANDOM_RANKING", normal, seed = SEED),
+            evaluator.evaluateRouter("TIME_ONLY", fullRouter, noSensors),
+            evaluator.evaluateRouter("GPS_ONLY", ablationRouter, noBle),
+            evaluator.evaluateRouter("BLE_ONLY", ablationRouter, noGps),
+            evaluator.evaluateRouter("FULL", fullRouter, normal),
+            evaluator.evaluateRouter("FULL_NO_HYSTERESIS", fullRouter, normal, margin = 0.0),
+            evaluator.evaluateRouter("FULL_STALE_GPS_70PCT", fullRouter, staleGps),
+            evaluator.evaluateRouter("FULL_HIGH_NOISE", fullRouter, highNoise),
+            evaluator.evaluateRouter("FULL_GPS_SPOOF_UNDETECTED", fullRouter, normal,
+                transform = ::gpsSpoofUndetected),
+            evaluator.evaluateRouter("FULL_GPS_SPOOF_MOCK_REJECTED", fullRouter, normal,
+                transform = ::gpsSpoofMockRejected),
+            evaluator.evaluateRouter("FULL_BLE_SPOOF", fullRouter, normal,
+                transform = ::bleSpoof)
+        )
+
+        writeCsv("prediction_eval.csv", EvalResult.CSV_HEADER, results.map { it.toCsv() })
+        println(EvalResult.CSV_HEADER)
+        results.forEach { println(it.toCsv()) }
+
+        val byName = results.associateBy { it.configName }
+
+        for (r in results) {
+            assertEquals(NUM_DAYS * 64, r.interactions)
+            assertEquals(r.interactions, r.correct + r.wrongContext + r.coldMiss)
+        }
+
+        assertEquals(1.0, byName.getValue("ORACLE_ALWAYS_RESIDENT").correctRate, 0.0)
+        assertTrue(byName.getValue("FULL").correctRate > byName.getValue("RANDOM_RANKING").correctRate)
+    }
+
+    @Test
+    fun `hysteresis margin sweep`() {
+
+        val margins = listOf(0.0, 0.05, 0.10, 0.15, 0.20, 0.30, 0.40, 0.50, 0.70)
+        val rows = mutableListOf<String>()
+
+        for ((label, config) in listOf("NORMAL" to NORMAL, "HIGH_NOISE" to HIGH_NOISE)) {
+            val t = traces(config)
+            for (m in margins) {
+                val r = evaluator.evaluateRouter("FULL_$label", fullRouter, t, margin = m)
+                rows += "$label,%.2f,".format(m) + r.toCsv()
             }
         }
 
-        val evaluator = PredictionEvaluator(fullRouter, states)
-        var totalInteractions = 0
-        var hit1 = 0
-        var hit3 = 0
-        var coldMiss = 0
-        var wrongContext = 0
-        var contextSwitches = 0
-
-        for (episode in 0 until NUM_EPISODES) {
-            val trace = spoofedGenerator.generateSpoofedTrace(episode)
-            val result = evaluator.evaluateEpisode(trace, episode)
-            totalInteractions += result.totalInteractions
-            hit1 += result.hit1Count
-            hit3 += result.hit3Count
-            coldMiss += result.coldMissCount
-            wrongContext += result.wrongContextCount
-            contextSwitches += result.contextSwitchCount
-        }
-
-        val results = PredictionResults(
-            configName = "GPS_SPOOFED",
-            episodes = emptyList(),
-            totalInteractions = totalInteractions,
-            hit1 = hit1.toDouble() / totalInteractions,
-            hit3 = hit3.toDouble() / totalInteractions,
-            coldMissRate = coldMiss.toDouble() / totalInteractions,
-            wrongContextRate = wrongContext.toDouble() / totalInteractions,
-            meanContextSwitches = contextSwitches.toDouble() / NUM_EPISODES
-        )
-        printResults(results)
-        writeResultsCsv(results, "gps_spoofed")
+        val header = "trace,margin," + EvalResult.CSV_HEADER
+        writeCsv("hysteresis_eval.csv", header, rows)
+        println(header)
+        rows.forEach(::println)
     }
-
-    // ================================================================
-    // STALE GPS CONDITION
-    // ================================================================
 
     @Test
-    fun `FULL fusion with stale GPS`() {
-        val evaluator = PredictionEvaluator(fullRouter, states)
-        // Simulate high GPS dropout = stale/unavailable fixes
-        val results = evaluator.evaluate(
-            generator = generator,
-            numEpisodes = NUM_EPISODES,
-            configName = "STALE_GPS",
-            interactionIntervalMinutes = 15.0,
-            timeNoiseHours = 0.5,
-            gpsDropoutProb = 0.7,  // 70% GPS unavailable
-            bleDetectionProb = 0.8,
-            bleDropoutProb = 0.15
-        )
-        printResults(results)
-        writeResultsCsv(results, "stale_gps")
+    fun `ground truth distribution`() {
+
+        val counts = traces(NORMAL).flatten()
+            .filter { it.isInteraction }
+            .groupingBy { it.groundTruthStateId }
+            .eachCount()
+        val total = counts.values.sum()
+
+        val rows = counts.entries.sortedByDescending { it.value }
+            .map { "${it.key},${it.value},%.6f".format(it.value.toDouble() / total) }
+
+        writeCsv("ground_truth_distribution.csv", "state,interactions,fraction", rows)
+        rows.forEach(::println)
+        assertEquals(NUM_DAYS * 64, total)
     }
 
-    // ================================================================
-    // HYSTERESIS MARGIN SWEEP (DriftDetector evaluation)
-    // ================================================================
-
-    @Test
-    fun `HYSTERESIS sweep across delta values`() {
-        val deltas = listOf(0.00, 0.05, 0.10, 0.15, 0.20)
-        println("\n=== HYSTERESIS SWEEP (HIGH NOISE) ===")
-        println("delta,switches_per_day,hit1,hit3_residency,cold_miss")
-
-        for (delta in deltas) {
-            var totalInteractions = 0
-            var totalHit1 = 0
-            var totalHit3 = 0
-            var totalColdMiss = 0
-            var totalSwaps = 0
-
-            for (episode in 0 until NUM_EPISODES) {
-                val trace = generator.generateDayTrace(
-                    episodeId = episode,
-                    interactionIntervalMinutes = 15.0,
-                    timeNoiseHours = 1.5,
-                    gpsNoiseKm = 0.2,
-                    gpsDropoutProb = 0.3,
-                    gpsAccuracyMean = 50.0,
-                    gpsAccuracySd = 30.0,
-                    bleDetectionProb = 0.5,
-                    bleDropoutProb = 0.4
-                )
-
-                val residentStates = mutableListOf<String>()
-
-                for (point in trace) {
-                    val scored = fullRouter.getScoredStates(point.snapshot, states)
-                    val scoreMap = scored.toMap()
-                    val best = scored.firstOrNull() ?: continue
-                    val top1 = best.first
-
-                    // Populate initial resident states
-                    if (residentStates.size < 3) {
-                        for (s in scored.take(3)) {
-                            if (s.first !in residentStates && residentStates.size < 3) {
-                                residentStates.add(s.first)
-                            }
-                        }
-                    } else if (top1 !in residentStates) {
-                        val weakest = residentStates.minByOrNull { scoreMap[it] ?: 0.0 }
-                        val weakestScore = if (weakest != null) scoreMap[weakest] ?: 0.0 else 0.0
-                        if ((best.second - weakestScore) > delta) {
-                            residentStates.remove(weakest)
-                            residentStates.add(top1)
-                            totalSwaps++
-                        }
-                    }
-
-                    totalInteractions++
-                    val gt = point.groundTruthStateId
-                    if (top1 == gt) totalHit1++
-                    if (gt in residentStates) totalHit3++
-                    if (gt !in residentStates) totalColdMiss++
-                }
-            }
-
-            val swapsPerDay = totalSwaps.toDouble() / NUM_EPISODES
-            val hit1 = totalHit1.toDouble() / totalInteractions
-            val hit3 = totalHit3.toDouble() / totalInteractions
-            val cold = totalColdMiss.toDouble() / totalInteractions
-
-            println(String.format("DELTA,%.2f,%.2f,%.4f,%.4f,%.4f", delta, swapsPerDay, hit1, hit3, cold))
-        }
+    private fun writeCsv(name: String, header: String, rows: List<String>) {
+        val dir = File(repoRoot(), "evaluation/prediction/tables").apply { mkdirs() }
+        File(dir, name).writeText((listOf(header) + rows).joinToString("\n", postfix = "\n"))
     }
 
-    // ================================================================
-    // STATE DISTRIBUTION ANALYSIS
-    // ================================================================
-
-    @Test
-    fun `state distribution analysis`() {
-        val allTracePoints = (0 until NUM_EPISODES).flatMap { i ->
-            generator.generateDayTrace(episodeId = i)
+    /** Walks up from the working directory to the repo root. */
+    private fun repoRoot(): File {
+        var dir: File? = File("").absoluteFile
+        while (dir != null) {
+            if (File(dir, "evaluation").isDirectory && File(dir, "android").isDirectory) return dir
+            dir = dir.parentFile
         }
-
-        val distribution = allTracePoints
-            .groupBy { it.groundTruthStateId }
-            .mapValues { (_, points) -> points.size }
-
-        val total = allTracePoints.size
-
-        println("\n=== STATE DISTRIBUTION ===")
-        println("Total interactions: $total")
-        for ((stateId, count) in distribution.entries.sortedByDescending { it.value }) {
-            val pct = count.toDouble() / total * 100
-            println("  $stateId: $count (${String.format("%.1f", pct)}%)")
-        }
-
-        // GPS coordinate sharing analysis
-        println("\n=== GPS COORDINATE SHARING ===")
-        println("  home_morning, home_evening, caregiver_visit: SAME GPS (28.6139, 77.2090)")
-        println("  hospital_ward, therapy_room: SIMILAR GPS (28.5672, ~77.210x)")
-        println("  GPS alone CANNOT distinguish home_morning vs home_evening vs caregiver_visit")
-    }
-
-    // ================================================================
-    // HELPERS
-    // ================================================================
-
-    private fun printResults(results: PredictionResults) {
-        println("\n=== ${results.configName} ===")
-        println("  Total interactions: ${results.totalInteractions}")
-        println("  Hit@1:     ${String.format("%.4f", results.hit1)} (${String.format("%.1f", results.hit1 * 100)}%)")
-        println("  Hit@3:     ${String.format("%.4f", results.hit3)} (${String.format("%.1f", results.hit3 * 100)}%)")
-        println("  Cold miss: ${String.format("%.4f", results.coldMissRate)} (${String.format("%.1f", results.coldMissRate * 100)}%)")
-        println("  Wrong ctx: ${String.format("%.4f", results.wrongContextRate)} (${String.format("%.1f", results.wrongContextRate * 100)}%)")
-        if (results.episodes.isNotEmpty()) {
-            println("  Ctx switches/day: ${String.format("%.1f", results.meanContextSwitches)}")
-        }
-    }
-
-    private fun writeResultsCsv(results: PredictionResults, filename: String) {
-        // Write to test output for extraction
-        println("CSV,$filename,${results.configName},${results.totalInteractions},${String.format("%.6f", results.hit1)},${String.format("%.6f", results.hit3)},${String.format("%.6f", results.coldMissRate)},${String.format("%.6f", results.wrongContextRate)},${String.format("%.2f", results.meanContextSwitches)}")
+        error("repo root (with evaluation/ and android/) not found from ${File("").absolutePath}")
     }
 }

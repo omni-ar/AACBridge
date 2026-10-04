@@ -32,9 +32,9 @@ interface LlamaBridgeAdapter {
     ): Boolean
 
     /**
-     * Clears the KV cache and resets session_tokens.
-     * Must be called between independent inference
-     * trials to prevent context exhaustion.
+     * Clears the scratch sequence (HardwareConfig.SCRATCH_SEQ_ID)
+     * used by runInference() and benchmark restores.
+     * Resident slots are not touched.
      */
     fun clearKVCache()
 
@@ -54,10 +54,11 @@ interface LlamaBridgeAdapter {
 
     /**
      * Executes tokenization, prefill, and greedy
-     * sampling on the given prompt.
+     * sampling on the given prompt (inline / RAG path).
      *
-     * After this call, the native KV cache contains
-     * the computed attention tensors for the prompt.
+     * Runs in the scratch sequence
+     * (HardwareConfig.SCRATCH_SEQ_ID), so resident
+     * states are not disturbed.
      *
      * @param prompt The context prompt string.
      * @return Generated text response.
@@ -76,10 +77,12 @@ interface LlamaBridgeAdapter {
      * saveKVCache() to produce clean cache files.
      *
      * @param prompt The context prompt to prefill.
+     * @param seqId Sequence slot to fill (cleared first).
      * @return true if prefill succeeded.
      */
     fun prefillOnly(
-        prompt: String
+        prompt: String,
+        seqId: Int
     ): Boolean
 
     /**
@@ -91,16 +94,27 @@ interface LlamaBridgeAdapter {
      * the token history restored by loadKVCache().
      *
      * Unlike runInference(), this function:
-     * - Does NOT clear session_tokens
+     * - Does NOT clear the slot
      * - Tokenizes intent WITHOUT BOS
      * - Uses explicit positions starting at n_past
+     * - Rolls the slot back to the cached context after
+     *   generation, so the resident state can be reused
+     *   for the next interaction without reloading
      *
      * @param prompt The intent prompt to append.
      * @return Generated text response.
      */
     fun resumeInference(
-        prompt: String
+        prompt: String,
+        seqId: Int
     ): String
+
+    /**
+     * Drops KV entries and token history for one slot.
+     * Called on eviction so a reused slot never inherits
+     * stale positions from its previous occupant.
+     */
+    fun resetSlot(seqId: Int)
 
     // -------------------------------------------------
     // Native timing/token telemetry
@@ -168,4 +182,4 @@ interface LlamaBridgeAdapter {
      * after the inference call.
      */
     fun getLastGenTokens(): Int = 0
-}
+}

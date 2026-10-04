@@ -10,40 +10,48 @@ import androidx.camera.core.ImageProxy
 import com.google.mediapipe.framework.image.BitmapImageBuilder
 import java.util.concurrent.Executors
 import com.aacbridge.BuildConfig
+import kotlin.math.abs
+import kotlin.math.hypot
 
 /**
  * MediaPipe Face Mesh gaze tracking for AAC interaction.
  *
- * Computer Vision Mathematics:
- * Evaluates the displacement vector between the nose-tip (landmark 4) and the eye-center
- * (the midpoint of the left eye inner corner 33 and right eye inner corner 362).
- * 
- * Coordinate System:
- * MediaPipe normalized coordinates [0, 1].
- * deltaX < 0 indicates looking left. deltaY < 0 indicates looking up.
- * 
- * Threshold Rationale:
- * Empirically selected THRESHOLD_X = 0.02f and THRESHOLD_Y = 0.01f to maximize facial
- * displacement sensitivity without causing false positives from micro-movements.
+ * Geometry
+ * --------
+ * Displacement between nose tip (landmark 4) and eye
+ * centre (midpoint of inner corners 33 and 362), divided
+ * by interocular distance to remove face-scale
+ * dependence, then offset by a per-user neutral baseline
+ * captured through CalibrationManager.
  *
- * Dwell State Machine (FSM):
- * Triggered by `currentTarget × dwellStartTime × hasFired` over a 400ms threshold.
- * 
- * Thread Safety:
- * Serialized through `Executors.newSingleThreadExecutor()` guaranteeing safe
- * dwell evaluation across asynchronous MediaPipe callbacks.
+ * After baseline subtraction:
+ *   gy < 0  => looking up
+ *   gy > 0  => looking down
+ *   gx < 0  => looking one way, gx > 0 the other
+ *              (see MIRROR_X below)
  *
- * Targets:
- * - confirm (top-left)
- * - reject (top-right)
- * - scroll (bottom-left)
- * - select (bottom-right)
- * - call-help (center)
+ * Targets
+ * -------
+ *   top-left     = confirm
+ *   top-right    = reject
+ *   bottom-left  = scroll
+ *   bottom-right = select
+ *   centre       = NO INTENT (long dwell => call-help)
  *
- * IMPORTANT:
- * This layer emits ONLY UI-level intent events.
- * It does NOT invoke JNI, KV cache, or backend routing.
- * Gaze logic is fully isolated from native systems.
+ * call-help is deliberately NOT the fallthrough branch.
+ * When it was, every ambiguous frame -- face partly out of
+ * frame, mid-saccade, user simply reading the screen --
+ * resolved to a request for assistance. For an AAC device
+ * that is the worst available failure mode.
+ *
+ * Thread safety
+ * -------------
+ * Dwell evaluation is serialized through a single-thread
+ * executor so asynchronous MediaPipe callbacks cannot
+ * interleave FSM transitions.
+ *
+ * This layer emits ONLY UI-level intent events. It does
+ * not invoke JNI, KV cache, or backend routing.
  */
 class GazeTracker(
     private val context: Context,
@@ -51,25 +59,44 @@ class GazeTracker(
     private val onGazeVector: ((FloatArray) -> Unit)? = null,
     private val onDwellProgress: ((Float) -> Unit)? = null,
     private val onOcclusionStateChanged: ((Boolean) -> Unit)? = null,
-    private val calibrationManager: CalibrationManager? = null
+    private val calibrationManager: CalibrationManager? = null,
+    private val onCalibrationNeeded: (() -> Unit)? = null
 ) {
 
     companion object {
         private const val TAG = "GazeTracker"
+
         private const val DWELL_THRESHOLD_MS = 400L
 
-        // Hardcoded thresholds mapped to AAC intent areas
-        private const val THRESHOLD_X = 0.02f
-        private const val THRESHOLD_Y = 0.01f
+        /** Sustained centre fixation that deliberately requests help. */
+        private const val HELP_DWELL_MS = 1500L
+
+        private const val OCCLUSION_THRESHOLD_FRAMES = 10
+
+        /**
+         * CameraX front-camera ImageAnalysis frames are NOT
+         * mirrored, but the user's mental model is. Verify
+         * once on device: look hard at the top-left target
+         * and read gx in logcat. If gx is positive, flip
+         * this to true.
+         */
+        private const val MIRROR_X = false
+
+        /** Rate limit for the calibration-needed callback. */
+        private const val CALIB_PROMPT_INTERVAL_MS = 5000L
     }
 
     private var faceLandmarker: FaceLandmarker? = null
+
     private var currentTarget: String? = null
     private var dwellStartTime: Long = 0L
     private var hasFired: Boolean = false
-    
+
+    private var centerDwellStart: Long = 0L
+    private var helpFired: Boolean = false
+
     private var emptyFramesCount = 0
-    private val OCCLUSION_THRESHOLD_FRAMES = 10
+    private var lastCalibPrompt = 0L
 
     private val dwellExecutor = Executors.newSingleThreadExecutor()
 
@@ -90,7 +117,9 @@ class GazeTracker(
                 .setMinTrackingConfidence(0.5f)
                 .setRunningMode(RunningMode.LIVE_STREAM)
                 .setResultListener { result: FaceLandmarkerResult, _ -> processResult(result) }
-                .setErrorListener { e: RuntimeException -> Log.e(TAG, "FaceLandmarker error: ${e.message}") }
+                .setErrorListener { e: RuntimeException ->
+                    Log.e(TAG, "FaceLandmarker error: ${e.message}")
+                }
                 .build()
 
             faceLandmarker = FaceLandmarker.createFromOptions(context, options)
@@ -101,9 +130,6 @@ class GazeTracker(
         }
     }
 
-    /**
-     * Processes live camera frames from CameraX ImageAnalysis.
-     */
     fun processImageProxy(imageProxy: ImageProxy) {
         if (faceLandmarker == null) {
             imageProxy.close()
@@ -111,17 +137,9 @@ class GazeTracker(
         }
 
         try {
-            if (BuildConfig.DEBUG) {
-                Log.d(TAG, "Camera frame received")
-            }
-            // CameraX 1.3.0+ supports direct toBitmap() with rotation applied
             val bitmap = imageProxy.toBitmap()
             val mpImage = BitmapImageBuilder(bitmap).build()
             val timestampMs = imageProxy.imageInfo.timestamp / 1_000_000
-            
-            if (BuildConfig.DEBUG) {
-                Log.d(TAG, "detectAsync invoked")
-            }
             faceLandmarker?.detectAsync(mpImage, timestampMs)
         } catch (e: Exception) {
             Log.e(TAG, "Error processing image proxy", e)
@@ -130,14 +148,9 @@ class GazeTracker(
         }
     }
 
-    /**
-     * Processes FaceLandmarker results to determine gaze target.
-     *
-     * Uses eye center vs nose tip displacement to resolve
-     * horizontal and vertical gaze direction.
-     */
     private fun processResult(result: FaceLandmarkerResult) {
         val faces = result.faceLandmarks()
+
         if (faces.isNullOrEmpty()) {
             emptyFramesCount++
             if (emptyFramesCount == OCCLUSION_THRESHOLD_FRAMES) {
@@ -152,35 +165,69 @@ class GazeTracker(
         }
         emptyFramesCount = 0
 
-        if (BuildConfig.DEBUG) {
-            Log.d(TAG, "Face landmarks detected")
-        }
-
         val face = faces[0]
 
-        // MediaPipe landmark indices:
-        // 4 = nose tip, 33 = left eye inner, 362 = right eye inner
+        // 4 = nose tip
+        // 33 / 362 = eye inner corners  (used for the centre)
+        // 130 / 359 = eye OUTER corners (wider, more stable scale ref)
         val noseTip = face[4]
-        val leftEye = face[33]
-        val rightEye = face[362]
+        val leftInner = face[33]
+        val rightInner = face[362]
+        val leftOuter = face[130]
+        val rightOuter = face[359]
 
-        val eyeCenterX = (leftEye.x() + rightEye.x()) / 2f
-        val eyeCenterY = (leftEye.y() + rightEye.y()) / 2f
+        val eyeCenterX = (leftInner.x() + rightInner.x()) / 2f
+        val eyeCenterY = (leftInner.y() + rightInner.y()) / 2f
 
-        val deltaX = noseTip.x() - eyeCenterX
-        val deltaY = noseTip.y() - eyeCenterY
+        val rawDx = noseTip.x() - eyeCenterX
+        val rawDy = noseTip.y() - eyeCenterY
 
-        val target = mapGazeToTarget(deltaX, deltaY)
-        if (BuildConfig.DEBUG) {
-            Log.d(TAG, "Resolved gaze target: $target (deltaX=$deltaX, deltaY=$deltaY)")
+        val iod = CalibrationManager.interocular(
+            leftOuter.x(), leftOuter.y(),
+            rightOuter.x(), rightOuter.y()
+        )
+
+        val (nx, ny) = CalibrationManager.normalize(rawDx, rawDy, iod)
+
+        val calib = calibrationManager
+
+        // Feed the baseline capture instead of classifying.
+        if (calib != null && calib.isCalibrating) {
+            calib.addSample(nx, ny)
+            return
         }
-        
-        // Construct 5-dim gaze feature vector
-        // Label leakage fix: intentIndex was previously included as 6th element,
-        // which leaked the ground truth into the model input.
-        val magnitude = Math.sqrt((deltaX * deltaX + deltaY * deltaY).toDouble()).toFloat()
-        val gazeFeatures = floatArrayOf(deltaX, deltaY, Math.abs(deltaX), Math.abs(deltaY), magnitude)
-        
+
+        // Without a baseline every reading is meaningless.
+        if (calib == null || !calib.isCalibrated) {
+            val now = System.currentTimeMillis()
+            if (now - lastCalibPrompt > CALIB_PROMPT_INTERVAL_MS) {
+                lastCalibPrompt = now
+                onCalibrationNeeded?.invoke()
+            }
+            return
+        }
+
+        var gx = nx - calib.neutralX
+        val gy = ny - calib.neutralY
+
+        if (MIRROR_X) gx = -gx
+
+        val target = mapGazeToTarget(gx, gy, calib)
+
+        if (BuildConfig.DEBUG) {
+            Log.d(TAG, "gaze gx=%.3f gy=%.3f iod=%.3f -> %s"
+                .format(gx, gy, iod, target ?: "center"))
+        }
+
+        // 5-dim feature vector for the fusion model, built
+        // from the SAME baseline-corrected, scale-normalized
+        // values the classifier uses.
+        // NOTE: the deployed fusion ONNX was trained on the
+        // old raw-delta distribution. Retrain or re-export
+        // against these values before trusting its output.
+        val magnitude = hypot(gx, gy)
+        val gazeFeatures = floatArrayOf(gx, gy, abs(gx), abs(gy), magnitude)
+
         dwellExecutor.execute {
             onGazeVector?.invoke(gazeFeatures)
             updateDwell(target)
@@ -188,51 +235,91 @@ class GazeTracker(
     }
 
     /**
-     * Maps gaze displacement to one of 5 AAC intent targets.
+     * Maps baseline-corrected gaze to a quadrant target.
      *
-     * Layout:
-     *   top-left=confirm    top-right=reject
-     *   bottom-left=scroll  bottom-right=select
-     *   center=call-help
+     * Returns null for the centre dead zone and for
+     * readings that clear the dead zone on only one axis.
+     * A null result must NOT be coerced into an intent.
      */
-    private fun mapGazeToTarget(deltaX: Float, deltaY: Float): String {
-        val threshX = calibrationManager?.getThresholdX() ?: THRESHOLD_X
-        val threshY = calibrationManager?.getThresholdY() ?: THRESHOLD_Y
-        
+    private fun mapGazeToTarget(
+        gx: Float,
+        gy: Float,
+        calib: CalibrationManager
+    ): String? {
+
+        val threshX = calib.getThresholdX()
+        val threshY = calib.getThresholdY()
+
+        if (abs(gx) < CalibrationManager.DEADBAND &&
+            abs(gy) < CalibrationManager.DEADBAND) {
+            return null
+        }
+
+        if (abs(gx) < threshX || abs(gy) < threshY) {
+            return null
+        }
+
         return when {
-            deltaX < -threshX && deltaY < -threshY -> "confirm"
-            deltaX > threshX && deltaY < -threshY  -> "reject"
-            deltaX < -threshX && deltaY > threshY   -> "scroll"
-            deltaX > threshX && deltaY > threshY    -> "select"
-            else -> "call-help"
+            gx < 0 && gy < 0 -> "confirm"
+            gx > 0 && gy < 0 -> "reject"
+            gx < 0 && gy > 0 -> "scroll"
+            else             -> "select"
         }
     }
 
     /**
-     * Public method for manual/simulated gaze input.
-     *
-     * Allows UI buttons or test harnesses to trigger
-     * dwell-based intent without real camera input.
+     * Manual/simulated gaze input for UI buttons and test
+     * harnesses.
      */
     fun simulateGaze(target: String) {
-        dwellExecutor.execute {
-            updateDwell(target)
-        }
+        dwellExecutor.execute { updateDwell(target) }
     }
 
-    private fun updateDwell(target: String) {
+    private fun updateDwell(target: String?) {
         val now = System.currentTimeMillis()
 
+        // Centre: no quadrant intent. A long, deliberate
+        // fixation here is the explicit call-help gesture.
+        if (target == null) {
+            if (currentTarget != null) {
+                currentTarget = null
+                dwellStartTime = 0L
+                hasFired = false
+                onDwellProgress?.invoke(0f)
+            }
+
+            if (centerDwellStart == 0L) {
+                centerDwellStart = now
+                helpFired = false
+                return
+            }
+
+            val held = now - centerDwellStart
+            onDwellProgress?.invoke(
+                (held.toFloat() / HELP_DWELL_MS).coerceIn(0f, 1f)
+            )
+
+            if (held >= HELP_DWELL_MS && !helpFired) {
+                Log.d(TAG, "Centre dwell threshold reached: call-help")
+                onGazeIntent("call-help")
+                helpFired = true
+            }
+            return
+        }
+
+        centerDwellStart = 0L
+        helpFired = false
+
         if (target == currentTarget) {
-            val progress = ((now - dwellStartTime).toFloat() / DWELL_THRESHOLD_MS).coerceIn(0f, 1f)
+            val progress =
+                ((now - dwellStartTime).toFloat() / DWELL_THRESHOLD_MS)
+                    .coerceIn(0f, 1f)
             onDwellProgress?.invoke(progress)
-            
-            if (now - dwellStartTime >= DWELL_THRESHOLD_MS) {
-                if (!hasFired) {
-                    Log.d(TAG, "Dwell threshold reached: $target")
-                    onGazeIntent(target)
-                    hasFired = true
-                }
+
+            if (now - dwellStartTime >= DWELL_THRESHOLD_MS && !hasFired) {
+                Log.d(TAG, "Dwell threshold reached: $target")
+                onGazeIntent(target)
+                hasFired = true
             }
         } else {
             currentTarget = target
@@ -247,6 +334,8 @@ class GazeTracker(
             currentTarget = null
             dwellStartTime = 0L
             hasFired = false
+            centerDwellStart = 0L
+            helpFired = false
             onDwellProgress?.invoke(0f)
         }
     }

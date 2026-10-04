@@ -1,0 +1,6 @@
+state,interactions,fraction
+home_morning,1600,0.250000
+home_evening,1553,0.242656
+hospital_ward,1248,0.195000
+therapy_room,1000,0.156250
+caregiver_visit,999,0.156094

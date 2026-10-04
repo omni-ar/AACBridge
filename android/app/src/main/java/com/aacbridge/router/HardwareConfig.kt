@@ -31,6 +31,30 @@ object HardwareConfig {
     const val MAX_ACTIVE_KV_STATES = 3
 
     /**
+     * Native llama.cpp sequence id reserved for work that
+     * must not disturb resident states: inline (RAG)
+     * inference, the startup smoke test and benchmark
+     * restores.
+     *
+     * Resident states occupy seqIds 0 until
+     * MAX_ACTIVE_KV_STATES. The native layer allocates
+     * MAX_ACTIVE_KV_STATES + 1 sequences (llama_jni.cpp
+     * RESIDENT_SLOTS / SCRATCH_SLOT must match).
+     */
+    const val SCRATCH_SEQ_ID = MAX_ACTIVE_KV_STATES
+
+    /**
+     * Minimum score advantage a non-resident candidate
+     * needs over the weakest resident state before it
+     * replaces that state (see ResidencyPolicy).
+     *
+     * Applied by both ActiveSweep (60 s) and
+     * DriftDetector (15 min). Not a smoothing window and
+     * unrelated to MAX_ACTIVE_KV_STATES.
+     */
+    const val RESIDENCY_HYSTERESIS_MARGIN = 0.10
+
+    /**
      * Fixed baseline reliability weight for temporal context.
      *
      * INVARIANT:

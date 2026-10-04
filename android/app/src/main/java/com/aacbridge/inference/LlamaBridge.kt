@@ -57,13 +57,20 @@ object LlamaBridge : LlamaBridgeAdapter { // 1. INHERIT THE ADAPTER HERE
      * Tokenizes and decodes the prompt without generation.
      * Produces a clean KV cache state for saveKVCache().
      */
-    override external fun prefillOnly(prompt: String): Boolean
+    override external fun prefillOnly(prompt: String, seqId: Int): Boolean
 
     /**
      * Continues inference from a loaded KV cache.
      * Uses explicit positions to avoid collision with loaded entries.
      */
-    override external fun resumeInference(prompt: String): String
+    override external fun resumeInference(prompt: String, seqId: Int): String
+
+    /**
+     * Drops KV entries and token history for one slot.
+     * Called on eviction so a reused slot never inherits
+     * stale positions from its previous occupant.
+     */
+    override external fun resetSlot(seqId: Int)
 
     // -------------------------------------------------
     // Native timing/token telemetry getters

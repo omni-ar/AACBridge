@@ -2,6 +2,9 @@ package com.aacbridge
 
 import android.app.Application
 import com.aacbridge.daemon.DriftDetector
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 
 /**
  * Root Android application object.
@@ -24,6 +27,13 @@ class AACBridgeApplication : Application() {
      */
     lateinit var appContainer: AppContainer
         private set
+
+    /**
+     * Process-lifetime scope for background work that must
+     * outlive an Activity (e.g. Tier-2 priming after a cold
+     * miss).
+     */
+    val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onCreate() {
         super.onCreate()

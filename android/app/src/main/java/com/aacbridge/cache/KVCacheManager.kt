@@ -2,7 +2,9 @@ package com.aacbridge.cache
 
 import com.aacbridge.inference.LlamaBridgeAdapter
 import com.aacbridge.router.HardwareConfig
+import com.aacbridge.router.ResidencyPolicy
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
@@ -42,7 +44,6 @@ class KVCacheManager(
     private val contextPrimer: ContextPrimerImpl? = null,
     private val engineLock: ReentrantLock? = null
 ) {
-
     companion object {
 
         /**
@@ -63,6 +64,17 @@ class KVCacheManager(
      */
     private val activeStates =
         ConcurrentHashMap<String, CacheState>()
+
+    /**
+     * Serializes residency changes (plan → evict → load).
+     *
+     * ActiveSweep, DriftDetector and the Tier-2 fallback
+     * can all change residency concurrently; without this,
+     * two callers could each see a free slot and race for
+     * the same seqId. Inference acquisition does not take
+     * this lock.
+     */
+    private val residencyMutex = Mutex()
 
     /**
      * Pool of available native llama.cpp sequence slots.
@@ -93,6 +105,63 @@ class KVCacheManager(
      */
     suspend fun loadTopStates(
         topIds: List<String>
+    ) = residencyMutex.withLock {
+
+        loadStatesLocked(topIds)
+    }
+
+    /**
+     * Applies ResidencyPolicy to the router's current
+     * ranking: evicts and loads only what the hysteresis
+     * rule allows.
+     *
+     * Used by ActiveSweep and DriftDetector so both apply
+     * the same replacement rule.
+     *
+     * @return the plan that was applied (for logging).
+     */
+    suspend fun updateResidency(
+        ranked: List<Pair<String, Double>>,
+        margin: Double = HardwareConfig.RESIDENCY_HYSTERESIS_MARGIN,
+        maxCandidates: Int = HardwareConfig.MAX_ACTIVE_KV_STATES
+    ): ResidencyPolicy.Plan = residencyMutex.withLock {
+
+        val plan = ResidencyPolicy.plan(
+            ranked = ranked,
+            resident = residentStateIds(),
+            capacity = HardwareConfig.MAX_ACTIVE_KV_STATES,
+            margin = margin,
+            maxCandidates = maxCandidates
+        )
+
+        for (victimId in plan.toEvict) {
+            evictVictim(victimId)
+        }
+
+        loadStatesLocked(plan.toLoad)
+
+        plan
+    }
+
+    /**
+     * Snapshot of resident (active, not being evicted)
+     * state ids.
+     */
+    fun residentStateIds(): Set<String> =
+        activeStates.values
+            .filter { it.isActive }
+            .map { it.stateId }
+            .toSet()
+
+    /**
+     * Caller must hold residencyMutex.
+     *
+     * States in [topIds] are never chosen as eviction
+     * victims, so loading the 2nd/3rd requested state can
+     * not evict the 1st.
+     */
+    private suspend fun loadStatesLocked(
+        topIds: List<String>
     ) {
 
         val missingStates =
@@ -104,6 +173,7 @@ class KVCacheManager(
 
             /*
              * Ensure native slot capacity.
+             * LRU among states the caller did not ask for.
              */
             while (
                 activeStates.size >=
@@ -112,6 +182,7 @@ class KVCacheManager(
 
                 val victim =
                     activeStates.values
+                        .filter { it.stateId !in topIds }
                         .minByOrNull {
                             it.lastAccessed.get()
                         }
@@ -121,6 +192,11 @@ class KVCacheManager(
                 } else {
                     break
                 }
+            }
+
+            if (activeStates.size >= HardwareConfig.MAX_ACTIVE_KV_STATES) {
+                // More requested states than slots.
+                break
             }
 
             val mutex =
@@ -260,8 +336,20 @@ class KVCacheManager(
             }
 
             /*
-             * Return native slot back to pool.
+             * Drop native KV entries for this slot before
+             * reuse. Without this the next occupant inherits
+             * stale positions from the evicted state, and
+             * llama_decode fails with "could not find a KV
+             * slot" once positions overlap.
              */
+            if (engineLock != null) {
+                engineLock.lockWithLock {
+                    jniBridge.resetSlot(victim.seqId)
+                }
+            } else {
+                jniBridge.resetSlot(victim.seqId)
+            }
+
             availableSeqIds.add(victim.seqId)
 
             /*

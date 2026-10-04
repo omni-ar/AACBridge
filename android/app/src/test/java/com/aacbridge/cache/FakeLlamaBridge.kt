@@ -64,6 +64,12 @@ class FakeLlamaBridge : LlamaBridgeAdapter {
 
     var shouldFailPrefill = false
 
+    /**
+     * Ordered list of seqIds received by prefillOnly.
+     */
+    val prefillSeqIds =
+        mutableListOf<Int>()
+
     override fun loadKVCache(
         filepath: String,
         seqId: Int
@@ -119,20 +125,27 @@ class FakeLlamaBridge : LlamaBridgeAdapter {
     }
 
     override fun prefillOnly(
-        prompt: String
+        prompt: String,
+        seqId: Int
     ): Boolean {
 
         prefillCallCount++
         prefillPrompts.add(prompt)
+        prefillSeqIds.add(seqId)
 
         return !shouldFailPrefill
     }
 
     override fun resumeInference(
-        prompt: String
+        prompt: String,
+        seqId: Int
     ): String {
 
         return inferenceResponse
+    }
+
+    override fun resetSlot(seqId: Int) {
+        // No-op for tests
     }
 
     // Timing getters return zero in test fake

@@ -4,25 +4,27 @@ import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
-import android.location.LocationManager
+import android.util.Log
 import com.aacbridge.cache.KVCacheManager
 import com.aacbridge.cache.StateRepository
 import com.aacbridge.router.*
 import kotlinx.coroutines.*
 import java.util.Calendar
+import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.coroutines.resume
 
 class ActiveSweep(
-    private val locationManager: LocationManager,
+    private val locationSource: LocationSource,
     private val bluetoothAdapter: BluetoothAdapter?,
     private val stateRouter: StateRouter,
     private val cacheManager: KVCacheManager,
     private val repository: StateRepository,
-    private val locationValidator: LocationValidator = LocationValidator()
+    private val latestRanking: LatestRanking
 ) {
 
     companion object {
+        private const val TAG = "ActiveSweep"
         private const val BLE_SCAN_WINDOW_MS = 3000L
     }
 
@@ -30,7 +32,7 @@ class ActiveSweep(
 
         val locationDeferred =
             async {
-                fetchLastKnownLocation()
+                locationSource.acquire()
             }
 
         val bleDeferred =
@@ -58,51 +60,41 @@ class ActiveSweep(
                 detectedBleDevices = bleDevices
             )
 
-        val availableStates =
-            repository.getAllContextStates()
-
-        val topStateIds =
-            stateRouter.getTopContextIds(
+        val ranked =
+            stateRouter.getScoredStates(
                 snapshot = snapshot,
-                states = availableStates,
-                limit = HardwareConfig.MAX_ACTIVE_KV_STATES
+                states = repository.getAllContextStates()
             )
 
-        if (topStateIds.isNotEmpty()) {
-            cacheManager.loadTopStates(topStateIds)
-        }
-    }
+        latestRanking.publish(ranked)
 
-    @SuppressLint("MissingPermission")
-    private suspend fun fetchLastKnownLocation(): GpsLocation? {
+        /*
+         * Hysteresis-gated replacement (ResidencyPolicy).
+         * Previously this loaded the raw top-k every 60 s,
+         * so the margin applied only in the 15-minute
+         * DriftDetector and noisy sweeps could churn the
+         * cache freely in between.
+         */
+        val plan =
+            if (ranked.isNotEmpty()) cacheManager.updateResidency(ranked)
+            else ResidencyPolicy.Plan(emptyList(), emptyList())
 
-        return try {
-
-            val providers =
-                locationManager.getProviders(true)
-
-            var bestLocation: android.location.Location? = null
-
-            for (provider in providers) {
-
-                val location =
-                    locationManager
-                        .getLastKnownLocation(provider)
-                        ?: continue
-
-                if (
-                    bestLocation == null ||
-                    location.accuracy < bestLocation.accuracy
-                ) {
-                    bestLocation = location
-                }
-            }
-
-            bestLocation?.let { locationValidator.validate(it) }
-
-        } catch (e: Exception) {
-            null
-        }
+        // Structured line for on-device trace collection.
+        Log.i(
+            TAG,
+            "SWEEP,hour=%.3f,gps=%s,gps_acc=%s,ble_n=%d,top1=%s,top1_score=%.4f,loaded=%s,evicted=%s,resident=%s".format(
+                Locale.US,
+                currentHourDecimal,
+                location != null,
+                location?.accuracyMeters?.toString() ?: "",
+                bleDevices.size,
+                ranked.firstOrNull()?.first ?: "",
+                ranked.firstOrNull()?.second ?: 0.0,
+                plan.toLoad.joinToString("|"),
+                plan.toEvict.joinToString("|"),
+                cacheManager.residentStateIds().sorted().joinToString("|")
+            )
+        )
     }
 
     @SuppressLint("MissingPermission")

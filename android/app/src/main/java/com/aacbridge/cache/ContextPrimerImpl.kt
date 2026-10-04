@@ -22,16 +22,20 @@ import kotlin.concurrent.withLock
  * Lifecycle per invocation:
  * 1. Resolve stateId → prompt text
  * 2. Acquire engine mutex (protects shared native state)
- * 3. runInference(prompt) → populates KV cache in memory
+ * 3. prefillOnly(prompt, seqId) → populates slot seqId
  * 4. saveKVCache(tmpPath, seqId) → serializes to .tmp file
  * 5. Release engine mutex
  * 6. Atomic rename .tmp → .bin (ext4 atomic guarantee)
  *
  * IMPORTANT:
- * The engine mutex MUST be held across both runInference()
- * and saveKVCache() atomically. The C++ global session_tokens
- * vector is shared — releasing between calls allows another
- * thread to corrupt it.
+ * The engine mutex MUST be held across both prefillOnly()
+ * and saveKVCache() atomically, so no other native call
+ * touches the slot in between.
+ *
+ * Priming writes directly into the slot KVCacheManager
+ * allocated, so after a successful prime that slot holds
+ * the state natively (no separate load needed) and no
+ * other resident slot is disturbed.
  *
  * Uses prefillOnly() JNI function to skip the
  * sampling loop — only KV tensors are computed.
@@ -42,16 +46,6 @@ class ContextPrimerImpl(
     private val engineLock: ReentrantLock,
     private val modelReady: AtomicBoolean = AtomicBoolean(true)
 ) {
-
-    companion object {
-        /**
-         * Native seq_id used during priming.
-         *
-         * runInference() → llama_batch_get_one() always
-         * decodes into seq_id 0. saveKVCache() must match.
-         */
-        private const val PRIMING_SEQ_ID = 0
-    }
 
     /**
      * Primes the KV cache for [stateId] and persists
@@ -73,7 +67,6 @@ class ContextPrimerImpl(
      *         false on any failure — KVCacheManager handles
      *         seqId return to pool on failure.
      */
-    @Suppress("UNUSED_PARAMETER") // seqId is the KVCacheManager load slot; priming always saves seq 0
     suspend fun primeAndSave(
         stateId: String,
         seqId: Int,
@@ -118,29 +111,18 @@ class ContextPrimerImpl(
              * generated output that would pollute the
              * KV cache when later restored.
              */
-            val prefillSuccess = bridge.prefillOnly(prompt)
+            val prefillSuccess = bridge.prefillOnly(prompt, seqId)
 
             if (!prefillSuccess) {
                 return@withLock false
             }
 
             /*
-             * Step 4: Serialize KV cache to .tmp file.
-             *
-             * CRITICAL: Always save seq_id 0.
-             *
-             * prefillOnly() uses llama_batch_get_one()
-             * which decodes all tokens into seq_id 0.
-             * The `seqId` parameter from KVCacheManager
-             * is the target LOAD slot, not the native
-             * decode slot.
-             *
-             * The .bin file is seq-id-agnostic on disk —
-             * loadKVCache() can restore it into any slot.
+             * Step 4: Serialize the same slot to .tmp.
              */
             bridge.saveKVCache(
                 tmpFile.absolutePath,
-                PRIMING_SEQ_ID
+                seqId
             )
         }
 

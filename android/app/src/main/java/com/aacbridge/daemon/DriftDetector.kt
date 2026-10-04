@@ -1,8 +1,6 @@
 package com.aacbridge.daemon
 
-import android.annotation.SuppressLint
 import android.content.Context
-import android.location.Location
 import android.location.LocationManager
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
@@ -10,9 +8,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.aacbridge.AACBridgeApplication
-import com.aacbridge.router.GpsLocation
 import com.aacbridge.router.HardwareConfig
-import com.aacbridge.router.LocationValidator
 import com.aacbridge.router.SensorSnapshot
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -26,8 +22,9 @@ import java.util.concurrent.TimeUnit
  * Polling frequency:
  * 15 minutes.
  *
- * Implements hysteresis-based cache swap protection
- * to prevent KV residency thrashing.
+ * Applies the shared hysteresis rule
+ * (ResidencyPolicy, HardwareConfig.RESIDENCY_HYSTERESIS_MARGIN)
+ * to the best BLE-blind candidate.
  */
 class DriftDetector(
     context: Context,
@@ -35,12 +32,6 @@ class DriftDetector(
 ) : CoroutineWorker(context, params) {
 
     companion object {
-
-        /**
-         * Minimum score delta required before replacing
-         * currently resident semantic states.
-         */
-        private const val HYSTERESIS_MARGIN = 0.10
 
         private const val WORK_NAME =
             "AAC_Drift_Detector"
@@ -125,7 +116,7 @@ class DriftDetector(
             // -----------------------------------------
 
             val location =
-                fetchLastKnownLocation(locationManager)
+                LocationSource(locationManager).acquire()
 
             val calendar =
                 Calendar.getInstance()
@@ -173,81 +164,21 @@ class DriftDetector(
             }
 
             // -----------------------------------------
-            // 5. Hysteresis evaluation
+            // 5. Hysteresis-gated replacement
             // -----------------------------------------
+            //
+            // Same rule as ActiveSweep (ResidencyPolicy),
+            // restricted to the single best candidate: the
+            // BLE-blind snapshot is only trusted to add the
+            // top state, not to reshuffle the whole set.
 
-            val residentScored =
-                scoredStates.filter {
-
-                    cacheManager.isStateResident(it.first)
-                }
-
-            val weakestScore =
-                if (
-                    residentScored.size <
-                    HardwareConfig.MAX_ACTIVE_KV_STATES
-                ) {
-
-                    0.0
-
-                } else {
-
-                    residentScored.minOf { it.second }
-                }
-
-            // -----------------------------------------
-            // 6. Trigger cache swap if margin exceeded
-            // -----------------------------------------
-
-            if (
-                (bestCandidate.second - weakestScore) >
-                HYSTERESIS_MARGIN
-            ) {
-
-                cacheManager.loadTopStates(
-                    listOf(bestCandidate.first)
-                )
-            }
+            cacheManager.updateResidency(
+                ranked = scoredStates,
+                margin = HardwareConfig.RESIDENCY_HYSTERESIS_MARGIN,
+                maxCandidates = 1
+            )
 
             Result.success()
-        }
-    }
-
-    private val locationValidator = LocationValidator()
-
-    @SuppressLint("MissingPermission")
-    private fun fetchLastKnownLocation(
-        locationManager: LocationManager
-    ): GpsLocation? {
-
-        return try {
-
-            val providers =
-                locationManager.getProviders(true)
-
-            var bestLocation: Location? = null
-
-            for (provider in providers) {
-
-                val location =
-                    locationManager
-                        .getLastKnownLocation(provider)
-                        ?: continue
-
-                if (
-                    bestLocation == null ||
-                    location.accuracy < bestLocation.accuracy
-                ) {
-
-                    bestLocation = location
-                }
-            }
-
-            bestLocation?.let { locationValidator.validate(it) }
-
-        } catch (_: Exception) {
-
-            null
         }
     }
 }

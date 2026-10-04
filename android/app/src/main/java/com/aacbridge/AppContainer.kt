@@ -8,9 +8,11 @@ import com.aacbridge.cache.ContextPrimerImpl
 import com.aacbridge.cache.SeededStateRepository
 import com.aacbridge.cache.KVCacheManager
 import com.aacbridge.daemon.ActiveSweep
+import com.aacbridge.daemon.LocationSource
 import com.aacbridge.inference.LlamaBridge
 import com.aacbridge.router.BLEScorer
 import com.aacbridge.router.GPSScorer
+import com.aacbridge.router.LatestRanking
 import com.aacbridge.router.StateRouter
 import com.aacbridge.router.TimeScorer
 import com.aacbridge.fusion.FusionInference
@@ -92,13 +94,14 @@ class AppContainer(
      * MANDATORY:
      * The C++ layer uses global static variables:
      * - ctx (llama_context pointer)
-     * - session_tokens (shared token vector)
+     * - slot_tokens (per-slot token histories)
      *
      * Concurrent JNI calls corrupt these globals.
      * This single lock serializes all native access:
-     * - ContextPrimer: runInference + saveKVCache
-     * - KVCacheManager: loadKVCache
-     * - MainActivity: runInference
+     * - ContextPrimer: prefillOnly + saveKVCache
+     * - KVCacheManager: loadKVCache, resetSlot
+     * - MainActivity: resumeInference, runInference
+     * - LatencyProfiler
      */
     val engineLock = ReentrantLock()
 
@@ -146,15 +149,23 @@ class AppContainer(
         )
 
     /**
+     * Latest full-sensor ranking (written by ActiveSweep,
+     * read at interaction time).
+     */
+    val latestRanking =
+        LatestRanking()
+
+    /**
      * Background context acquisition sweep.
      */
     val activeSweep =
         ActiveSweep(
-            locationManager = locationManager,
+            locationSource = LocationSource(locationManager),
             bluetoothAdapter = bluetoothManager.adapter,
             stateRouter = stateRouter,
             cacheManager = kvCacheManager,
-            repository = repository
+            repository = repository,
+            latestRanking = latestRanking
         )
 
     /**

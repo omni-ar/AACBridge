@@ -112,11 +112,16 @@ class ContextPrimerImplTest {
                     return true
                 }
                 override fun clearKVCache() {}
-                override fun prefillOnly(prompt: String): Boolean {
+                override fun prefillOnly(prompt: String, seqId: Int): Boolean {
                     callOrder.add("prefillOnly")
                     return true
                 }
-                override fun resumeInference(prompt: String) = ""
+                override fun resumeInference(prompt: String, seqId: Int) = ""
+                override fun resetSlot(seqId: Int) {}
+                override fun getLastPrefillMs() = 0.0
+                override fun getLastGenMs() = 0.0
+                override fun getLastPromptTokens() = 0
+                override fun getLastGenTokens() = 0
                 override fun saveKVCache(filepath: String, seqId: Int): Boolean {
                     callOrder.add("saveKVCache")
                     java.io.File(filepath).apply {
@@ -212,11 +217,16 @@ class ContextPrimerImplTest {
             val lockCheckAdapter = object : LlamaBridgeAdapter {
                 override fun loadKVCache(filepath: String, seqId: Int) = true
                 override fun clearKVCache() {}
-                override fun prefillOnly(prompt: String): Boolean {
+                override fun prefillOnly(prompt: String, seqId: Int): Boolean {
                     lockHeldDuringPrefill = engineLock.isHeldByCurrentThread
                     return true
                 }
-                override fun resumeInference(prompt: String) = ""
+                override fun resumeInference(prompt: String, seqId: Int) = ""
+                override fun resetSlot(seqId: Int) {}
+                override fun getLastPrefillMs() = 0.0
+                override fun getLastGenMs() = 0.0
+                override fun getLastPromptTokens() = 0
+                override fun getLastGenTokens() = 0
                 override fun saveKVCache(filepath: String, seqId: Int): Boolean {
                     lockHeldDuringSave = engineLock.isHeldByCurrentThread
                     java.io.File(filepath).apply {
