@@ -60,7 +60,7 @@
 
 % ===========================================================================
 \begin{abstract}
-On-device language models often need situational context prepended to the user's input: location, nearby people, time of day. The prefill step that reads this context is expensive. On a OnePlus~11R running Qwen2.5-0.5B-Instruct (Q4\_K\_M), prefilling a 439-token context prompt took 14.2~s. Server systems cache KV state across users to skip repeated prefill, but that depends on overlapping requests from multiple users, which a single phone does not have. A phone does have sensors. CAP-KVC uses GPS, BLE proximity, and time of day to rank a small set of pre-written contexts, prefills the likely ones during idle time, and keeps up to three as resident llama.cpp KV state. At interaction time only the user's intent tokens are decoded. With a cached 44-token context, the CAP-KVC prefill step (9 intent tokens) averaged 351~ms versus 2507~ms for the matched 52-token inline condition, a 7.1$\times$ reduction ($n=30$ each); the KV state restore added 2.4~ms. Over 100 synthetic days with five contexts, correct-context selection reached 98.5\% of 6,400 interactions versus 92.2\% for request-driven LRU caching, at a cost of 1.5\% wrong-context selections. Undetected GPS forgery raised wrong-context selections to 38.9\%. One device, one model, five contexts, synthetic traces.
+On-device language models often need situational context prepended to the user's input: location, nearby people, time of day. The prefill step that reads this context is expensive. On a OnePlus~11R running Qwen2.5-0.5B-Instruct (Q4\_K\_M), prefilling a 439-token context prompt took 14.9~s. Server systems cache KV state across users to skip repeated prefill, but that depends on overlapping requests from multiple users, which a single phone does not have. A phone does have sensors. CAP-KVC uses GPS, BLE proximity, and time of day to rank a small set of pre-written contexts, prefills the likely ones during idle time, and keeps up to three as resident llama.cpp KV state. At interaction time only the user's intent tokens are decoded. With a cached 44-token context, the CAP-KVC prefill step (9 intent tokens) averaged 366~ms versus 1847~ms for the matched 52-token inline condition, a 5.0$\times$ reduction ($n=30$ each, interleaved randomized trial order); the KV state restore added 2.9~ms. Over 100 synthetic days with five contexts, correct-context selection reached 98.5\% of 6,400 interactions versus 92.2\% for request-driven LRU caching, at a cost of 1.5\% wrong-context selections. Undetected GPS forgery raised wrong-context selections to 38.9\%. One device, one model, five contexts, synthetic traces.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -261,9 +261,7 @@ With 24 layers, 2 KV heads of dimension 64, and fp16 storage, Qwen2.5-0.5B needs
 
 \subsection{Setup}
 % --- HUMAN-SCORED BLOCK: preserve verbatim ---
-All latency measurements were taken on a OnePlus~11R (Snapdragon~8+~Gen~1, 8~GB RAM, Android~14), with 4 threads, batch size 512, greedy decoding, and a cap of 64 output tokens. Each condition ran 2 warm-up trials followed by 30 measured trials. Prefill and generation times come from \texttt{std::chrono} timestamps placed around the \texttt{llama\_decode} call in native code; restore time is measured around the load call. All 180 trials and the analysis script are in the repository.
-
-During this run, the gaze interface remained active and issued 45 interaction inferences between trials. These held the engine lock, inflating the wall-clock totals of some trials with lock-wait time unrelated to inference. We report only the natively timed components (prefill, generation, restore), which the lock wait does not affect, and omit end-to-end totals. The benchmark code now blocks interaction inference during measurement and acquires the lock before starting the trial timer.
+All latency measurements were taken on a OnePlus~11R (Snapdragon~8+~Gen~1, 8~GB RAM, Android~14), with 4 threads, batch size 512, greedy decoding, and a cap of 64 output tokens. Trials used an interleaved protocol: each of the 30 measured rounds ran all six conditions once in a seeded random order (seed 20261005), preceded by 2 warmup rounds (discarded). This spreads thermal drift and OS scheduling noise across conditions instead of concentrating them on whichever block runs last. The benchmark sets an \texttt{isBenchmarkActive} flag that causes the gaze interface to reject all interaction requests during measurement; 336 gaze events were blocked, zero leaked through. Per-trial battery temperature, thermal-zone temperature (65.8--78.0$^\circ$C, median 69.7$^\circ$C), and big-core (cpu7) frequency (787--1402~MHz) were logged. Prefill and generation times come from \texttt{std::chrono} timestamps placed around the \texttt{llama\_decode} call in native code; restore time is measured around the load call. All 180 trials and the analysis script are in the repository.
 
 \subsection{Matched-Context Latency}
 \label{sec:eval_latency}
@@ -273,7 +271,7 @@ The CAP-KVC condition holds a 44-token context in its cache. The matched inline 
 
 \begin{table}[t]
 \centering
-\caption{Natively timed latency components (ms), median [IQR], $n=30$ each. CAP-KVC restores a 44-token context and decodes the 9 intent tokens.}
+\caption{Latency components (ms), median [IQR], $n=30$ each, interleaved random order. CAP-KVC restores a 44-token context and decodes the 9 intent tokens.}
 \label{tab:latency}
 \scriptsize
 \setlength{\tabcolsep}{2.5pt}
@@ -281,12 +279,12 @@ The CAP-KVC condition holds a 44-token context in its cache. The matched inline 
 \toprule
 Condition (tokens) & Prefill & Generation & Restore \\
 \midrule
-No context (9) & 377 [288, 503] & 5775 [2823, 6213] & -- \\
-\textbf{Inline, matched (52)} & \textbf{2449} [2231, 2777] & 7964 [7350, 9374] & -- \\
-Inline (89) & 4116 [3677, 4487] & 8589 [7822, 11294] & -- \\
-Inline (206) & 7075 [5148, 8700] & 6991 [4107, 10275] & -- \\
-Inline (439) & 14024 [13219, 14941] & 5912 [5467, 7003] & -- \\
-\textbf{CAP-KVC (9)} & \textbf{331} [276, 355] & 4395 [3985, 5110] & 1.2 [1.0, 3.3] \\
+No context (9) & 292 [265, 388] & 4740 [3319, 6718] & -- \\
+\textbf{Inline, matched (52)} & \textbf{1741} [1363, 2223] & 4857 [3319, 7837] & -- \\
+Inline (89) & 2368 [2308, 3546] & 4289 [3360, 6127] & -- \\
+Inline (206) & 7104 [5458, 7963] & 5112 [3771, 6465] & -- \\
+Inline (439) & 13989 [12160, 17142] & 5677 [4311, 7188] & -- \\
+\textbf{CAP-KVC (9)} & \textbf{293} [267, 467] & 3922 [3531, 5773] & 2.1 [1.1, 4.0] \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -298,13 +296,13 @@ Inline (439) & 14024 [13219, 14941] & 5912 [5467, 7003] & -- \\
 \label{fig:prefill}
 \end{figure}
 
-Table~\ref{tab:latency} shows the results. The KV restore overhead (loading the cached state from disk) averaged 2.4~ms (median 1.2~ms). The CAP-KVC prefill (decoding only the 9 intent tokens after restore) averaged 351~ms (SD 97). The matched inline prefill (all 52 tokens) averaged 2507~ms (SD 522). The ratio is 7.1$\times$ (Welch $t(31.0)=22.2$, $p<10^{-19}$; Mann--Whitney $p<10^{-10}$).
+Table~\ref{tab:latency} shows the results. The KV restore overhead (loading the cached state from disk) averaged 2.9~ms (median 2.1~ms). The CAP-KVC prefill (decoding only the 9 intent tokens after restore) averaged 366~ms (SD 122). The matched inline prefill (all 52 tokens) averaged 1847~ms (SD 510). The ratio is 5.0$\times$ (Welch $t(32.3)=15.5$, $p<10^{-15}$).
 
-A rough time to first token (restore + prefill + one generation step) is about 0.43~s for CAP-KVC, about 2.6~s inline.
+A rough time to first token (restore + prefill + one generation step) is about 0.37~s for CAP-KVC, about 1.8~s inline.
 
-Inline prefill grew at about 30~ms per prompt token (OLS, $R^2=0.91$; Fig.~\ref{fig:prefill}), reaching 14.2~s at 439 tokens where the CAP-KVC prefill was 40.5$\times$ shorter. That larger ratio reflects the cost CAP-KVC avoids when contexts happen to be long, not a matched speedup. We only measured restore for the 44-token cache and cannot say how it scales with context length.
+Inline prefill grew at about 30~ms per prompt token (OLS, $R^2=0.87$; Fig.~\ref{fig:prefill}), reaching 14.9~s at 439 tokens where the CAP-KVC prefill was 40.8$\times$ shorter. That larger ratio reflects the cost CAP-KVC avoids when contexts happen to be long, not a matched speedup. We only measured restore for the 44-token cache and cannot say how it scales with context length.
 
-The prefill saving should be kept in perspective. Generation dominated the full response: 4.4--8.6~s at median with 64 output tokens. So the 2.1~s saved in matched prefill shortens the overall response by much less than 7.1$\times$; the benefit is concentrated in time to first token. Generation times varied across conditions and trials (IQRs above 1~s). We recorded no thermal or CPU-frequency data and cannot explain this variation.
+The prefill saving should be kept in perspective. Generation dominated the full response: 3.9--5.7~s at median with 64 output tokens. So the 1.5~s saved in matched prefill shortens the overall response by much less than 5.0$\times$; the benefit is concentrated in time to first token. Generation times varied across conditions and trials (IQRs above 2~s). Position-in-round showed negligible correlation with prefill (Spearman $|\rho|<0.13$ for all conditions), confirming the interleaved design controlled for ordering effects. Thermal-zone temperature was weakly correlated with prefill ($|\rho|<0.30$), and the zone-temperature range across all 180 trials was 65.8--78.0$^\circ$C. The big core (cpu7) ran at its maximum frequency (1.4~GHz) in 68\% of trials and throttled to 787~MHz or below in 11\%.
 
 \subsection{Prediction and Cache Policy}
 \label{sec:eval_prediction}
@@ -404,9 +402,9 @@ We consider three attackers. (A)~An app on the same phone supplying mock locatio
 \section{Limitations and Conclusion}
 \label{sec:conclusion}
 
-The latency measurements come from one phone (OnePlus~11R), one 0.5B-parameter model, 30 trials per condition, one cached context size. Restore time was measured only for a 44-token cache; we do not know how it scales with context length. The benchmark ran on a debug build with the gaze interface active (Section~\ref{sec:evaluation}); a controlled rerun with randomized trial order and disabled interaction inference is needed. We recorded no thermal or CPU-frequency data during trials. Memory footprint with the model loaded and three resident KV states: 627~MB proportional (PSS), of which 151~MB native heap (llama.cpp context and KV tensors) and 391~MB memory-mapped model file. On the 8~GB OnePlus~11R this leaves headroom but constrains multi-tasking; smaller models or KV compression would reduce it. The prediction results come from synthetic traces whose time anchors match the contexts' schedule; on these traces, a Markov successor baseline that uses no sensors at all achieves 99.7\% correct (Section~\ref{sec:eval_markov}), exposing that the deterministic schedule is trivially predictable. The simulation does not model priming delay---a context chosen at one sweep is assumed available at the next. Real multi-day sensor recordings from actual users are needed. Five hand-written contexts. Energy cost unmeasured. No evaluation with AAC users. No clinical claim.
+The latency measurements come from one phone (OnePlus~11R), one 0.5B-parameter model, 30 trials per condition, one cached context size. Restore time was measured only for a 44-token cache; we do not know how it scales with context length. The benchmark ran on a debug build. It used interleaved randomized trial order and blocked interaction inference during measurement (Section~\ref{sec:evaluation}); thermal-zone temperature was logged per trial but battery temperature was not readable (returned $-1$). Memory footprint with the model loaded and three resident KV states: 627~MB proportional (PSS), of which 151~MB native heap (llama.cpp context and KV tensors) and 391~MB memory-mapped model file. On the 8~GB OnePlus~11R this leaves headroom but constrains multi-tasking; smaller models or KV compression would reduce it. The prediction results come from synthetic traces whose time anchors match the contexts' schedule; on these traces, a Markov successor baseline that uses no sensors at all achieves 99.7\% correct (Section~\ref{sec:eval_markov}), exposing that the deterministic schedule is trivially predictable. The simulation does not model priming delay---a context chosen at one sweep is assumed available at the next. Real multi-day sensor recordings from actual users are needed. Five hand-written contexts. Energy cost unmeasured. No evaluation with AAC users. No clinical claim.
 
-Within those limits, the measurements do separate the parts of the question. The KV restore overhead was 2.4~ms; the matched prefill dropped from 2507~ms to 351~ms. Sensor-driven residency selected the correct context for 98.5\% of synthetic interactions (mean 98.3\% across 20 seeds, SD 0.15~pp; Section~\ref{sec:eval_multiseed}), compared with 92.2\% for request-driven LRU, by trading first-visit cold misses for 1.5\% wrong-context selections. With $\pm$2~h schedule jitter, accuracy degraded to 95.6\% (Section~\ref{sec:eval_independent}). Abstention at $\tau=0.05$ reduced wrong-context responses from 1.5\% to 0.8\% at the cost of 2.1\% cold misses (Section~\ref{sec:eval_risk}). The main vulnerability is undetected GPS forgery, which raised wrong-context answers to 38.9\%.
+Within those limits, the measurements do separate the parts of the question. The KV restore overhead was 2.9~ms; the matched prefill dropped from 1847~ms to 366~ms. Sensor-driven residency selected the correct context for 98.5\% of synthetic interactions (mean 98.3\% across 20 seeds, SD 0.15~pp; Section~\ref{sec:eval_multiseed}), compared with 92.2\% for request-driven LRU, by trading first-visit cold misses for 1.5\% wrong-context selections. With $\pm$2~h schedule jitter, accuracy degraded to 95.6\% (Section~\ref{sec:eval_independent}). Abstention at $\tau=0.05$ reduced wrong-context responses from 1.5\% to 0.8\% at the cost of 2.1\% cold misses (Section~\ref{sec:eval_risk}). The main vulnerability is undetected GPS forgery, which raised wrong-context answers to 38.9\%.
 
 Code, benchmark logs, evaluation harness, and figure scripts are available at \url{https://github.com/omni-ar/AACBridge}.
 

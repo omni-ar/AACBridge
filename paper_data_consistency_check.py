@@ -156,24 +156,75 @@ def check_multi_seed():
 
 
 def check_latency():
-    print("\n=== Latency (prefill_results.csv) ===")
-    path = REPO / "evaluation/latency/prefill_results.csv"
+    print("\n=== Latency (interleaved_20261005_trials.csv) ===")
+    path = REPO / "benchmarks/results/interleaved_20261005_trials.csv"
     if not path.exists():
-        warn("prefill_results.csv not found")
+        warn("interleaved_20261005_trials.csv not found")
         return
 
     data = load_csv(path)
 
-    # Filter CAP_KVC trials
-    cap = [float(r["prefill_ms"]) for r in data
-           if r.get("mode") == "CAP_KVC" and r.get("trial", "0") != "0"]
-    if not cap:
-        # Try different column names
-        warn("Could not parse CAP_KVC trials from prefill_results.csv")
-        return
+    import statistics as st
+    cap = [float(r["prefill_ms"]) for r in data if r["mode"] == "CAP_KVC"]
+    rag50 = [float(r["prefill_ms"]) for r in data if r["mode"] == "RAG_INLINE" and r["target"] == "50"]
+    restore = [float(r["cache_load_ms"]) for r in data if r["mode"] == "CAP_KVC"]
 
-    avg = sum(cap) / len(cap)
-    ok(f"CAP_KVC prefill mean = {avg:.1f}ms (n={len(cap)})")
+    if len(cap) != 30:
+        err(f"CAP_KVC trials = {len(cap)}, expected 30")
+    else:
+        ok(f"CAP_KVC trials = {len(cap)}")
+
+    if len(rag50) != 30:
+        err(f"RAG_INLINE@50 trials = {len(rag50)}, expected 30")
+    else:
+        ok(f"RAG_INLINE@50 trials = {len(rag50)}")
+
+    # Paper says: CAP prefill mean 366 ms
+    cap_mean = st.mean(cap)
+    if abs(cap_mean - 366) < 1:
+        ok(f"CAP prefill mean = {cap_mean:.1f} (paper says 366)")
+    else:
+        err(f"CAP prefill mean = {cap_mean:.1f}, paper says 366")
+
+    # Paper says: RAG@50 prefill mean 1847 ms
+    rag_mean = st.mean(rag50)
+    if abs(rag_mean - 1847) < 1:
+        ok(f"RAG@50 prefill mean = {rag_mean:.1f} (paper says 1847)")
+    else:
+        err(f"RAG@50 prefill mean = {rag_mean:.1f}, paper says 1847")
+
+    # Ratio: 5.0x
+    ratio = rag_mean / cap_mean
+    if abs(ratio - 5.0) < 0.1:
+        ok(f"Ratio = {ratio:.1f}x (paper says 5.0x)")
+    else:
+        err(f"Ratio = {ratio:.1f}x, paper says 5.0x")
+
+    # Restore mean: 2.9 ms
+    r_mean = st.mean(restore)
+    if abs(r_mean - 2.9) < 0.1:
+        ok(f"Restore mean = {r_mean:.1f} (paper says 2.9)")
+    else:
+        err(f"Restore mean = {r_mean:.1f}, paper says 2.9")
+
+    # Contamination check: 0 BUSY/HIT events during suite
+    log_path = REPO / "benchmarks/raw_logs/full_interleaved_20261005.log"
+    if log_path.exists():
+        text = log_path.read_text(encoding="utf-8-sig", errors="replace")
+        in_suite = False
+        contam = 0
+        for ln in text.splitlines():
+            if "BENCHMARK SUITE START" in ln:
+                in_suite = True
+            elif "BENCHMARK SUITE COMPLETE" in ln:
+                in_suite = False
+            if in_suite and "INTERACTION" in ln:
+                if "FALLBACK_BUSY" in ln or "HIT_TOP" in ln:
+                    contam += 1
+        if contam == 0:
+            ok(f"No contaminating interactions during benchmark suite")
+        else:
+            err(f"{contam} contaminating interactions during benchmark suite")
 
 
 def check_hysteresis():
@@ -226,6 +277,7 @@ if __name__ == "__main__":
     check_markov_baseline()
     check_k_ablation()
     check_multi_seed()
+    check_latency()
     check_hysteresis()
     check_jni_count()
 
