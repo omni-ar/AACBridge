@@ -1,0 +1,4 @@
+policy,correct,wrong_context,cold_miss,loads_per_day
+FULL,0.98484375,0.01515625,0.0,31.6
+MARKOV_SUCCESSOR,0.996875,0.003125,0.0,6.0
+REACTIVE_LRU,0.921875,0.0,0.078125,5.0

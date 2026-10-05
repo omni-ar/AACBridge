@@ -178,6 +178,214 @@ class PredictionEvaluationTest {
         assertEquals(NUM_DAYS * 64, total)
     }
 
+    // =================================================================
+    // Phase 18: Multi-seed evaluation (20 seeds × 100 days)
+    // =================================================================
+    @Test
+    fun `multi-seed evaluation with bootstrap CIs`() {
+        val seeds = (1L..20L).toList()
+        val rows = mutableListOf<String>()
+
+        for (seed in seeds) {
+            val gen = TraceGenerator(seed = seed)
+            val dayTraces = (0 until NUM_DAYS).map { gen.generateDayTrace(it, NORMAL) }
+            val eval = PredictionEvaluator(states)
+
+            val full = eval.evaluateRouter("FULL_SEED_$seed", fullRouter, dayTraces)
+            val lru = eval.evaluateReactiveLru("LRU_SEED_$seed", dayTraces)
+            val random = eval.evaluateRandom("RANDOM_SEED_$seed", dayTraces, seed = seed)
+
+            rows += "$seed,FULL,${full.correctRate},${full.wrongContextRate},${full.coldMissRate},${full.loadsPerDay}"
+            rows += "$seed,LRU,${lru.correctRate},${lru.wrongContextRate},${lru.coldMissRate},${lru.loadsPerDay}"
+            rows += "$seed,RANDOM,${random.correctRate},${random.wrongContextRate},${random.coldMissRate},${random.loadsPerDay}"
+        }
+
+        val header = "seed,policy,correct,wrong_context,cold_miss,loads_per_day"
+        writeCsv("multi_seed_eval.csv", header, rows)
+        println(header)
+        rows.forEach(::println)
+
+        // Print bootstrap summary
+        val fullCorrect = rows.filter { it.contains(",FULL,") }.map {
+            it.split(",")[2].toDouble()
+        }
+        val lruCorrect = rows.filter { it.contains(",LRU,") }.map {
+            it.split(",")[2].toDouble()
+        }
+        println("\n--- Bootstrap Summary ---")
+        println("FULL correct: mean=%.4f, min=%.4f, max=%.4f".format(
+            fullCorrect.average(), fullCorrect.min(), fullCorrect.max()))
+        println("LRU correct: mean=%.4f, min=%.4f, max=%.4f".format(
+            lruCorrect.average(), lruCorrect.min(), lruCorrect.max()))
+    }
+
+    // =================================================================
+    // Phase 20: K residency ablation (K=1, K=2, K=3)
+    // =================================================================
+    @Test
+    fun `K residency ablation`() {
+        val normal = traces(NORMAL)
+        val rows = mutableListOf<String>()
+
+        for (k in 1..3) {
+            val eval = PredictionEvaluator(states, capacity = k)
+            val r = eval.evaluateRouter("FULL_K$k", fullRouter, normal)
+            rows += "$k,${r.correctRate},${r.wrongContextRate},${r.coldMissRate},${r.loadsPerDay},${r.evictionsPerDay}"
+        }
+
+        val header = "K,correct,wrong_context,cold_miss,loads_per_day,evictions_per_day"
+        writeCsv("k_ablation.csv", header, rows)
+        println(header)
+        rows.forEach(::println)
+    }
+
+    // =================================================================
+    // Phase 19: Markov/successor baseline
+    // =================================================================
+    @Test
+    fun `markov successor baseline`() {
+        val normal = traces(NORMAL)
+        val eval = PredictionEvaluator(states)
+
+        val markov = eval.evaluateMarkov("MARKOV_SUCCESSOR", normal, trainDays = 50)
+        val full = eval.evaluateRouter("FULL", fullRouter, normal)
+        val lru = eval.evaluateReactiveLru("REACTIVE_LRU", normal)
+
+        val rows = listOf(
+            "FULL,${full.correctRate},${full.wrongContextRate},${full.coldMissRate},${full.loadsPerDay}",
+            "MARKOV_SUCCESSOR,${markov.correctRate},${markov.wrongContextRate},${markov.coldMissRate},${markov.loadsPerDay}",
+            "REACTIVE_LRU,${lru.correctRate},${lru.wrongContextRate},${lru.coldMissRate},${lru.loadsPerDay}"
+        )
+
+        val header = "policy,correct,wrong_context,cold_miss,loads_per_day"
+        writeCsv("markov_baseline.csv", header, rows)
+        println(header)
+        rows.forEach(::println)
+    }
+
+    // =================================================================
+    // Phase 16: Readiness lag experiment
+    // =================================================================
+    @Test
+    fun `readiness lag experiment`() {
+        val normal = traces(NORMAL)
+        val lags = listOf(0.5, 1.0, 2.0, 5.0, 15.0) // minutes after context transition
+        val rows = mutableListOf<String>()
+
+        for (lag in lags) {
+            // For each day trace, find context transitions and test
+            // interactions that occur at exactly 'lag' minutes after
+            var totalInteractions = 0
+            var correctCount = 0
+            var wrongCount = 0
+            var coldCount = 0
+
+            for (dayTrace in normal) {
+                val resident = mutableSetOf<String>()
+                var lastTransitionHour: Double? = null
+                var prevGt: String? = null
+
+                for (point in dayTrace) {
+                    val ranked = fullRouter.getScoredStates(point.snapshot, states)
+                    val plan = ResidencyPolicy.plan(ranked, resident, capacity = 3)
+                    for (id in plan.toEvict) resident.remove(id)
+                    for (id in plan.toLoad) resident.add(id)
+
+                    // Detect transition
+                    if (prevGt != null && point.groundTruthStateId != prevGt) {
+                        lastTransitionHour = point.timestampHour
+                    }
+
+                    // Check if this is an interaction at the right lag
+                    if (point.isInteraction && lastTransitionHour != null) {
+                        val minutesSinceTransition = (point.timestampHour - lastTransitionHour) * 60.0
+                        // Within a window of [lag-0.5, lag+0.5]
+                        if (minutesSinceTransition >= lag - 0.5 && minutesSinceTransition < lag + 0.5) {
+                            totalInteractions++
+                            val served = ResidencyPolicy.selectForInference(ranked, resident)
+                            when {
+                                served == null -> coldCount++
+                                served == point.groundTruthStateId -> correctCount++
+                                else -> wrongCount++
+                            }
+                        }
+                    }
+                    prevGt = point.groundTruthStateId
+                }
+            }
+
+            if (totalInteractions > 0) {
+                rows += "%.1f,%d,%.4f,%.4f,%.4f".format(
+                    lag, totalInteractions,
+                    correctCount.toDouble() / totalInteractions,
+                    wrongCount.toDouble() / totalInteractions,
+                    coldCount.toDouble() / totalInteractions
+                )
+            }
+        }
+
+        val header = "lag_minutes,interactions,correct,wrong_context,cold_miss"
+        writeCsv("readiness_lag.csv", header, rows)
+        println(header)
+        rows.forEach(::println)
+    }
+
+    // =================================================================
+    // Phase 21: Abstention / risk-coverage sweep
+    // =================================================================
+    @Test
+    fun `abstention risk-coverage sweep`() {
+        val normal = traces(NORMAL)
+        val taus = listOf(0.0, 0.02, 0.05, 0.10, 0.15, 0.20)
+        val rows = mutableListOf<String>()
+
+        for (tau in taus) {
+            val eval = PredictionEvaluator(states)
+            val r = eval.evaluateWithAbstention("TAU_%.2f".format(tau),
+                fullRouter, normal, tau = tau)
+            val coverage = r.correctRate + r.wrongContextRate // non-abstained
+            rows += "%.2f,%.4f,%.4f,%.4f,%.4f".format(
+                tau, coverage, r.correctRate, r.wrongContextRate, r.coldMissRate)
+        }
+
+        val header = "tau,coverage,correct,wrong_context,cold_miss"
+        writeCsv("risk_coverage.csv", header, rows)
+        println(header)
+        rows.forEach(::println)
+    }
+
+    // =================================================================
+    // Phase 17: Independent trace schedules
+    // =================================================================
+    @Test
+    fun `independent trace schedules`() {
+        val seeds = listOf(100L, 200L, 300L, 400L, 500L)
+        val rows = mutableListOf<String>()
+
+        // Shifted schedules with different jitter
+        val configs = listOf(
+            "SHIFTED_1H" to TraceConfig(scheduleShiftHours = 1.0),
+            "SHIFTED_2H" to TraceConfig(scheduleShiftHours = 2.0),
+            "VARIABLE_DWELL" to TraceConfig(scheduleShiftHours = 0.5, interactionEveryMinutes = 7.0),
+            "HIGH_JITTER" to TraceConfig(scheduleShiftHours = 1.5, gpsNoiseKm = 0.15)
+        )
+
+        for ((label, config) in configs) {
+            for (seed in seeds) {
+                val gen = TraceGenerator(seed = seed)
+                val dayTraces = (0 until NUM_DAYS).map { gen.generateDayTrace(it, config) }
+                val eval = PredictionEvaluator(states)
+                val r = eval.evaluateRouter("${label}_SEED$seed", fullRouter, dayTraces)
+                rows += "$label,$seed,${r.correctRate},${r.wrongContextRate},${r.coldMissRate},${r.loadsPerDay}"
+            }
+        }
+
+        val header = "config,seed,correct,wrong_context,cold_miss,loads_per_day"
+        writeCsv("independent_traces.csv", header, rows)
+        println(header)
+        rows.forEach(::println)
+    }
+
     private fun writeCsv(name: String, header: String, rows: List<String>) {
         val dir = File(repoRoot(), "evaluation/prediction/tables").apply { mkdirs() }
         File(dir, name).writeText((listOf(header) + rows).joinToString("\n", postfix = "\n"))
@@ -193,3 +401,4 @@ class PredictionEvaluationTest {
         error("repo root (with evaluation/ and android/) not found from ${File("").absolutePath}")
     }
 }
+

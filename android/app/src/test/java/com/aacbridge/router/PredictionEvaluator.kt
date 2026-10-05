@@ -393,6 +393,130 @@ class PredictionEvaluator(
         return t.result()
     }
 
+    /**
+     * Markov/successor baseline: predicts next context based on
+     * transition probabilities estimated from training traces.
+     * No sensor information used — only context ordering.
+     *
+     * Training phase: count P(next_context | current_context)
+     * from the first [trainDays] days of traces.
+     *
+     * Test phase: at each sweep, if the current top-1 context
+     * changed, predict the most likely successor and load it.
+     * Otherwise keep current ranking. Uses same residency policy.
+     */
+    fun evaluateMarkov(
+        configName: String,
+        traces: List<List<TracePoint>>,
+        trainDays: Int = 50,
+        margin: Double = HardwareConfig.RESIDENCY_HYSTERESIS_MARGIN
+    ): EvalResult {
+        val ids = states.map { it.stateId }
+
+        // Training: count transitions from training traces
+        val transitionCounts = mutableMapOf<String, MutableMap<String, Int>>()
+        for (id in ids) transitionCounts[id] = mutableMapOf()
+        val trainTraces = traces.take(trainDays)
+        for (dayTrace in trainTraces) {
+            var prev: String? = null
+            for (point in dayTrace) {
+                val gt = point.groundTruthStateId
+                if (prev != null && gt != prev) {
+                    transitionCounts[prev]!![gt] = (transitionCounts[prev]!![gt] ?: 0) + 1
+                }
+                prev = gt
+            }
+        }
+
+        // Build P(next|current): most-likely successor for each context
+        val successor = mutableMapOf<String, String>()
+        for ((from, tos) in transitionCounts) {
+            val best = tos.maxByOrNull { it.value }
+            if (best != null) successor[from] = best.key
+        }
+
+        // Test phase on remaining traces
+        val testTraces = traces.drop(trainDays)
+        val t = Tally(configName)
+        for (trace in testTraces) {
+            t.days++
+            val resident = mutableSetOf<String>()
+            var currentContext: String? = null
+            for (point in trace) {
+                // Markov ranking: current context first, then successor, then rest
+                val ranking = mutableListOf<Pair<String, Double>>()
+                if (currentContext != null) {
+                    ranking.add(currentContext to 1.0)
+                    val succ = successor[currentContext]
+                    if (succ != null && succ != currentContext) {
+                        ranking.add(succ to 0.8)
+                    }
+                }
+                for (id in ids) {
+                    if (ranking.none { it.first == id }) {
+                        ranking.add(id to 0.1)
+                    }
+                }
+
+                applyPlan(t, resident, ResidencyPolicy.plan(ranking, resident, capacity, margin))
+
+                if (point.isInteraction) {
+                    t.interaction(
+                        gt = point.groundTruthStateId,
+                        top1Id = ranking.firstOrNull()?.first,
+                        resident = resident,
+                        served = ResidencyPolicy.selectForInference(ranking, resident)
+                    )
+                }
+
+                // Update current context from ground truth (Markov observes transitions)
+                currentContext = point.groundTruthStateId
+            }
+        }
+        return t.result()
+    }
+
+    /**
+     * Evaluates with abstention: if score(top1) - score(top2) < tau,
+     * the system does not select confidently and falls back to Tier-1.
+     */
+    fun evaluateWithAbstention(
+        configName: String,
+        router: StateRouter,
+        traces: List<List<TracePoint>>,
+        margin: Double = HardwareConfig.RESIDENCY_HYSTERESIS_MARGIN,
+        tau: Double
+    ): EvalResult {
+        val t = Tally(configName)
+        for (trace in traces) {
+            t.days++
+            val resident = mutableSetOf<String>()
+            for (point in trace) {
+                val ranked = router.getScoredStates(point.snapshot, states)
+                applyPlan(t, resident, ResidencyPolicy.plan(ranked, resident, capacity, margin))
+                if (point.isInteraction) {
+                    val top1Score = ranked.getOrNull(0)?.second ?: 0.0
+                    val top2Score = ranked.getOrNull(1)?.second ?: 0.0
+                    val confident = (top1Score - top2Score) >= tau
+
+                    val served = if (confident) {
+                        ResidencyPolicy.selectForInference(ranked, resident)
+                    } else {
+                        null // abstain → cold miss / Tier-1
+                    }
+
+                    t.interaction(
+                        gt = point.groundTruthStateId,
+                        top1Id = ranked.firstOrNull()?.first,
+                        resident = resident,
+                        served = served
+                    )
+                }
+            }
+        }
+        return t.result()
+    }
+
     private fun applyPlan(t: Tally, resident: MutableSet<String>, plan: ResidencyPolicy.Plan) {
         for (id in plan.toEvict) { resident.remove(id); t.evictions++ }
         for (id in plan.toLoad) { resident.add(id); t.loads++ }
