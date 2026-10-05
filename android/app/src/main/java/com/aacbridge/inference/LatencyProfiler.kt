@@ -750,7 +750,9 @@ class LatencyProfiler(
      *   repository.getFilePath(REPRESENTATIVE_STATE).
      */
     suspend fun runBenchmarkSuite(
-        quickMode: Boolean = true
+        quickMode: Boolean = true,
+        interleaved: Boolean = false,
+        orderSeed: Long = 20261005L
     ) {
 
         if (!modelReady.get()) {
@@ -820,7 +822,8 @@ class LatencyProfiler(
             "trials=$measuredTrials " +
             "warmup=$warmupTrials " +
             "targets=$targets " +
-            "state=$REPRESENTATIVE_STATE"
+            "state=$REPRESENTATIVE_STATE " +
+            "interleaved=$interleaved seed=$orderSeed"
         )
 
         /*
@@ -853,6 +856,20 @@ class LatencyProfiler(
                     "Inspect logcat output above."
                 )
                 onProgress?.invoke("VALIDATION FAILED")
+                return
+            }
+
+            if (interleaved) {
+                runInterleavedTrials(
+                    basePrompt = basePrompt,
+                    cacheFilePath = cacheFilePath,
+                    targets = targets,
+                    measuredTrials = measuredTrials,
+                    warmupTrials = warmupTrials,
+                    seed = orderSeed
+                )
+                onProgress?.invoke("BENCHMARK: Suite Complete")
+                Log.i(TAG, "=== BENCHMARK SUITE COMPLETE ===")
                 return
             }
 
@@ -1177,4 +1194,120 @@ class LatencyProfiler(
             }
         }
     }
+
+    // -------------------------------------------------
+    // Interleaved (randomized-order) protocol
+    // -------------------------------------------------
+
+    private data class Condition(
+        val mode: BenchmarkMode,
+        val target: Int,
+        val prompt: String?
+    )
+
+    /**
+     * Runs every condition once per round, in an order
+     * shuffled with a seeded RNG, so that thermal drift
+     * and background state are spread across conditions
+     * rather than accumulating on the last block.
+     *
+     * Warmup: each condition runs [warmupTrials] times
+     * up front (discarded). Each measured trial emits the
+     * usual BENCH line plus:
+     *   ORDER,round,position,mode,target
+     *   THERMAL,round,mode,target,battery_c,max_zone_c,cpu7_khz
+     */
+    private fun runInterleavedTrials(
+        basePrompt: String,
+        cacheFilePath: String,
+        targets: List<Int>,
+        measuredTrials: Int,
+        warmupTrials: Int,
+        seed: Long
+    ) {
+        val conditions = mutableListOf(
+            Condition(BenchmarkMode.ZERO_CONTEXT, 0, null)
+        )
+        for (t in targets) {
+            conditions += Condition(
+                BenchmarkMode.RAG_INLINE, t, expandPrompt(basePrompt, t)
+            )
+        }
+        conditions += Condition(BenchmarkMode.CAP_KVC, 50, null)
+
+        Log.i(TAG, "--- INTERLEAVED: ${conditions.size} conditions ---")
+
+        for (w in 1..warmupTrials) {
+            for (c in conditions) runCondition(c, cacheFilePath)
+        }
+
+        val rng = java.util.Random(seed)
+        for (round in 1..measuredTrials) {
+            val order = conditions.toMutableList()
+            java.util.Collections.shuffle(order, rng)
+            onProgress?.invoke("BENCHMARK: round $round/$measuredTrials")
+            order.forEachIndexed { pos, c ->
+                val m = runCondition(c, cacheFilePath)
+                Log.i(TAG, "ORDER,$round,${pos + 1},${c.mode},${c.target}")
+                emitCsvLine(
+                    TrialResult(
+                        trial = round,
+                        mode = c.mode,
+                        stateId = if (c.mode == BenchmarkMode.ZERO_CONTEXT) "none" else REPRESENTATIVE_STATE,
+                        promptTokenTarget = c.target,
+                        totalMs = m.totalMs,
+                        prefillMs = m.prefillMs,
+                        genMs = m.genMs,
+                        cacheLoadMs = if (c.mode == BenchmarkMode.CAP_KVC) m.cacheLoadMs else 0.0,
+                        promptTokens = m.promptTokens,
+                        genTokens = m.genTokens
+                    )
+                )
+                Log.i(
+                    TAG,
+                    "THERMAL,$round,${c.mode},${c.target}," +
+                        "%.1f,%.1f,%d".format(
+                            java.util.Locale.US,
+                            readBatteryTempC(),
+                            readMaxZoneTempC(),
+                            readCpuFreqKhz(7)
+                        )
+                )
+            }
+        }
+    }
+
+    private fun runCondition(c: Condition, cacheFilePath: String): Measurement =
+        when (c.mode) {
+            BenchmarkMode.ZERO_CONTEXT -> measureZeroContext()
+            BenchmarkMode.RAG_INLINE -> measureRagInline(c.prompt!!)
+            BenchmarkMode.CAP_KVC -> measureCapKvc(cacheFilePath)
+        }
+
+    /** Battery temperature in deg C, or -1 if unreadable. */
+    private fun readBatteryTempC(): Double = try {
+        java.io.File("/sys/class/power_supply/battery/temp")
+            .readText().trim().toDouble() / 10.0
+    } catch (e: Exception) { -1.0 }
+
+    /** Hottest readable thermal zone in deg C, or -1. */
+    private fun readMaxZoneTempC(): Double {
+        var best = -1.0
+        val zones = java.io.File("/sys/class/thermal").listFiles() ?: return best
+        for (z in zones) {
+            if (!z.name.startsWith("thermal_zone")) continue
+            try {
+                val raw = java.io.File(z, "temp").readText().trim().toDouble()
+                val c = if (raw > 1000) raw / 1000.0 else raw
+                if (c in 0.0..150.0 && c > best) best = c
+            } catch (e: Exception) { /* unreadable zone */ }
+        }
+        return best
+    }
+
+    /** Current frequency of the given core in kHz, or -1. */
+    private fun readCpuFreqKhz(cpu: Int): Int = try {
+        java.io.File("/sys/devices/system/cpu/cpu$cpu/cpufreq/scaling_cur_freq")
+            .readText().trim().toInt()
+    } catch (e: Exception) { -1 }
 }

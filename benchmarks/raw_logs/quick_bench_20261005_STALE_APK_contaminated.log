@@ -1,0 +1,115 @@
+--------- beginning of main
+10-05 20:19:31.882 I/AACBridgeJNI(28391): Llama backend initialized
+10-05 20:19:31.882 I/AACBridgeJNI(28391): Initializing model from path: /data/local/tmp/models/qwen2.5-0.5b-instruct-q4_k_m.gguf
+10-05 20:19:33.457 I/AACBridgeJNI(28391): Model initialized: n_ctx=4096 n_seq_max=4 (1024 per slot)
+10-05 20:19:35.405 I/AACBridge(28391): INTERACTION,intent=confirm,outcome=COLD_MISS,served=,top1=,ranking_age_ms=-1,tier1_ms=1.37,resume_ms=0.00,total_ms=4.66,resident=
+10-05 20:19:37.083 I/AACBridge(28391): INTERACTION,intent=call-help,outcome=COLD_MISS,served=,top1=home_evening,ranking_age_ms=524,tier1_ms=0.72,resume_ms=0.00,total_ms=2.12,resident=
+10-05 20:19:42.059 I/AACBridge(28391): INTERACTION,intent=confirm,outcome=COLD_MISS,served=,top1=home_evening,ranking_age_ms=5499,tier1_ms=0.44,resume_ms=0.00,total_ms=1.85,resident=
+10-05 20:19:43.091 I/AACBridgeJNI(28391): TIMING,runInference,prefill_ms=842.43,gen_ms=8785.86,prompt_tokens=6,gen_tokens=64
+10-05 20:19:43.094 I/LatencyProfiler(28391): === BENCHMARK SUITE START ===
+10-05 20:19:43.094 I/LatencyProfiler(28391): Config: quick=true trials=3 warmup=1 targets=[50] state=home_morning
+10-05 20:19:43.094 I/LatencyProfiler(28391): ContextDaemon sweeps paused
+10-05 20:19:43.094 I/LatencyProfiler(28391): BENCH,trial,mode,stateId,prompt_token_target,total_ms,prefill_ms,gen_ms,cache_load_ms,prompt_tokens,gen_tokens
+10-05 20:19:43.094 I/LatencyProfiler(28391): === VALIDATION START ===
+10-05 20:19:43.094 I/LatencyProfiler(28391): Validation prompt: 
+10-05 20:19:43.094 I/LatencyProfiler(28391): User: What should I have for breakfast and is my morning medication due?
+10-05 20:19:43.094 I/LatencyProfiler(28391): Assistant:
+10-05 20:19:43.098 I/AACBridgeJNI(28391): KV cache loaded: slot=0 tokens=44
+10-05 20:19:43.099 I/AACBridgeJNI(28391): Scratch slot 3 cleared
+10-05 20:19:45.394 I/AACBridge(28391): INTERACTION,intent=confirm,outcome=FALLBACK_BUSY,served=,top1=home_evening,ranking_age_ms=8834,tier1_ms=6.19,resume_ms=0.00,total_ms=6.19,resident=home_evening
+10-05 20:19:47.586 I/AACBridge(28391): INTERACTION,intent=call-help,outcome=FALLBACK_BUSY,served=,top1=home_evening,ranking_age_ms=11026,tier1_ms=1.04,resume_ms=0.00,total_ms=1.04,resident=home_evening
+10-05 20:19:50.746 I/AACBridgeJNI(28391): TIMING,runInference,prefill_ms=608.15,gen_ms=7038.53,prompt_tokens=18,gen_tokens=64
+10-05 20:19:50.746 I/LatencyProfiler(28391): ZERO_VALIDATION:  As an AI language model, I don't have access to your personal information or your medical history. However, I can provide you with some general advice on what you should have for breakfast and what your morning medication is due.
+10-05 20:19:50.746 I/LatencyProfiler(28391): 
+10-05 20:19:50.746 I/LatencyProfiler(28391): For breakfast, you should have a balanced meal that includes a source of protein, a source of
+10-05 20:19:50.746 I/AACBridgeJNI(28391): Scratch slot 3 cleared
+10-05 20:19:53.142 I/AACBridge(28391): INTERACTION,intent=call-help,outcome=FALLBACK_BUSY,served=,top1=home_evening,ranking_age_ms=16583,tier1_ms=0.44,resume_ms=0.00,total_ms=0.44,resident=home_evening
+10-05 20:19:56.276 I/AACBridge(28391): INTERACTION,intent=reject,outcome=FALLBACK_BUSY,served=,top1=home_evening,ranking_age_ms=19717,tier1_ms=0.54,resume_ms=0.00,total_ms=0.54,resident=home_evening
+10-05 20:19:56.700 I/AACBridgeJNI(28391): EOS token reached
+10-05 20:19:56.700 I/AACBridgeJNI(28391): TIMING,runInference,prefill_ms=2065.75,gen_ms=3887.22,prompt_tokens=61,gen_tokens=36
+10-05 20:19:56.704 I/LatencyProfiler(28391): RAG_VALIDATION:  Breakfast: Oatmeal with fruit and nuts. Morning medication: Take your medication as directed by your doctor. Greeting family members: Have a friendly conversation with your family members.
+10-05 20:19:56.718 I/AACBridgeJNI(28391): KV cache loaded: slot=1 tokens=39
+10-05 20:19:56.720 I/AACBridgeJNI(28391): resumeInference: slot=0 appending 8 intent tokens at pos 44
+10-05 20:19:57.885 I/AACBridge(28391): INTERACTION,intent=confirm,outcome=FALLBACK_BUSY,served=,top1=home_evening,ranking_age_ms=21326,tier1_ms=0.45,resume_ms=0.00,total_ms=0.45,resident=caregiver_visit|home_evening
+10-05 20:20:02.337 I/AACBridge(28391): INTERACTION,intent=call-help,outcome=FALLBACK_BUSY,served=,top1=home_evening,ranking_age_ms=25777,tier1_ms=1.20,resume_ms=0.00,total_ms=1.20,resident=caregiver_visit|home_evening
+10-05 20:20:03.444 I/AACBridge(28391): INTERACTION,intent=reject,outcome=FALLBACK_BUSY,served=,top1=home_evening,ranking_age_ms=26882,tier1_ms=0.33,resume_ms=0.00,total_ms=0.33,resident=caregiver_visit|home_evening
+10-05 20:20:04.314 I/AACBridgeJNI(28391): TIMING,resumeInference,prefill_ms=550.15,gen_ms=7043.31,prompt_tokens=8,gen_tokens=64,seq=0
+10-05 20:20:04.320 I/AACBridge(28391): INTERACTION,intent=call-help,outcome=HIT_TOP1,served=home_evening,top1=home_evening,ranking_age_ms=7581,tier1_ms=0.49,resume_ms=7593.98,total_ms=20176.15,resident=caregiver_visit|home_evening
+10-05 20:20:04.328 I/AACBridgeJNI(28391): KV cache loaded: slot=3 tokens=44
+10-05 20:20:04.328 I/AACBridgeJNI(28391): resumeInference: slot=3 appending 18 intent tokens at pos 44
+10-05 20:20:07.104 I/AACBridge(28391): INTERACTION,intent=reject,outcome=FALLBACK_BUSY,served=,top1=home_evening,ranking_age_ms=30543,tier1_ms=0.45,resume_ms=0.00,total_ms=0.45,resident=caregiver_visit|home_evening
+10-05 20:20:07.838 I/AACBridge(28391): INTERACTION,intent=confirm,outcome=FALLBACK_BUSY,served=,top1=home_evening,ranking_age_ms=31278,tier1_ms=0.40,resume_ms=0.00,total_ms=0.40,resident=caregiver_visit|home_evening
+10-05 20:20:11.489 I/AACBridgeJNI(28391): TIMING,resumeInference,prefill_ms=1209.67,gen_ms=5950.38,prompt_tokens=18,gen_tokens=64,seq=3
+10-05 20:20:11.489 I/LatencyProfiler(28391): CAP_KVC_VALIDATION:  Breakfast: Oatmeal with fruit and nuts. Morning medication: Due. Please call me back. [Note: I am at home in the morning.] [Note: My mother is nearby.] [Note: Common needs: breakfast requests, morning medication reminders, greeting family members.] [Note: I am at home in
+10-05 20:20:11.489 I/LatencyProfiler(28391): === VALIDATION COMPLETE ===
+10-05 20:20:11.489 I/LatencyProfiler(28391): --- ZERO_CONTEXT ---
+10-05 20:20:11.489 I/AACBridgeJNI(28391): resumeInference: slot=0 appending 8 intent tokens at pos 44
+10-05 20:20:12.155 I/AACBridge(28391): INTERACTION,intent=confirm,outcome=FALLBACK_BUSY,served=,top1=home_evening,ranking_age_ms=35595,tier1_ms=0.40,resume_ms=0.00,total_ms=0.40,resident=caregiver_visit|home_evening
+10-05 20:20:15.258 I/AACBridge(28391): INTERACTION,intent=reject,outcome=FALLBACK_BUSY,served=,top1=home_evening,ranking_age_ms=38699,tier1_ms=0.45,resume_ms=0.00,total_ms=0.45,resident=caregiver_visit|home_evening
+10-05 20:20:17.039 I/AACBridge(28391): INTERACTION,intent=reject,outcome=FALLBACK_BUSY,served=,top1=home_evening,ranking_age_ms=40480,tier1_ms=0.44,resume_ms=0.00,total_ms=0.44,resident=caregiver_visit|home_evening
+10-05 20:20:18.858 I/AACBridgeJNI(28391): TIMING,resumeInference,prefill_ms=381.99,gen_ms=6986.46,prompt_tokens=8,gen_tokens=64,seq=0
+10-05 20:20:18.860 I/AACBridgeJNI(28391): Scratch slot 3 cleared
+10-05 20:20:18.863 I/AACBridge(28391): INTERACTION,intent=call-help,outcome=HIT_TOP1,served=home_evening,top1=home_evening,ranking_age_ms=29062,tier1_ms=0.44,resume_ms=7370.43,total_ms=13241.00,resident=caregiver_visit|home_evening
+10-05 20:20:25.465 I/AACBridge(28391): INTERACTION,intent=call-help,outcome=FALLBACK_BUSY,served=,top1=home_evening,ranking_age_ms=48902,tier1_ms=0.55,resume_ms=0.00,total_ms=0.55,resident=caregiver_visit|home_evening
+10-05 20:20:27.598 I/AACBridgeJNI(28391): EOS token reached
+10-05 20:20:27.599 I/AACBridgeJNI(28391): TIMING,runInference,prefill_ms=859.73,gen_ms=7878.39,prompt_tokens=9,gen_tokens=58
+10-05 20:20:27.599 I/AACBridgeJNI(28391): resumeInference: slot=0 appending 6 intent tokens at pos 44
+10-05 20:20:30.755 I/AACBridge(28391): INTERACTION,intent=reject,outcome=FALLBACK_BUSY,served=,top1=home_evening,ranking_age_ms=54194,tier1_ms=0.45,resume_ms=0.00,total_ms=0.45,resident=caregiver_visit|home_evening
+10-05 20:20:35.142 I/AACBridgeJNI(28391): TIMING,resumeInference,prefill_ms=446.02,gen_ms=7096.43,prompt_tokens=6,gen_tokens=64,seq=0
+10-05 20:20:35.145 I/AACBridgeJNI(28391): Scratch slot 3 cleared
+10-05 20:20:35.146 I/AACBridge(28391): INTERACTION,intent=reject,outcome=HIT_TOP1,served=home_evening,top1=home_evening,ranking_age_ms=42645,tier1_ms=0.69,resume_ms=7542.84,total_ms=15940.29,resident=caregiver_visit|home_evening
+10-05 20:20:41.531 I/AACBridgeJNI(28391): EOS token reached
+10-05 20:20:41.531 I/AACBridgeJNI(28391): TIMING,runInference,prefill_ms=659.46,gen_ms=5726.15,prompt_tokens=9,gen_tokens=58
+10-05 20:20:41.531 I/LatencyProfiler(28391): BENCH,1,ZERO_CONTEXT,none,0,13931.33,659.46,5726.15,0.00,9,58
+10-05 20:20:41.566 I/LatencyProfiler(28391): TRIAL_RESULT: mode=ZERO_CONTEXT target=0 trial=1 => total_ms=13,931.33 prefill_ms=659.46 gen_ms=5,726.15 cache_load_ms=0.00 prompt_tokens=9 gen_tokens=58
+10-05 20:20:41.567 I/AACBridgeJNI(28391): Scratch slot 3 cleared
+10-05 20:20:47.994 I/AACBridgeJNI(28391): EOS token reached
+10-05 20:20:47.994 I/AACBridgeJNI(28391): TIMING,runInference,prefill_ms=414.91,gen_ms=6011.52,prompt_tokens=9,gen_tokens=58
+10-05 20:20:47.994 I/LatencyProfiler(28391): BENCH,2,ZERO_CONTEXT,none,0,6427.39,414.91,6011.52,0.00,9,58
+10-05 20:20:47.995 I/LatencyProfiler(28391): TRIAL_RESULT: mode=ZERO_CONTEXT target=0 trial=2 => total_ms=6,427.39 prefill_ms=414.91 gen_ms=6,011.52 cache_load_ms=0.00 prompt_tokens=9 gen_tokens=58
+10-05 20:20:47.995 I/AACBridgeJNI(28391): Scratch slot 3 cleared
+10-05 20:20:50.577 I/AACBridge(28391): INTERACTION,intent=reject,outcome=FALLBACK_BUSY,served=,top1=home_evening,ranking_age_ms=74016,tier1_ms=0.42,resume_ms=0.00,total_ms=0.42,resident=caregiver_visit|home_evening
+10-05 20:20:53.372 I/AACBridge(28391): INTERACTION,intent=confirm,outcome=FALLBACK_BUSY,served=,top1=home_evening,ranking_age_ms=76813,tier1_ms=0.78,resume_ms=0.00,total_ms=0.78,resident=caregiver_visit|home_evening
+10-05 20:20:54.907 I/AACBridgeJNI(28391): EOS token reached
+10-05 20:20:54.907 I/AACBridgeJNI(28391): TIMING,runInference,prefill_ms=398.28,gen_ms=6513.15,prompt_tokens=9,gen_tokens=58
+10-05 20:20:54.907 I/LatencyProfiler(28391): BENCH,3,ZERO_CONTEXT,none,0,6911.83,398.28,6513.15,0.00,9,58
+10-05 20:20:54.907 I/AACBridgeJNI(28391): resumeInference: slot=0 appending 6 intent tokens at pos 44
+10-05 20:20:54.907 I/LatencyProfiler(28391): TRIAL_RESULT: mode=ZERO_CONTEXT target=0 trial=3 => total_ms=6,911.83 prefill_ms=398.28 gen_ms=6,513.15 cache_load_ms=0.00 prompt_tokens=9 gen_tokens=58
+10-05 20:20:54.908 I/LatencyProfiler(28391): --- RAG_INLINE N=50 ---
+10-05 20:20:54.908 I/LatencyProfiler(28391): Expanded prompt length: 224 chars (target ~50 tokens)
+10-05 20:20:58.682 I/AACBridge(28391): INTERACTION,intent=call-help,outcome=FALLBACK_BUSY,served=,top1=home_evening,ranking_age_ms=82122,tier1_ms=0.46,resume_ms=0.00,total_ms=0.46,resident=caregiver_visit|home_evening
+10-05 20:21:02.356 I/AACBridge(28391): INTERACTION,intent=call-help,outcome=FALLBACK_BUSY,served=,top1=home_evening,ranking_age_ms=85797,tier1_ms=0.49,resume_ms=0.00,total_ms=0.49,resident=caregiver_visit|home_evening
+10-05 20:21:03.448 I/AACBridgeJNI(28391): TIMING,resumeInference,prefill_ms=646.63,gen_ms=7894.55,prompt_tokens=6,gen_tokens=64,seq=0
+10-05 20:21:03.450 I/AACBridgeJNI(28391): Scratch slot 3 cleared
+10-05 20:21:03.459 I/AACBridge(28391): INTERACTION,intent=confirm,outcome=HIT_TOP1,served=home_evening,top1=home_evening,ranking_age_ms=72609,tier1_ms=0.43,resume_ms=8541.73,total_ms=14282.63,resident=caregiver_visit|home_evening
+10-05 20:21:12.064 I/AACBridgeJNI(28391): TIMING,runInference,prefill_ms=2351.22,gen_ms=6259.87,prompt_tokens=52,gen_tokens=64
+10-05 20:21:12.064 I/AACBridgeJNI(28391): resumeInference: slot=0 appending 6 intent tokens at pos 44
+10-05 20:21:16.317 I/AACBridgeJNI(28391): TIMING,resumeInference,prefill_ms=400.70,gen_ms=3851.80,prompt_tokens=6,gen_tokens=64,seq=0
+10-05 20:21:16.319 I/AACBridgeJNI(28391): Scratch slot 3 cleared
+10-05 20:21:16.323 I/AACBridge(28391): INTERACTION,intent=confirm,outcome=HIT_TOP1,served=home_evening,top1=home_evening,ranking_age_ms=90129,tier1_ms=0.45,resume_ms=4252.89,total_ms=9630.87,resident=caregiver_visit|home_evening
+10-05 20:21:21.732 I/AACBridge(28391): INTERACTION,intent=confirm,outcome=FALLBACK_BUSY,served=,top1=home_evening,ranking_age_ms=105170,tier1_ms=0.55,resume_ms=0.00,total_ms=0.55,resident=caregiver_visit|home_evening
+10-05 20:21:23.532 I/AACBridgeJNI(28391): TIMING,runInference,prefill_ms=1815.77,gen_ms=5395.84,prompt_tokens=52,gen_tokens=64
+10-05 20:21:23.533 I/LatencyProfiler(28391): BENCH,1,RAG_INLINE,home_morning,50,11468.46,1815.77,5395.84,0.00,52,64
+10-05 20:21:23.533 I/LatencyProfiler(28391): TRIAL_RESULT: mode=RAG_INLINE target=50 trial=1 => total_ms=11,468.46 prefill_ms=1,815.77 gen_ms=5,395.84 cache_load_ms=0.00 prompt_tokens=52 gen_tokens=64
+10-05 20:21:23.534 I/AACBridgeJNI(28391): resumeInference: slot=0 appending 6 intent tokens at pos 44
+10-05 20:21:27.050 I/AACBridgeJNI(28391): TIMING,resumeInference,prefill_ms=352.63,gen_ms=3163.11,prompt_tokens=6,gen_tokens=64,seq=0
+10-05 20:21:27.050 I/AACBridgeJNI(28391): Scratch slot 3 cleared
+10-05 20:21:27.054 I/AACBridge(28391): INTERACTION,intent=reject,outcome=HIT_TOP1,served=home_evening,top1=home_evening,ranking_age_ms=101055,tier1_ms=0.48,resume_ms=3516.68,total_ms=9437.61,resident=caregiver_visit|home_evening
+10-05 20:21:29.477 I/AACBridge(28391): INTERACTION,intent=reject,outcome=FALLBACK_BUSY,served=,top1=home_evening,ranking_age_ms=112914,tier1_ms=0.56,resume_ms=0.00,total_ms=0.56,resident=caregiver_visit|home_evening
+10-05 20:21:34.575 I/AACBridge(28391): INTERACTION,intent=call-help,outcome=FALLBACK_BUSY,served=,top1=home_evening,ranking_age_ms=118015,tier1_ms=0.46,resume_ms=0.00,total_ms=0.46,resident=caregiver_visit|home_evening
+10-05 20:21:36.345 I/AACBridgeJNI(28391): TIMING,runInference,prefill_ms=1888.12,gen_ms=7404.02,prompt_tokens=52,gen_tokens=64
+10-05 20:21:36.345 I/AACBridgeJNI(28391): resumeInference: slot=0 appending 6 intent tokens at pos 44
+10-05 20:21:36.345 I/LatencyProfiler(28391): BENCH,2,RAG_INLINE,home_morning,50,12811.31,1888.12,7404.02,0.00,52,64
+10-05 20:21:36.352 I/LatencyProfiler(28391): TRIAL_RESULT: mode=RAG_INLINE target=50 trial=2 => total_ms=12,811.31 prefill_ms=1,888.12 gen_ms=7,404.02 cache_load_ms=0.00 prompt_tokens=52 gen_tokens=64
+10-05 20:21:39.615 I/AACBridge(28391): INTERACTION,intent=confirm,outcome=FALLBACK_BUSY,served=,top1=home_evening,ranking_age_ms=123056,tier1_ms=0.49,resume_ms=0.00,total_ms=0.49,resident=caregiver_visit|home_evening
+10-05 20:21:42.903 I/AACBridgeJNI(28391): TIMING,resumeInference,prefill_ms=429.35,gen_ms=6128.17,prompt_tokens=6,gen_tokens=64,seq=0
+10-05 20:21:42.905 I/AACBridgeJNI(28391): Scratch slot 3 cleared
+10-05 20:21:42.908 I/AACBridge(28391): INTERACTION,intent=confirm,outcome=HIT_TOP1,served=home_evening,top1=home_evening,ranking_age_ms=112274,tier1_ms=0.56,resume_ms=6558.36,total_ms=14072.85,resident=caregiver_visit|home_evening
+10-05 20:21:47.686 I/AACBridge(28391): INTERACTION,intent=reject,outcome=FALLBACK_BUSY,served=,top1=home_evening,ranking_age_ms=131123,tier1_ms=0.43,resume_ms=0.00,total_ms=0.43,resident=caregiver_visit|home_evening
+10-05 20:21:52.073 I/AACBridge(28391): INTERACTION,intent=reject,outcome=FALLBACK_BUSY,served=,top1=home_evening,ranking_age_ms=135513,tier1_ms=0.28,resume_ms=0.00,total_ms=0.28,resident=caregiver_visit|home_evening
+10-05 20:21:53.426 I/AACBridge(28391): INTERACTION,intent=confirm,outcome=FALLBACK_BUSY,served=,top1=home_evening,ranking_age_ms=136867,tier1_ms=0.61,resume_ms=0.00,total_ms=0.61,resident=caregiver_visit|home_evening
+10-05 20:21:53.710 I/AACBridgeJNI(28391): TIMING,runInference,prefill_ms=2715.99,gen_ms=8087.69,prompt_tokens=52,gen_tokens=64
+10-05 20:21:53.710 I/LatencyProfiler(28391): BENCH,3,RAG_INLINE,home_morning,50,17357.51,2715.99,8087.69,0.00,52,64
+10-05 20:21:53.712 I/LatencyProfiler(28391): TRIAL_RESULT: mode=RAG_INLINE target=50 trial=3 => total_ms=17,357.51 prefill_ms=2,715.99 gen_ms=8,087.69 cache_load_ms=0.00 prompt_tokens=52 gen_tokens=64
+10-05 20:21:53.713 I/AACBridgeJNI(28391): resumeInference: slot=0 appending 6 intent tokens at pos 44
+10-05 20:21:53.713 I/LatencyProfiler(28391): --- CAP_KVC ---

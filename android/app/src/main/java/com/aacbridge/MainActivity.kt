@@ -240,8 +240,17 @@ class MainActivity : AppCompatActivity() {
                 )
                 Log.d(TAG, "[INIT] Step 6: quickMode=$quickBenchmark")
 
+                // --ez interleaved_benchmark true: seeded random
+                // condition order per round + THERMAL logging.
+                val interleavedBenchmark = intent.getBooleanExtra(
+                    "interleaved_benchmark", false
+                )
+
                 kotlinx.coroutines.runBlocking {
-                    profiler.runBenchmarkSuite(quickMode = quickBenchmark)
+                    profiler.runBenchmarkSuite(
+                        quickMode = quickBenchmark,
+                        interleaved = interleavedBenchmark
+                    )
                 }
                 Log.d(TAG, "[INIT] Step 6: Benchmark suite finished")
 
