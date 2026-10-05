@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.7.12)  5 OCT 2026 20:12
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.7.12)  5 OCT 2026 22:11
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -823,59 +823,132 @@ jit/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/base/8r.enc}
 
 
 ]
-Underfull \hbox (badness 1881) in paragraph at lines 110--110
-[]\T1/ptm/m/n/8 Prompt pre-fix / doc-u-
+Underfull \hbox (badness 4254) in paragraph at lines 111--112
+[]\T1/ptm/m/n/8 Restored from primed
  []
 
 
-Underfull \hbox (badness 3780) in paragraph at lines 111--111
-[]\T1/ptm/m/n/8 First re-quest in a
+Underfull \hbox (badness 2142) in paragraph at lines 120--122
+\T1/ptm/m/n/10 tion [[]], [[]], mobile-optimized model ar-chi-tec-tures like
  []
 
 
-Underfull \hbox (badness 1394) in paragraph at lines 112--113
-[]\T1/ptm/m/n/8 Wrong con-text or cold
+Underfull \hbox (badness 4660) in paragraph at lines 120--122
+\T1/ptm/m/n/10 Mo-bileLLM [[]], em-bed-ded run-time en-gines such as
+ []
+
+
+Underfull \hbox (badness 2134) in paragraph at lines 127--128
+[]\T1/ptm/m/n/10 The sys-tem ar-chi-tec-ture sep-a-rates back-ground con-text
  []
 
 [2]
-LaTeX Font Info:    Trying to load font information for T1+pcr on input line 23
-9.
+LaTeX Font Info:    Trying to load font information for T1+pcr on input line 25
+0.
  (C:\Users\arjit\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\t1pcr.fd
 File: t1pcr.fd 2001/06/04 font definitions for T1/pcr.
 )
-Underfull \hbox (badness 5681) in paragraph at lines 239--240
-[]\T1/ptm/m/n/10 AACBridge is an An-droid app (Kotlin, API 26+,
+[3]
+Underfull \hbox (badness 4341) in paragraph at lines 252--254
+\T1/ptm/m/n/10 ex-ports 14 na-tive func-tions to Kotlin: three life-cy-cle
  []
 
-[3]
-<figures/prefill_scaling.pdf, id=185, 230.3374pt x 133.35484pt>
+
+Underfull \hbox (badness 1635) in paragraph at lines 252--254
+\T1/pcr/m/n/10 release\T1/ptm/m/n/10 ); four KV cache op-er-a-tions (\T1/pcr/m/
+n/10 saveKVCache\T1/ptm/m/n/10 ,
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 252--254
+\T1/pcr/m/n/10 loadKVCache\T1/ptm/m/n/10 , \T1/pcr/m/n/10 clearKVCache\T1/ptm/m
+/n/10 , \T1/pcr/m/n/10 resetSlot\T1/ptm/m/n/10 );
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 252--254
+\T1/ptm/m/n/10 three in-fer-ence func-tions (\T1/pcr/m/n/10 runInference\T1/ptm
+/m/n/10 ,
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 252--254
+\T1/pcr/m/n/10 prefillOnly\T1/ptm/m/n/10 , \T1/pcr/m/n/10 resumeInference\T1/pt
+m/m/n/10 ); and four
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 252--254
+\T1/pcr/m/n/10 getLastPromptTokens\T1/ptm/m/n/10 , \T1/pcr/m/n/10 getLastGenTok
+ens\T1/ptm/m/n/10 ). All
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 258--260
+[]\T1/ptm/b/n/10 Sensor Pro-cess-ing. \T1/ptm/m/n/10 A fore-ground ser-vice ex-
+e-cutes
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 258--260
+\T1/ptm/m/n/10 the sen-sor sweep ev-ery 60 s, per-form-ing a 3-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 258--260
+\T1/ptm/m/n/10 second BLE scan via \T1/pcr/m/n/10 BluetoothLeScanner \T1/ptm/m/
+n/10 and
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 258--260
+\T1/ptm/m/n/10 query-ing \T1/pcr/m/n/10 FusedLocationProviderClient\T1/ptm/m/n/
+10 . The
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 258--260
+\T1/ptm/m/n/10 fixes flagged as mock by An-droid (\T1/pcr/m/n/10 isMock() \T1/p
+tm/m/n/10 or
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 258--260
+\T1/pcr/m/n/10 isFromMockProvider()\T1/ptm/m/n/10 ) are re-jected, fixes older
+ []
+
+
+Underfull \hbox (badness 1701) in paragraph at lines 261--263
+[]\T1/ptm/b/n/10 Intent In-put and Se-cu-rity. \T1/ptm/m/n/10 The user in-ter-f
+ace sup-
+ []
+
+
+Underfull \hbox (badness 4072) in paragraph at lines 261--263
+\T1/ptm/m/n/10 ports touch but-tons and gaze-dwell in-put. Ap-pli-ca-tion
+ []
+
+
+Underfull \hbox (badness 2726) in paragraph at lines 270--271
+\T1/ptm/m/n/10 smart-phone (Qual-comm Snap-dragon 8+ Gen 1, 8 GB
+ []
+
+<figures/prefill_scaling.pdf, id=189, 230.3374pt x 133.35484pt>
 File: figures/prefill_scaling.pdf Graphic file (type pdf)
 <use figures/prefill_scaling.pdf>
-Package pdftex.def Info: figures/prefill_scaling.pdf  used on input line 296.
-(pdftex.def)             Requested size: 252.0pt x 145.90125pt.
- [4 <./figures/prefill_scaling.pdf>]
-Underfull \hbox (badness 1789) in paragraph at lines 317--318
-[]\T1/ptm/b/n/10 Baselines. \T1/ptm/m/it/10 Or-a-cle\T1/ptm/m/n/10 : $\OML/cmm/
-m/it/10 c[]$ \T1/ptm/m/n/10 al-ways res-i-dent (up-per bound).
- []
-
-<figures/hysteresis_churn.pdf, id=210, 227.32616pt x 123.8713pt>
+Package pdftex.def Info: figures/prefill_scaling.pdf  used on input line 302.
+(pdftex.def)             Requested size: 221.76123pt x 128.39359pt.
+[4]
+<figures/hysteresis_churn.pdf, id=201, 227.32616pt x 123.8713pt>
 File: figures/hysteresis_churn.pdf Graphic file (type pdf)
 <use figures/hysteresis_churn.pdf>
-Package pdftex.def Info: figures/hysteresis_churn.pdf  used on input line 359.
-(pdftex.def)             Requested size: 252.0pt x 137.32297pt.
+Package pdftex.def Info: figures/hysteresis_churn.pdf  used on input line 363.
+(pdftex.def)             Requested size: 221.76123pt x 120.8449pt.
+ [5 <./figures/prefill_scaling.pdf>] [6 <./figures/hysteresis_churn.pdf>]
+Underfull \hbox (badness 2932) in paragraph at lines 408--410
+\T1/ptm/m/n/10 text or al-ter user in-tent. At-tacker A is mit-i-gated by
+ []
 
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 370.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 370.
-
-[5 <./figures/hysteresis_churn.pdf>]
-Underfull \vbox (badness 1412) has occurred while \output is active []
-
- [6]
 
 ** Conference Paper **
 Before submitting the final camera ready copy, remember to:
@@ -887,24 +960,22 @@ Before submitting the final camera ready copy, remember to:
  uses only Type 1 fonts and that every step in the generation
  process uses the appropriate paper size.
 
-[7
-
-] (ieee_main.aux)
+[7] (ieee_main.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2025-12-24>
  ***********
 Package rerunfilecheck Info: File `ieee_main.out' has not changed.
-(rerunfilecheck)             Checksum: 92137AC3D15AA96666E5FE2AA19A8A31;3178.
+(rerunfilecheck)             Checksum: 1F5D28D149F2E900B82A61D1A027C9FF;3749.
  ) 
 Here is how much of TeX's memory you used:
- 22811 strings out of 467871
- 431914 string characters out of 5418376
- 853035 words of memory out of 5000000
- 51249 multiletter control sequences out of 15000+600000
+ 22825 strings out of 467871
+ 432164 string characters out of 5418376
+ 854359 words of memory out of 5000000
+ 51258 multiletter control sequences out of 15000+600000
  750672 words of font info for 177 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 84i,20n,104p,1417b,915s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 84i,20n,104p,1875b,915s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <C:/Users/arjit/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/
 cmex10.pfb><C:/Users/arjit/AppData/Local/Programs/MiKTeX/fonts/type1/public/ams
 fonts/cm/cmmi10.pfb><C:/Users/arjit/AppData/Local/Programs/MiKTeX/fonts/type1/p
@@ -919,17 +990,18 @@ sers/arjit/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr8.pf
 b><C:/Users/arjit/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/
 cmr9.pfb><C:/Users/arjit/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfo
 nts/cm/cmsy10.pfb><C:/Users/arjit/AppData/Local/Programs/MiKTeX/fonts/type1/pub
-lic/amsfonts/cm/cmsy7.pfb><C:/Users/arjit/AppData/Local/Programs/MiKTeX/fonts/t
-ype1/public/amsfonts/cm/cmsy9.pfb><C:/Users/arjit/AppData/Local/Programs/MiKTeX
-/fonts/type1/public/amsfonts/symbols/msbm10.pfb><C:/Users/arjit/AppData/Local/P
-rograms/MiKTeX/fonts/type1/urw/courier/ucrr8a.pfb><C:/Users/arjit/AppData/Local
-/Programs/MiKTeX/fonts/type1/urw/times/utmb8a.pfb><C:/Users/arjit/AppData/Local
-/Programs/MiKTeX/fonts/type1/urw/times/utmbi8a.pfb><C:/Users/arjit/AppData/Loca
-l/Programs/MiKTeX/fonts/type1/urw/times/utmr8a.pfb><C:/Users/arjit/AppData/Loca
-l/Programs/MiKTeX/fonts/type1/urw/times/utmri8a.pfb>
-Output written on ieee_main.pdf (7 pages, 368569 bytes).
+lic/amsfonts/cm/cmsy6.pfb><C:/Users/arjit/AppData/Local/Programs/MiKTeX/fonts/t
+ype1/public/amsfonts/cm/cmsy7.pfb><C:/Users/arjit/AppData/Local/Programs/MiKTeX
+/fonts/type1/public/amsfonts/cm/cmsy9.pfb><C:/Users/arjit/AppData/Local/Program
+s/MiKTeX/fonts/type1/public/amsfonts/symbols/msbm10.pfb><C:/Users/arjit/AppData
+/Local/Programs/MiKTeX/fonts/type1/urw/courier/ucrr8a.pfb><C:/Users/arjit/AppDa
+ta/Local/Programs/MiKTeX/fonts/type1/urw/times/utmb8a.pfb><C:/Users/arjit/AppDa
+ta/Local/Programs/MiKTeX/fonts/type1/urw/times/utmbi8a.pfb><C:/Users/arjit/AppD
+ata/Local/Programs/MiKTeX/fonts/type1/urw/times/utmr8a.pfb><C:/Users/arjit/AppD
+ata/Local/Programs/MiKTeX/fonts/type1/urw/times/utmri8a.pfb>
+Output written on ieee_main.pdf (7 pages, 386083 bytes).
 PDF statistics:
- 363 PDF objects out of 1000 (max. 8388607)
- 61 named destinations out of 1000 (max. 500000)
- 199 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 366 PDF objects out of 1000 (max. 8388607)
+ 66 named destinations out of 1000 (max. 500000)
+ 207 words of extra memory for PDF output out of 10000 (max. 10000000)
 

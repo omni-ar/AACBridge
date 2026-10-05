@@ -15,11 +15,10 @@
 \citation{cacheblend}
 \citation{cachegen}
 \citation{ragcache}
-\citation{llamacpp}
 \citation{h2o}
 \citation{scissorhands}
-\citation{snapkv}
 \citation{streamingllm}
+\citation{snapkv}
 \citation{kvquant}
 \citation{dettmers2022}
 \citation{frantar2022}
@@ -28,57 +27,60 @@
 \citation{mlcllm}
 \citation{llminaflash}
 \citation{powerinfer2}
-\@writefile{lot}{\contentsline {table}{\numberline {I}{\ignorespaces Where CAP-KVC differs from request-driven KV reuse.}}{2}{table.1}\protected@file@percent }
-\newlabel{tab:positioning}{{I}{2}{Where CAP-KVC differs from request-driven KV reuse}{table.1}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {I}{\ignorespaces Architectural comparison: request-driven KV reuse vs.\ CAP-KVC.}}{2}{table.1}\protected@file@percent }
+\newlabel{tab:positioning}{{I}{2}{Architectural comparison: request-driven KV reuse vs.\ CAP-KVC}{table.1}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {II}Related Work}{2}{section.2}\protected@file@percent }
 \newlabel{sec:related}{{II}{2}{Related Work}{section.2}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {III}System Design}{2}{section.3}\protected@file@percent }
 \newlabel{sec:design}{{III}{2}{System Design}{section.3}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-A}}Problem}{2}{subsection.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-A}}Data Management}{2}{subsection.3.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-B}}Context Scoring}{2}{subsection.3.2}\protected@file@percent }
 \newlabel{sec:scoring}{{\mbox  {III-B}}{2}{Context Scoring}{subsection.3.2}{}}
 \newlabel{eq:score}{{1}{2}{Context Scoring}{equation.1}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-C}}Residency and Hysteresis}{2}{subsection.3.3}\protected@file@percent }
-\newlabel{sec:residency}{{\mbox  {III-C}}{2}{Residency and Hysteresis}{subsection.3.3}{}}
 \citation{llamacpp}
 \citation{qwen25}
-\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces CAP-KVC architecture. A background sweep scores five pre-written contexts from GPS, BLE and time, keeps up to three of them as primed KV state in llama.cpp sequence slots, and saves each state to disk. An interaction shows a canned reply, then resumes the highest-ranked resident context and decodes only the intent; if none is resident, priming starts in the background. Slot~3 serves inline inference without disturbing resident states.}}{3}{figure.1}\protected@file@percent }
-\newlabel{fig:architecture}{{1}{3}{CAP-KVC architecture. A background sweep scores five pre-written contexts from GPS, BLE and time, keeps up to three of them as primed KV state in llama.cpp sequence slots, and saves each state to disk. An interaction shows a canned reply, then resumes the highest-ranked resident context and decodes only the intent; if none is resident, priming starts in the background. Slot~3 serves inline inference without disturbing resident states}{figure.1}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-D}}Interaction and Fallback}{3}{subsection.3.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {IV}Implementation}{3}{section.4}\protected@file@percent }
-\newlabel{sec:implementation}{{IV}{3}{Implementation}{section.4}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {II}{\ignorespaces Natively timed latency components (ms), median [IQR], $n=30$ each. CAP-KVC restores a 44-token context and decodes the 9 intent tokens.}}{4}{table.2}\protected@file@percent }
-\newlabel{tab:latency}{{II}{4}{Natively timed latency components (ms), median [IQR], $n=30$ each. CAP-KVC restores a 44-token context and decodes the 9 intent tokens}{table.2}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces CAP-KVC architecture. A background sweep evaluates candidate contexts from GPS, BLE, and time inputs, maintains up to three primed KV states across llama.cpp sequence slots, and persists each state to internal storage. When an interaction begins, Tier~1 immediately presents a canned response, then the engine resumes the highest-ranked resident slot to decode the user's intent. If no matching state is resident, background priming is scheduled (Tier~2). Slot~3 handles inline inference and benchmark executions without evicting resident states.}}{3}{figure.1}\protected@file@percent }
+\newlabel{fig:architecture}{{1}{3}{CAP-KVC architecture. A background sweep evaluates candidate contexts from GPS, BLE, and time inputs, maintains up to three primed KV states across llama.cpp sequence slots, and persists each state to internal storage. When an interaction begins, Tier~1 immediately presents a canned response, then the engine resumes the highest-ranked resident slot to decode the user's intent. If no matching state is resident, background priming is scheduled (Tier~2). Slot~3 handles inline inference and benchmark executions without evicting resident states}{figure.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-C}}Residency Management and Hysteresis}{3}{subsection.3.3}\protected@file@percent }
+\newlabel{sec:residency}{{\mbox  {III-C}}{3}{Residency Management and Hysteresis}{subsection.3.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-D}}Priming, Interaction, and Fallback}{3}{subsection.3.4}\protected@file@percent }
+\newlabel{sec:fallback}{{\mbox  {III-D}}{3}{Priming, Interaction, and Fallback}{subsection.3.4}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {IV}Implementation}{4}{section.4}\protected@file@percent }
+\newlabel{sec:implementation}{{IV}{4}{Implementation}{section.4}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {V}Evaluation}{4}{section.5}\protected@file@percent }
 \newlabel{sec:evaluation}{{V}{4}{Evaluation}{section.5}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-A}}Setup}{4}{subsection.5.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-A}}Experimental Setup}{4}{subsection.5.1}\protected@file@percent }
+\newlabel{sec:eval_setup}{{\mbox  {V-A}}{4}{Experimental Setup}{subsection.5.1}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {II}{\ignorespaces Latency components (ms), median [IQR], $n=30$ each, interleaved randomized trial order. CAP-KVC restores a 44-token context and decodes 9 intent tokens.}}{4}{table.2}\protected@file@percent }
+\newlabel{tab:latency}{{II}{4}{Latency components (ms), median [IQR], $n=30$ each, interleaved randomized trial order. CAP-KVC restores a 44-token context and decodes 9 intent tokens}{table.2}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-B}}Matched-Context Latency}{4}{subsection.5.2}\protected@file@percent }
 \newlabel{sec:eval_latency}{{\mbox  {V-B}}{4}{Matched-Context Latency}{subsection.5.2}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Prefill latency against tokens decoded (log scale). Points are trials; markers show median and IQR ($n=30$ per condition).}}{4}{figure.2}\protected@file@percent }
-\newlabel{fig:prefill}{{2}{4}{Prefill latency against tokens decoded (log scale). Points are trials; markers show median and IQR ($n=30$ per condition)}{figure.2}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-C}}Prediction and Cache Policy}{4}{subsection.5.3}\protected@file@percent }
-\newlabel{sec:eval_prediction}{{\mbox  {V-C}}{4}{Prediction and Cache Policy}{subsection.5.3}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {III}{\ignorespaces Interaction outcomes over 6,400 synthetic interactions (\%) and states loaded per day. $\Delta =0.10$ unless noted.}}{5}{table.3}\protected@file@percent }
-\newlabel{tab:prediction}{{III}{5}{Interaction outcomes over 6,400 synthetic interactions (\%) and states loaded per day. $\Delta =0.10$ unless noted}{table.3}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-D}}Hysteresis}{5}{subsection.5.4}\protected@file@percent }
-\newlabel{sec:eval_hysteresis}{{\mbox  {V-D}}{5}{Hysteresis}{subsection.5.4}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces States loaded per day against hysteresis margin $\Delta $ (100 synthetic days each). The share of correct interactions stayed at 98.5\% (normal) and 90.6\% (high noise) across all margins up to 0.5.}}{5}{figure.3}\protected@file@percent }
-\newlabel{fig:hysteresis}{{3}{5}{States loaded per day against hysteresis margin $\Delta $ (100 synthetic days each). The share of correct interactions stayed at 98.5\% (normal) and 90.6\% (high noise) across all margins up to 0.5}{figure.3}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-E}}Markov Successor Baseline}{5}{subsection.5.5}\protected@file@percent }
-\newlabel{sec:eval_markov}{{\mbox  {V-E}}{5}{Markov Successor Baseline}{subsection.5.5}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-F}}Residency Capacity ($K$) Ablation}{5}{subsection.5.6}\protected@file@percent }
-\newlabel{sec:eval_k_ablation}{{\mbox  {V-F}}{5}{Residency Capacity ($K$) Ablation}{subsection.5.6}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-G}}Multi-Seed Evaluation}{6}{subsection.5.7}\protected@file@percent }
-\newlabel{sec:eval_multiseed}{{\mbox  {V-G}}{6}{Multi-Seed Evaluation}{subsection.5.7}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-H}}Independent Trace Schedules}{6}{subsection.5.8}\protected@file@percent }
-\newlabel{sec:eval_independent}{{\mbox  {V-H}}{6}{Independent Trace Schedules}{subsection.5.8}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Prefill latency versus prompt token count (log scale). Points represent individual benchmark trials; markers denote median and IQR ($n=30$ per condition).}}{5}{figure.2}\protected@file@percent }
+\newlabel{fig:prefill}{{2}{5}{Prefill latency versus prompt token count (log scale). Points represent individual benchmark trials; markers denote median and IQR ($n=30$ per condition)}{figure.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-C}}Prediction and Cache Policy}{5}{subsection.5.3}\protected@file@percent }
+\newlabel{sec:eval_prediction}{{\mbox  {V-C}}{5}{Prediction and Cache Policy}{subsection.5.3}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {III}{\ignorespaces Interaction outcomes across 6,400 synthetic interactions (\%) and cache operations per day. $\Delta = 0.10$ unless specified.}}{5}{table.3}\protected@file@percent }
+\newlabel{tab:prediction}{{III}{5}{Interaction outcomes across 6,400 synthetic interactions (\%) and cache operations per day. $\Delta = 0.10$ unless specified}{table.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-D}}Hysteresis Margin Sweep}{5}{subsection.5.4}\protected@file@percent }
+\newlabel{sec:eval_hysteresis}{{\mbox  {V-D}}{5}{Hysteresis Margin Sweep}{subsection.5.4}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Cache loads per day versus hysteresis margin $\Delta $ (100 synthetic days). Correct selection remained constant at 98.5\% (normal) and 90.6\% (high noise) across all margins up to 0.5.}}{6}{figure.3}\protected@file@percent }
+\newlabel{fig:hysteresis}{{3}{6}{Cache loads per day versus hysteresis margin $\Delta $ (100 synthetic days). Correct selection remained constant at 98.5\% (normal) and 90.6\% (high noise) across all margins up to 0.5}{figure.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-E}}Markov Successor Baseline}{6}{subsection.5.5}\protected@file@percent }
+\newlabel{sec:eval_markov}{{\mbox  {V-E}}{6}{Markov Successor Baseline}{subsection.5.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-F}}Residency Capacity ($K$) Ablation}{6}{subsection.5.6}\protected@file@percent }
+\newlabel{sec:eval_k_ablation}{{\mbox  {V-F}}{6}{Residency Capacity (\texorpdfstring {$K$}{K}) Ablation}{subsection.5.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-G}}Multi-Seed Robustness}{6}{subsection.5.7}\protected@file@percent }
+\newlabel{sec:eval_multiseed}{{\mbox  {V-G}}{6}{Multi-Seed Robustness}{subsection.5.7}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-H}}Schedule Variation}{6}{subsection.5.8}\protected@file@percent }
+\newlabel{sec:eval_independent}{{\mbox  {V-H}}{6}{Schedule Variation}{subsection.5.8}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-I}}Abstention and Risk-Coverage}{6}{subsection.5.9}\protected@file@percent }
 \newlabel{sec:eval_risk}{{\mbox  {V-I}}{6}{Abstention and Risk-Coverage}{subsection.5.9}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-J}}Not Measured}{6}{subsection.5.10}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-J}}Security Experiments}{6}{subsection.5.10}\protected@file@percent }
+\newlabel{sec:eval_security}{{\mbox  {V-J}}{6}{Security Experiments}{subsection.5.10}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-K}}Resource Overhead and Unmeasured Quantities}{6}{subsection.5.11}\protected@file@percent }
+\newlabel{sec:eval_unmeasured}{{\mbox  {V-K}}{6}{Resource Overhead and Unmeasured Quantities}{subsection.5.11}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {VI}Threat Model}{6}{section.6}\protected@file@percent }
 \newlabel{sec:threat}{{VI}{6}{Threat Model}{section.6}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {VII}Limitations and Conclusion}{6}{section.7}\protected@file@percent }
-\newlabel{sec:conclusion}{{VII}{6}{Limitations and Conclusion}{section.7}{}}
 \bibcite{beukelman2020}{1}
 \bibcite{llamacpp}{2}
 \bibcite{qwen25}{3}
@@ -99,5 +101,7 @@
 \bibcite{mlcllm}{18}
 \bibcite{llminaflash}{19}
 \bibcite{powerinfer2}{20}
+\@writefile{toc}{\contentsline {section}{\numberline {VII}Limitations and Conclusion}{7}{section.7}\protected@file@percent }
+\newlabel{sec:conclusion}{{VII}{7}{Limitations and Conclusion}{section.7}{}}
 \@writefile{toc}{\contentsline {section}{References}{7}{section*.2}\protected@file@percent }
 \gdef \@abspage@last{7}
